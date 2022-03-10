@@ -1,2 +1,0 @@
-- name: Required Task Completed Checker
-  uses: macqueenism/required-task-checker-action@v0.2.0
