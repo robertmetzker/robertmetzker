@@ -1,0 +1,7 @@
+- name: Task Completed Checker
+  # You may pin to the exact commit or the version.
+  # uses: kentaro-m/task-completed-checker-action@15aa21278f36c35b1006de5c65efa6b04e7b02bf
+  uses: kentaro-m/task-completed-checker-action@v0.1.0
+  with:
+    # The GITHUB_TOKEN secret
+    repo-token: {{ #github }}
