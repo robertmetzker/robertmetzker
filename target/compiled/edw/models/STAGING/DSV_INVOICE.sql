@@ -1,0 +1,292 @@
+
+
+---- SRC LAYER ----
+WITH
+SRC_INVOICE as ( SELECT *     from     STAGING.DST_INVOICE ),
+//SRC_INVOICE as ( SELECT *     from     DST_INVOICE) ,
+
+---- LOGIC LAYER ----
+
+LOGIC_INVOICE as ( SELECT 
+		  UNIQUE_ID_KEY                                      as                                      UNIQUE_ID_KEY 
+		, HEADER_INVOICE_HEADER_ID                           as                           HEADER_INVOICE_HEADER_ID 
+		, INVOICE_LINE_ID                                    as                                    INVOICE_LINE_ID 
+		, LINE_SEQUENCE                                      as                                      LINE_SEQUENCE 
+		, SEQUENCE_EXTENSION                                 as                                 SEQUENCE_EXTENSION 
+		, LINE_VERSION_NUMBER                                as                                LINE_VERSION_NUMBER 
+		, INVOICE_NUMBER                                     as                                     INVOICE_NUMBER 
+		, MCO_NUMBER                                         as                                         MCO_NUMBER 
+		, MCO_ID_KEY                                         as                                         MCO_ID_KEY 
+		, CLAIM_NUMBER                                       as                                       CLAIM_NUMBER 
+		, CLM_STT_TYP_CD                                     as                                     CLM_STT_TYP_CD 
+		, CLM_STS_TYP_CD                                     as                                     CLM_STS_TYP_CD 
+		, CLM_TRANS_RSN_TYP_CD                               as                               CLM_TRANS_RSN_TYP_CD 
+		, CUST_NO                                            as                                            CUST_NO 
+		, POLICY_NUMBER                                      as                                      POLICY_NUMBER 
+		, POLICY_TYPE_CODE                                   as                                   POLICY_TYPE_CODE 
+		, POLICY_ACTIVE_IND                                  as                                  POLICY_ACTIVE_IND 
+		, PLCY_STS_TYP_CD                                    as                                    PLCY_STS_TYP_CD 
+		, PLCY_STS_RSN_TYP_CD                                as                                PLCY_STS_RSN_TYP_CD 
+		, SERVICING_PROVIDER_ID                              as                              SERVICING_PROVIDER_ID 
+		, SERVICING_PEACH_NUMBER                             as                             SERVICING_PEACH_NUMBER 
+		, PAYTO_PROVIDER_ID                                  as                                  PAYTO_PROVIDER_ID 
+		, PAYTO_PEACH_NUMBER                                 as                                 PAYTO_PEACH_NUMBER 
+		, PAYTO_PRVDR_TYPE_CODE                              as                              PAYTO_PRVDR_TYPE_CODE 
+		, OTHER_PHYSICIAN1                                   as                                   OTHER_PHYSICIAN1 
+		, PRESCRIBING_PHYISCIAN                              as                              PRESCRIBING_PHYISCIAN 
+		, INVOICE_TYPE                                       as                                       INVOICE_TYPE 
+		, INVOICE_TYPE_DESC                                  as                                  INVOICE_TYPE_DESC 
+		, INVOICE_STATUS                                     as                                     INVOICE_STATUS 
+		, INVOICE_STATUS_DESC                                as                                INVOICE_STATUS_DESC 
+		, HEADER_ENTRY_DATE                                  as                                  HEADER_ENTRY_DATE 
+		, RECEIPT_DATE                                       as                                       RECEIPT_DATE 
+		, NETWORK_RECEIPT_DATE                               as                               NETWORK_RECEIPT_DATE 
+		, SERVICE_FROM                                       as                                       SERVICE_FROM 
+		, SERVICE_TO                                         as                                         SERVICE_TO 
+		, BATCH_NUMBER                                       as                                       BATCH_NUMBER 
+		, BATCH_SEQUENCE                                     as                                     BATCH_SEQUENCE 
+		, BATCH_TYPE                                         as                                         BATCH_TYPE 
+		, EXTENSION_NUMBER                                   as                                   EXTENSION_NUMBER 
+		, HEADER_VERSION_NUMBER                              as                              HEADER_VERSION_NUMBER 
+		, PAYEE_ID                                           as                                           PAYEE_ID 
+		, NETWORK_PAYEE_IND                                  as                                  NETWORK_PAYEE_IND 
+		, PAYEE_TYPE                                         as                                         PAYEE_TYPE 
+		, PRIOR_AUTH_NUMBER                                  as                                  PRIOR_AUTH_NUMBER 
+		, ADMISSION_DATE                                     as                                     ADMISSION_DATE 
+		, ADMISSION_HOURS                                    as                                    ADMISSION_HOURS 
+		, ADMISSION_TYPE                                     as                                     ADMISSION_TYPE 
+		, ADMISSION_SOURCE                                   as                                   ADMISSION_SOURCE 
+		, DISCHARGE_STATUS                                   as                                   DISCHARGE_STATUS 
+		, DISCHARGE_DATE                                     as                                     DISCHARGE_DATE 
+		, DISCHARGE_HOURS                                    as                                    DISCHARGE_HOURS 
+		, BILL_DATE                                          as                                          BILL_DATE 
+		, BILL_TYPE                                          as                                          BILL_TYPE 
+		, PATIENT_ACCOUNT_NUMBER                             as                             PATIENT_ACCOUNT_NUMBER 
+		, REFERRING_PROVIDER_ID                              as                              REFERRING_PROVIDER_ID 
+		, REFERRING_PEACH_NUMBER                             as                             REFERRING_PEACH_NUMBER 
+		, HEADER_ULM                                         as                                         HEADER_ULM 
+		, HEADER_DLM                                         as                                         HEADER_DLM 
+		, MOD_SET                                            as                                            MOD_SET 
+		, LINE_INVOICE_HEADER_ID                             as                             LINE_INVOICE_HEADER_ID 
+		, DATE_OF_SERVICE_FROM                               as                               DATE_OF_SERVICE_FROM 
+		, DATE_OF_SERVICE_TO                                 as                                 DATE_OF_SERVICE_TO 
+		, PROCEDURE_CODE                                     as                                     PROCEDURE_CODE 
+		, REVENUE_CENTER_CODE                                as                                REVENUE_CENTER_CODE 
+		, NATIONAL_DRUG_CODE                                 as                                 NATIONAL_DRUG_CODE 
+		, PLACE_OF_SERVICE_CODE                              as                              PLACE_OF_SERVICE_CODE 
+		, PLACE_OF_SERVICE_DESC                              as                              PLACE_OF_SERVICE_DESC 
+		, LINE_STATUS_CODE                                   as                                   LINE_STATUS_CODE 
+		, LINE_STATUS_DESC                                   as                                   LINE_STATUS_DESC 
+		, LINE_STATUS_DATE                                   as                                   LINE_STATUS_DATE 
+		, ADJUDICATION_STATUS_CODE                           as                           ADJUDICATION_STATUS_CODE 
+		, ADJUDICATION_STATUS_DESC                           as                           ADJUDICATION_STATUS_DESC 
+		, ADJUDICATION_STATUS_DATE                           as                           ADJUDICATION_STATUS_DATE 
+		, REVERSAL_IND                                       as                                       REVERSAL_IND 
+		, OVERRIDE_IND                                       as                                       OVERRIDE_IND 
+		, DENIED_FLAG                                        as                                        DENIED_FLAG 
+		, PAYMENT_NUMBER                                     as                                     PAYMENT_NUMBER 
+		, PAYMENT_DATE                                       as                                       PAYMENT_DATE 
+		, DIAGNOSIS_SEQUENCE                                 as                                 DIAGNOSIS_SEQUENCE 
+		, DIAGNOSIS1                                         as                                         DIAGNOSIS1 
+		, DIAGNOSIS2                                         as                                         DIAGNOSIS2 
+		, DIAGNOSIS3                                         as                                         DIAGNOSIS3 
+		, DIAGNOSIS4                                         as                                         DIAGNOSIS4 
+		, DIAGNOSIS_CODE                                     as                                     DIAGNOSIS_CODE 
+		, EDI_ID                                             as                                             EDI_ID 
+		, LINE_ENTRY_DATE                                    as                                    LINE_ENTRY_DATE 
+		, ENTRY_USER                                         as                                         ENTRY_USER 
+		, LINE_DLM                                           as                                           LINE_DLM 
+		, LINE_ULM                                           as                                           LINE_ULM 
+		, PMT_AMT                                            as                                            PMT_AMT 
+		, PAID_UNITS                                         as                                         PAID_UNITS 
+		, UNITS_OF_SERVICE                                   as                                   UNITS_OF_SERVICE 
+		, BILLED_AMOUNT                                      as                                      BILLED_AMOUNT 
+		, CALC_AMOUNT                                        as                                        CALC_AMOUNT 
+		, NON_COVERED_AMOUNT                                 as                                 NON_COVERED_AMOUNT 
+		, APPROVED_AMOUNT                                    as                                    APPROVED_AMOUNT 
+		, NTWK_BILLED_AMT                                    as                                    NTWK_BILLED_AMT 
+		, FEE_SCHED_AMOUNT                                   as                                   FEE_SCHED_AMOUNT 
+		, PAID_MCO_ID                                        as                                        PAID_MCO_ID 
+		, PAID_MCO_NUMBER                                    as                                    PAID_MCO_NUMBER 
+		, INTEREST_ACCRUAL_DATE                              as                              INTEREST_ACCRUAL_DATE
+		, WRNT_DATE                                          as                                          WRNT_DATE
+		, WRNT_NO                                            as                                            WRNT_NO  
+		, SUBROGATION_FLAG                                   as                                   SUBROGATION_FLAG 
+		, ADJUSTMENT_TYPE                                    as                                    ADJUSTMENT_TYPE 
+		, INPUT_METHOD_CODE                                  as                                  INPUT_METHOD_CODE 
+		, PAYMENT_CATEGORY                                   as                                   PAYMENT_CATEGORY 
+		, FEE_SCHEDULE                                       as                                       FEE_SCHEDULE 
+		, MOD1_MODIFIER_CODE                                 as                                 MOD1_MODIFIER_CODE 
+		, MOD2_MODIFIER_CODE                                 as                                 MOD2_MODIFIER_CODE 
+		, MOD3_MODIFIER_CODE                                 as                                 MOD3_MODIFIER_CODE 
+		, MOD4_MODIFIER_CODE                                 as                                 MOD4_MODIFIER_CODE 
+		, PAID_ABOVE_ZERO_IND                                as                                PAID_ABOVE_ZERO_IND 
+		, SUBROGATION_TYPE_DESC                              as                              SUBROGATION_TYPE_DESC 
+		, TOTAL_APPROVED_AMOUNT                              as                              TOTAL_APPROVED_AMOUNT 
+		, CLM_TYP_CD                                         as                                         CLM_TYP_CD 
+	    , OCCR_SRC_TYP_NM                                    as                                    OCCR_SRC_TYP_NM 
+		, OCCR_MEDA_TYP_NM                                   as                                   OCCR_MEDA_TYP_NM 
+		, NOI_CTG_TYP_NM                                     as                                     NOI_CTG_TYP_NM 
+		, NOI_TYP_NM                                         as                                         NOI_TYP_NM 
+		, FIREFIGHTER_CANCER_IND                             as                             FIREFIGHTER_CANCER_IND 
+		, COVID_EXPOSURE_IND                                 as                                 COVID_EXPOSURE_IND 
+		, COVID_EMERGENCY_WORKER_IND                         as                         COVID_EMERGENCY_WORKER_IND 
+		, COVID_HEALTH_CARE_WORKER_IND                       as                       COVID_HEALTH_CARE_WORKER_IND 
+		, COMBINED_CLAIM_IND                                 as                                 COMBINED_CLAIM_IND 
+		, SB223_IND                                          as                                          SB223_IND 
+		, EMPLOYER_PREMISES_IND                              as                              EMPLOYER_PREMISES_IND 
+		, CLM_CTRPH_INJR_IND                                 as                                 CLM_CTRPH_INJR_IND 
+		, K_PROGRAM_ENROLLMENT_DESC                          as                          K_PROGRAM_ENROLLMENT_DESC 
+		, K_PROGRAM_TYPE_DESC                                as                                K_PROGRAM_TYPE_DESC 
+		, K_PROGRAM_REASON_DESC                              as                              K_PROGRAM_REASON_DESC 
+		, CHNG_OVR_IND                                       as                                       CHNG_OVR_IND 
+		from SRC_INVOICE
+            )
+
+---- RENAME LAYER ----
+,
+
+RENAME_INVOICE as ( SELECT 
+		  UNIQUE_ID_KEY                                      as                                      UNIQUE_ID_KEY
+		, HEADER_INVOICE_HEADER_ID                           as                           HEADER_INVOICE_HEADER_ID
+		, INVOICE_LINE_ID                                    as                                    INVOICE_LINE_ID
+		, LINE_SEQUENCE                                      as                                      LINE_SEQUENCE
+		, SEQUENCE_EXTENSION                                 as                                 SEQUENCE_EXTENSION
+		, LINE_VERSION_NUMBER                                as                                LINE_VERSION_NUMBER
+		, INVOICE_NUMBER                                     as                                     INVOICE_NUMBER
+		, MCO_NUMBER                                         as                                         MCO_NUMBER
+		, MCO_ID_KEY                                         as                                         MCO_ID_KEY
+		, CLAIM_NUMBER                                       as                                       CLAIM_NUMBER
+		, CLM_STT_TYP_CD                                     as                                     CLM_STT_TYP_CD
+		, CLM_STS_TYP_CD                                     as                                     CLM_STS_TYP_CD
+		, CLM_TRANS_RSN_TYP_CD                               as                               CLM_TRANS_RSN_TYP_CD
+		, CUST_NO                                            as                                    CUSTOMER_NUMBER
+		, POLICY_NUMBER				                         as                            SUBMITTED_POLICY_NUMBER
+		, POLICY_TYPE_CODE                                   as                                   POLICY_TYPE_CODE
+		, POLICY_ACTIVE_IND                                  as                                  POLICY_ACTIVE_IND
+		, PLCY_STS_TYP_CD                                    as                                    PLCY_STS_TYP_CD
+		, PLCY_STS_RSN_TYP_CD                                as                                PLCY_STS_RSN_TYP_CD
+		, SERVICING_PROVIDER_ID                              as                              SERVICING_PROVIDER_ID
+		, SERVICING_PEACH_NUMBER                             as                             SERVICING_PEACH_NUMBER
+		, PAYTO_PROVIDER_ID                                  as                                  PAYTO_PROVIDER_ID
+		, PAYTO_PEACH_NUMBER                                 as                                 PAYTO_PEACH_NUMBER
+		, PAYTO_PRVDR_TYPE_CODE                              as                           PAYTO_PROVIDER_TYPE_CODE
+		, OTHER_PHYSICIAN1                                   as                                   OTHER_PHYSICIAN1
+		, PRESCRIBING_PHYISCIAN                              as                              PRESCRIBING_PHYISCIAN
+		, INVOICE_TYPE                                       as                                       INVOICE_TYPE
+		, INVOICE_TYPE_DESC                                  as                                  INVOICE_TYPE_DESC
+		, INVOICE_STATUS                                     as                                     INVOICE_STATUS
+		, INVOICE_STATUS_DESC                                as                                INVOICE_STATUS_DESC
+		, HEADER_ENTRY_DATE                                  as                                  HEADER_ENTRY_DATE
+		, RECEIPT_DATE                                       as                                       RECEIPT_DATE
+		, NETWORK_RECEIPT_DATE                               as                               NETWORK_RECEIPT_DATE
+		, SERVICE_FROM                                       as                                       SERVICE_FROM
+		, SERVICE_TO                                         as                                         SERVICE_TO
+		, BATCH_NUMBER                                       as                                       BATCH_NUMBER
+		, BATCH_SEQUENCE                                     as                                     BATCH_SEQUENCE
+		, BATCH_TYPE                                         as                                         BATCH_TYPE
+		, EXTENSION_NUMBER                                   as                                   EXTENSION_NUMBER
+		, HEADER_VERSION_NUMBER                              as                              HEADER_VERSION_NUMBER
+		, PAYEE_ID                                           as                                           PAYEE_ID
+		, NETWORK_PAYEE_IND                                  as                                  NETWORK_PAYEE_IND
+		, PAYEE_TYPE                                         as                                         PAYEE_TYPE
+		, PRIOR_AUTH_NUMBER                                  as                                  PRIOR_AUTH_NUMBER
+		, ADMISSION_DATE                                     as                                     ADMISSION_DATE
+		, ADMISSION_HOURS                                    as                                    ADMISSION_HOURS
+		, ADMISSION_TYPE                                     as                                     ADMISSION_TYPE
+		, ADMISSION_SOURCE                                   as                                   ADMISSION_SOURCE
+		, DISCHARGE_STATUS                                   as                                   DISCHARGE_STATUS
+		, DISCHARGE_DATE                                     as                                     DISCHARGE_DATE
+		, DISCHARGE_HOURS                                    as                                    DISCHARGE_HOURS
+		, BILL_DATE                                          as                                          BILL_DATE
+		, BILL_TYPE                                          as                                          BILL_TYPE
+		, PATIENT_ACCOUNT_NUMBER                             as                             PATIENT_ACCOUNT_NUMBER
+		, REFERRING_PROVIDER_ID                              as                              REFERRING_PROVIDER_ID
+		, REFERRING_PEACH_NUMBER                             as                             REFERRING_PEACH_NUMBER
+		, HEADER_ULM                                         as                                         HEADER_ULM
+		, HEADER_DLM                                         as                                         HEADER_DLM
+		, MOD_SET                                            as                                       MODIFER_TYPE
+		, LINE_INVOICE_HEADER_ID                             as                             LINE_INVOICE_HEADER_ID
+		, DATE_OF_SERVICE_FROM                               as                               DATE_OF_SERVICE_FROM
+		, DATE_OF_SERVICE_TO                                 as                                 DATE_OF_SERVICE_TO
+		, PROCEDURE_CODE                                     as                                     PROCEDURE_CODE
+		, REVENUE_CENTER_CODE                                as                                REVENUE_CENTER_CODE
+		, NATIONAL_DRUG_CODE                                 as                                 NATIONAL_DRUG_CODE
+		, PLACE_OF_SERVICE_CODE                              as                              PLACE_OF_SERVICE_CODE
+		, PLACE_OF_SERVICE_DESC                              as                              PLACE_OF_SERVICE_DESC
+		, LINE_STATUS_CODE                                   as                                   LINE_STATUS_CODE
+		, LINE_STATUS_DESC                                   as                                   LINE_STATUS_DESC
+		, LINE_STATUS_DATE                                   as                                   LINE_STATUS_DATE
+		, ADJUDICATION_STATUS_CODE                           as                           ADJUDICATION_STATUS_CODE
+		, ADJUDICATION_STATUS_DESC                           as                           ADJUDICATION_STATUS_DESC
+		, ADJUDICATION_STATUS_DATE                           as                           ADJUDICATION_STATUS_DATE
+		, REVERSAL_IND                                       as                                       REVERSAL_IND
+		, OVERRIDE_IND                                       as                                       OVERRIDE_IND
+		, DENIED_FLAG                                        as                                        DENIED_FLAG
+		, PAYMENT_NUMBER                                     as                                     PAYMENT_NUMBER
+		, PAYMENT_DATE                                       as                                       PAYMENT_DATE
+		, DIAGNOSIS_SEQUENCE                                 as                                 DIAGNOSIS_SEQUENCE
+		, DIAGNOSIS1                                         as                                         DIAGNOSIS1
+		, DIAGNOSIS2                                         as                                         DIAGNOSIS2
+		, DIAGNOSIS3                                         as                                         DIAGNOSIS3
+		, DIAGNOSIS4                                         as                                         DIAGNOSIS4
+		, DIAGNOSIS_CODE                                     as                                     DIAGNOSIS_CODE
+		, EDI_ID                                             as                                             EDI_ID
+		, LINE_ENTRY_DATE                                    as                                    LINE_ENTRY_DATE
+		, ENTRY_USER                                         as                                         ENTRY_USER
+		, LINE_DLM                                           as                                           LINE_DLM
+		, LINE_ULM                                           as                                           LINE_ULM
+		, PMT_AMT                                            as                                    INTEREST_AMOUNT
+		, PAID_UNITS                                         as                                 PAID_UNIT_QUANTITY
+		, UNITS_OF_SERVICE                                   as                                   UNITS_OF_SERVICE
+		, BILLED_AMOUNT                                      as                                      BILLED_AMOUNT
+		, CALC_AMOUNT                                        as                                        CALC_AMOUNT
+		, NON_COVERED_AMOUNT                                 as                                 NON_COVERED_AMOUNT
+		, APPROVED_AMOUNT                                    as                                    APPROVED_AMOUNT
+		, NTWK_BILLED_AMT                                    as                                    NTWK_BILLED_AMT
+		, FEE_SCHED_AMOUNT                                   as                                   FEE_SCHED_AMOUNT
+		, PAID_MCO_ID                                        as                                        PAID_MCO_ID
+		, PAID_MCO_NUMBER                                    as                                    PAID_MCO_NUMBER
+		, INTEREST_ACCRUAL_DATE                              as                              INTEREST_ACCRUAL_DATE
+		, WRNT_DATE                                          as                                          WRNT_DATE
+		, WRNT_NO                                            as                                            WRNT_NO 
+		, SUBROGATION_FLAG                                   as                                   SUBROGATION_FLAG
+		, ADJUSTMENT_TYPE                                    as                                    ADJUSTMENT_TYPE
+		, INPUT_METHOD_CODE                                  as                                  INPUT_METHOD_CODE
+		, PAYMENT_CATEGORY                                   as                                   PAYMENT_CATEGORY
+		, FEE_SCHEDULE                                       as                                       FEE_SCHEDULE
+		, MOD1_MODIFIER_CODE                                 as                                 MOD1_MODIFIER_CODE
+		, MOD2_MODIFIER_CODE                                 as                                 MOD2_MODIFIER_CODE
+		, MOD3_MODIFIER_CODE                                 as                                 MOD3_MODIFIER_CODE
+		, MOD4_MODIFIER_CODE                                 as                                 MOD4_MODIFIER_CODE
+		, PAID_ABOVE_ZERO_IND                                as                                PAID_ABOVE_ZERO_IND
+		, SUBROGATION_TYPE_DESC                              as                              SUBROGATION_TYPE_DESC
+		, TOTAL_APPROVED_AMOUNT                              as                              TOTAL_APPROVED_AMOUNT
+        , CLM_TYP_CD                                         as                                         CLM_TYP_CD	
+		, OCCR_SRC_TYP_NM                                    as                                    OCCR_SRC_TYP_NM
+		, OCCR_MEDA_TYP_NM                                   as                                   OCCR_MEDA_TYP_NM
+		, NOI_CTG_TYP_NM                                     as                                     NOI_CTG_TYP_NM
+		, NOI_TYP_NM                                         as                                         NOI_TYP_NM
+		, FIREFIGHTER_CANCER_IND                             as                             FIREFIGHTER_CANCER_IND
+		, COVID_EXPOSURE_IND                                 as                                 COVID_EXPOSURE_IND
+		, COVID_EMERGENCY_WORKER_IND                         as                         COVID_EMERGENCY_WORKER_IND
+		, COVID_HEALTH_CARE_WORKER_IND                       as                       COVID_HEALTH_CARE_WORKER_IND
+		, COMBINED_CLAIM_IND                                 as                                 COMBINED_CLAIM_IND
+		, SB223_IND                                          as                                          SB223_IND
+		, EMPLOYER_PREMISES_IND                              as                              EMPLOYER_PREMISES_IND
+		, CLM_CTRPH_INJR_IND                                 as                                 CLM_CTRPH_INJR_IND
+		, K_PROGRAM_ENROLLMENT_DESC                          as                          K_PROGRAM_ENROLLMENT_DESC
+		, K_PROGRAM_TYPE_DESC                                as                                K_PROGRAM_TYPE_DESC
+		, K_PROGRAM_REASON_DESC                              as                              K_PROGRAM_REASON_DESC
+		, CHNG_OVR_IND                                       as                                       CHNG_OVR_IND 	
+				FROM     LOGIC_INVOICE   )
+
+---- FILTER LAYER (uses aliases) ----
+,
+FILTER_INVOICE                        as ( SELECT * from    RENAME_INVOICE   ),
+
+---- JOIN LAYER ----
+
+ JOIN_INVOICE  as  ( SELECT * 
+				FROM  FILTER_INVOICE )
+ SELECT * FROM  JOIN_INVOICE

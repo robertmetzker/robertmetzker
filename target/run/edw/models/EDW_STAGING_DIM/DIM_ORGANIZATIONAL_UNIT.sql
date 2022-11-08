@@ -1,0 +1,44 @@
+
+
+      create or replace  table DEV_EDW.EDW_STAGING_DIM.DIM_ORGANIZATIONAL_UNIT  as
+      (
+
+ WITH  SCD AS ( 
+	SELECT  UNIQUE_ID_KEY,
+     last_value(ORGANIZATIONAL_UNIT_NAME) over 
+        (partition by UNIQUE_ID_KEY 
+        order by UNIQUE_ID_KEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as ORGANIZATIONAL_UNIT_NAME, 
+     last_value(SERVICE_OFFICE_NAME) over 
+        (partition by UNIQUE_ID_KEY 
+        order by UNIQUE_ID_KEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as SERVICE_OFFICE_NAME
+     
+	FROM EDW_STAGING.DIM_ORGANIZATIONAL_UNIT_SCDALL_STEP2),
+
+-- ETL Layer---
+
+ETL AS (
+SELECT
+  md5(cast(
+    
+    coalesce(cast(ORGANIZATIONAL_UNIT_NAME as 
+    varchar
+), '')
+
+ as 
+    varchar
+))  AS ORGANIZATION_UNIT_HKEY
+, UNIQUE_ID_KEY
+, ORGANIZATIONAL_UNIT_NAME
+, SERVICE_OFFICE_NAME
+, CURRENT_TIMESTAMP AS  LOAD_DATETIME
+, TRY_TO_TIMESTAMP('Invalid') AS UPDATE_DATETIME
+, 'CORESUITE'  AS PRIMARY_SOURCE_SYSTEM
+from  SCD
+)
+select * from ETL
+      );
+    

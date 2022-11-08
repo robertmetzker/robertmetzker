@@ -1,0 +1,34 @@
+-- depends_on: EDW_STAGING_DIM.DIM_CASE_TYPE
+
+
+
+
+
+
+
+
+
+
+
+WITH diff as (
+select
+    CASE_CATEGORY_CODE, 
+    CASE_CATEGORY_DESC, 
+    CASE_TYPE_CODE, 
+    CASE_TYPE_DESC, 
+    PRIMARY_SOURCE_SYSTEM, 
+    UNIQUE_ID_KEY
+    from  EDW_STAGING_DIM.DIM_CASE_TYPE 
+minus
+select 
+    CASE_CATEGORY_CODE, 
+    CASE_CATEGORY_DESC, 
+    CASE_TYPE_CODE, 
+    CASE_TYPE_DESC, 
+    PRIMARY_SOURCE_SYSTEM, 
+    UNIQUE_ID_KEY
+    from DEV_EDW_32600145.DIM_INCREMENTAL.DIM_CASE_TYPE_INC 
+),
+src as ( select * from EDW_STAGING_DIM.DIM_CASE_TYPE )
+select src.* from src
+inner join diff on ( diff.UNIQUE_ID_KEY = src.UNIQUE_ID_KEY )

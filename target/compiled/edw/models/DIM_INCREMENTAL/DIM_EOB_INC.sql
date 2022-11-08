@@ -1,0 +1,50 @@
+-- depends_on: EDW_STAGING_DIM.DIM_EOB
+
+
+
+
+
+
+
+
+
+
+
+WITH diff as (
+select
+    APPLIED_DESC, 
+    CURRENT_RECORD_IND, 
+    EOB_CATEGORY_CODE, 
+    EOB_CATEGORY_DESCRIPTION, 
+    EOB_CODE, 
+    EOB_EFFECTIVE_DATE, 
+    EOB_END_DATE, 
+    EOB_LONG_DESCRIPTION, 
+    EOB_SHORT_DESCRIPTION, 
+    EOB_TYPE_CODE, 
+    EOB_TYPE_DESCRIPTION, 
+    PRIMARY_SOURCE_SYSTEM, 
+    UNIQUE_ID_KEY
+    from  EDW_STAGING_DIM.DIM_EOB 
+where current_record_ind = 'Y'
+minus
+select 
+    APPLIED_DESC, 
+    CURRENT_RECORD_IND, 
+    EOB_CATEGORY_CODE, 
+    EOB_CATEGORY_DESCRIPTION, 
+    EOB_CODE, 
+    EOB_EFFECTIVE_DATE, 
+    EOB_END_DATE, 
+    EOB_LONG_DESCRIPTION, 
+    EOB_SHORT_DESCRIPTION, 
+    EOB_TYPE_CODE, 
+    EOB_TYPE_DESCRIPTION, 
+    PRIMARY_SOURCE_SYSTEM, 
+    UNIQUE_ID_KEY
+    from DEV_EDW_32600145.DIM_INCREMENTAL.DIM_EOB_INC 
+where current_record_ind = 'Y'
+),
+src as ( select * from EDW_STAGING_DIM.DIM_EOB )
+select src.* from src
+inner join diff on ( diff.UNIQUE_ID_KEY = src.UNIQUE_ID_KEY )

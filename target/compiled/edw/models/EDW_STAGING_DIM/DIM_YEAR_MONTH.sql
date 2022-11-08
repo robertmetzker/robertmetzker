@@ -1,0 +1,100 @@
+
+
+ WITH  SCD AS ( 
+	SELECT  YEAR_MONTH_SKEY,
+     last_value(YEAR_MONTH_NUMBER) over 
+        (partition by YEAR_MONTH_SKEY 
+        order by YEAR_MONTH_SKEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as YEAR_MONTH_NUMBER, 
+     last_value(MONTH_NUMBER) over 
+        (partition by YEAR_MONTH_SKEY 
+        order by YEAR_MONTH_SKEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as MONTH_NUMBER, 
+     last_value(MONTH_NUMBER_STRING) over 
+        (partition by YEAR_MONTH_SKEY 
+        order by YEAR_MONTH_SKEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as MONTH_NUMBER_STRING, 
+     last_value(MONTH_NAME) over 
+        (partition by YEAR_MONTH_SKEY 
+        order by YEAR_MONTH_SKEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as MONTH_NAME, 
+     last_value(MONTH_SHORT_NAME) over 
+        (partition by YEAR_MONTH_SKEY 
+        order by YEAR_MONTH_SKEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as MONTH_SHORT_NAME, 
+     last_value(MONTH_BEGIN_DATE) over 
+        (partition by YEAR_MONTH_SKEY 
+        order by YEAR_MONTH_SKEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as MONTH_BEGIN_DATE, 
+     last_value(MONTH_FIRST_BUSINESS_DATE) over 
+        (partition by YEAR_MONTH_SKEY 
+        order by YEAR_MONTH_SKEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as MONTH_FIRST_BUSINESS_DATE, 
+     last_value(MONTH_END_DATE) over 
+        (partition by YEAR_MONTH_SKEY 
+        order by YEAR_MONTH_SKEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as MONTH_END_DATE, 
+     last_value(MONTH_LAST_BUSINESS_DATE) over 
+        (partition by YEAR_MONTH_SKEY 
+        order by YEAR_MONTH_SKEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as MONTH_LAST_BUSINESS_DATE, 
+     last_value(QUARTER_NUMBER) over 
+        (partition by YEAR_MONTH_SKEY 
+        order by YEAR_MONTH_SKEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as QUARTER_NUMBER, 
+     last_value(QUARTER_NAME) over 
+        (partition by YEAR_MONTH_SKEY 
+        order by YEAR_MONTH_SKEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as QUARTER_NAME, 
+     last_value(HALF_YEAR) over 
+        (partition by YEAR_MONTH_SKEY 
+        order by YEAR_MONTH_SKEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as HALF_YEAR, 
+     last_value(YEAR_NUMBER) over 
+        (partition by YEAR_MONTH_SKEY 
+        order by YEAR_MONTH_SKEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as YEAR_NUMBER, 
+     last_value(MONTH_ENDING_IND) over 
+        (partition by YEAR_MONTH_SKEY 
+        order by YEAR_MONTH_SKEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as MONTH_ENDING_IND
+    
+	FROM EDW_STAGING.DIM_YEAR_MONTH_SCDALL_STEP2),
+---ETL LAYER----------
+ETL AS (
+select 
+LEFT(YEAR_MONTH_SKEY,6):: INT as YEAR_MONTH_SKEY,
+YEAR_MONTH_NUMBER,
+MONTH_NUMBER,
+MONTH_NUMBER_STRING,
+MONTH_NAME,
+MONTH_SHORT_NAME,
+MONTH_BEGIN_DATE,
+MONTH_FIRST_BUSINESS_DATE,
+MONTH_END_DATE,
+MONTH_LAST_BUSINESS_DATE,
+QUARTER_NUMBER,
+QUARTER_NAME,
+HALF_YEAR,
+YEAR_NUMBER,
+CURRENT_TIMESTAMP AS  LOAD_DATETIME,
+TRY_TO_TIMESTAMP('Invalid') AS UPDATE_DATETIME,
+'DW_REPORT' AS PRIMARY_SOURCE_SYSTEM 
+from SCD
+WHERE MONTH_ENDING_IND = 'Y'
+)
+select * from ETL

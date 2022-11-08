@@ -1,0 +1,23 @@
+
+
+
+
+
+with meet_condition as (
+
+    select * from STAGING.STG_TMPPREA where 1=1
+
+),
+validation_errors as (
+
+    select
+        *
+    from meet_condition
+    
+    where not(length(PRVDR_BASE_NMBR) = 7)
+
+)
+
+select count(*)
+from validation_errors
+

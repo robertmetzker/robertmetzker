@@ -1,0 +1,71 @@
+----SRC LAYER----
+WITH
+SRC_REF as ( SELECT *     from      STAGING.STG_CAM_REF ),
+----LOGIC LAYER----
+
+LOGIC_REF as ( SELECT 
+		REF_IDN AS REF_IDN,
+		REF_DSC AS REF_DSC,
+		REF_EFF_DTE AS REF_EFF_DTE,
+		REF_EXP_DTE AS REF_EXP_DTE,
+		REF_DGN AS REF_DGN 
+				from SRC_REF
+            )
+----RENAME LAYER ----
+,
+RENAME_REF as ( SELECT 	
+			REF_IDN AS INVOICE_STATUS_CODE,
+			
+			REF_DSC AS INVOICE_STATUS_DESC,
+			
+			REF_EFF_DTE AS INVOICE_STATUS_EFFECTIVE_DATE,
+			
+			REF_EXP_DTE AS INVOICE_STATUS_END_DATE,
+			
+			REF_EXP_DTE AS CURRENT_IND,REF_DGN AS REF_DGN 
+			from      LOGIC_REF
+        )
+----FILTER LAYER(uses aliases)----
+,
+
+        FILTER_REF as ( SELECT  * 
+			from     RENAME_REF 
+            WHERE REF_DGN = 'AST'
+        )
+----JOIN LAYER----
+,
+ JOIN_REF as ( SELECT * 
+			from  FILTER_REF )
+----ETL LAYER----
+,
+ETL1 as ( select  md5(cast(
+    
+    coalesce(cast(INVOICE_STATUS_CODE as 
+    varchar
+), '')
+
+ as 
+    varchar
+)) as UNIQUE_ID_KEY,
+
+md5(cast(
+    
+    coalesce(cast(INVOICE_STATUS_CODE as 
+    varchar
+), '')
+
+ as 
+    varchar
+)) as INVOICE_STATUS_HKEY,
+
+INVOICE_STATUS_CODE, INVOICE_STATUS_DESC, INVOICE_STATUS_EFFECTIVE_DATE,
+
+CASE WHEN INVOICE_STATUS_END_DATE = '2099-12-31' THEN NULL ELSE INVOICE_STATUS_END_DATE END AS  INVOICE_STATUS_END_DATE,
+
+CASE WHEN CURRENT_IND >= CURRENT_DATE() THEN 'Y' ELSE 'N' END AS CURRENT_IND,
+
+REF_DGN
+
+ from   JOIN_REF )
+
+SELECT * FROM ETL1

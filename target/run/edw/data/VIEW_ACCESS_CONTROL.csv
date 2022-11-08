@@ -1,0 +1,8 @@
+
+    truncate table "DEV_EDW"."EDW_STAGING"."VIEW_ACCESS_CONTROL";
+    -- dbt seed --
+    
+            insert into DEV_EDW.EDW_STAGING.VIEW_ACCESS_CONTROL (TABLE_NAME, GRANT_STMT) values
+            (%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s)
+        
+  

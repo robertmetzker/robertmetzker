@@ -1,0 +1,20 @@
+
+    
+    
+
+
+
+select count(*) as validation_errors
+from (
+
+    select
+        CHECK_NUMBER||WARRANT_NUMBER||TCN_NUMBER||WARRANT_DATE_HKEY||PAYMENT_CODER_HKEY
+
+    from EDW_STG_MEDICAL_MART.FACT_DETAIL_PAYMENT_CODING
+    where CHECK_NUMBER||WARRANT_NUMBER||TCN_NUMBER||WARRANT_DATE_HKEY||PAYMENT_CODER_HKEY is not null
+    group by CHECK_NUMBER||WARRANT_NUMBER||TCN_NUMBER||WARRANT_DATE_HKEY||PAYMENT_CODER_HKEY
+    having count(*) > 1
+
+) validation_errors
+
+

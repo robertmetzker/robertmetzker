@@ -1,0 +1,16 @@
+
+
+      create or replace  table DEV_EDW.EDW_STAGING.DIM_INDUSTRY_GROUP_SCDALL_STEP2  as
+      (----SRC LAYER----
+WITH
+SCD1 as ( SELECT  INDUSTRY_GROUP_CODE , UNIQUE_ID_KEY    
+	--, '1901-01-01' as DBT_VALID_FROM, '2099-12-31' as DBT_VALID_TO
+	from      STAGING.DSV_INDUSTRY_GROUP ),
+SCD2 as ( SELECT *    
+	FROM      EDW_STAGING_SNAPSHOT.DIM_INDUSTRY_GROUP_SNAPSHOT_STEP1 ),
+FINAL as ( SELECT * 
+            FROM  SCD2 
+                INNER JOIN SCD1 USING( UNIQUE_ID_KEY )  )
+select * from FINAL
+      );
+    

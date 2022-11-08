@@ -1,0 +1,9 @@
+
+
+      create or replace  table DEV_EDW.EDW_STAGING.DIM_DRUG_PRICING_TYPE_SCDALL_STEP2  as
+      (----SRC LAYER----
+WITH
+SCD1 as ( SELECT PRICE_TYPE_DESC,PRICE_TYPE_CODE, UNIQUE_ID_KEY    from      STAGING.DSV_DRUG_PRICING_TYPE )
+select * from SCD1
+      );
+    

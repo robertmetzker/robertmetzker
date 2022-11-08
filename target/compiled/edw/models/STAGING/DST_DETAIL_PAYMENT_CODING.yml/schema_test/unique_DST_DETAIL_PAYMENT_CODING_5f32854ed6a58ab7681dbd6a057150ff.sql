@@ -1,0 +1,20 @@
+
+    
+    
+
+
+
+select count(*) as validation_errors
+from (
+
+    select
+        CHECK_NO||WRNT_NO||TCN_NO||ACNTB_CODE||PYMNT_FUND_TYPE||CVRG_TYPE||BILL_TYPE_F2||BILL_TYPE_L3||ACDNT_TYPE||STS_CODE
+
+    from STAGING.DST_DETAIL_PAYMENT_CODING
+    where CHECK_NO||WRNT_NO||TCN_NO||ACNTB_CODE||PYMNT_FUND_TYPE||CVRG_TYPE||BILL_TYPE_F2||BILL_TYPE_L3||ACDNT_TYPE||STS_CODE is not null
+    group by CHECK_NO||WRNT_NO||TCN_NO||ACNTB_CODE||PYMNT_FUND_TYPE||CVRG_TYPE||BILL_TYPE_F2||BILL_TYPE_L3||ACDNT_TYPE||STS_CODE
+    having count(*) > 1
+
+) validation_errors
+
+

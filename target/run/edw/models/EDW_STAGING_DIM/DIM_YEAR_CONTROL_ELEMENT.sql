@@ -1,0 +1,58 @@
+
+
+      create or replace  table DEV_EDW.EDW_STAGING_DIM.DIM_YEAR_CONTROL_ELEMENT  as
+      (
+
+ WITH  SCD AS ( 
+	SELECT  UNIQUE_ID_KEY,
+     last_value(POLICY_TYPE_CODE) over 
+        (partition by UNIQUE_ID_KEY 
+        order by UNIQUE_ID_KEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as POLICY_TYPE_CODE, 
+     last_value(PAYMENT_PLAN_TYPE_CODE) over 
+        (partition by UNIQUE_ID_KEY 
+        order by UNIQUE_ID_KEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as PAYMENT_PLAN_TYPE_CODE, 
+     last_value(LEASE_TYPE_CODE) over 
+        (partition by UNIQUE_ID_KEY 
+        order by UNIQUE_ID_KEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as LEASE_TYPE_CODE, 
+     last_value(POLICY_TYPE_DESC) over 
+        (partition by UNIQUE_ID_KEY 
+        order by UNIQUE_ID_KEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as POLICY_TYPE_DESC, 
+     last_value(PAYMENT_PLAN_TYPE_DESC) over 
+        (partition by UNIQUE_ID_KEY 
+        order by UNIQUE_ID_KEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as PAYMENT_PLAN_TYPE_DESC, 
+     last_value(LEASE_TYPE_DESC) over 
+        (partition by UNIQUE_ID_KEY 
+        order by UNIQUE_ID_KEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as LEASE_TYPE_DESC
+	FROM EDW_STAGING.DIM_YEAR_CONTROL_ELEMENT_SCDALL_STEP2),
+---------ETL LAYER-------------------
+ETL AS( 
+SELECT
+     UNIQUE_ID_KEY AS YEAR_CONTROL_ELEMENT_HKEY
+    ,UNIQUE_ID_KEY
+    ,POLICY_TYPE_CODE
+    ,PAYMENT_PLAN_TYPE_CODE
+    ,LEASE_TYPE_CODE
+    ,POLICY_TYPE_DESC
+    ,PAYMENT_PLAN_TYPE_DESC
+    ,LEASE_TYPE_DESC
+    ,CURRENT_TIMESTAMP AS  LOAD_DATETIME
+    ,TRY_TO_TIMESTAMP('Invalid') AS UPDATE_DATETIME
+    ,'CORESUITE' AS PRIMARY_SOURCE_SYSTEM 
+ from SCD
+)
+
+select * from ETL
+      );
+    

@@ -1,0 +1,58 @@
+
+
+      create or replace  table DEV_EDW.EDW_STAGING_DIM.DIM_ACTIVITY  as
+      (
+
+ WITH  SCD AS ( 
+	SELECT  UNIQUE_ID_KEY,
+          last_value(ACTION_TYPE) over 
+        (partition by UNIQUE_ID_KEY 
+        order by UNIQUE_ID_KEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as ACTION_TYPE, 
+     last_value(ACTIVITY_NAME_TYPE) over 
+        (partition by UNIQUE_ID_KEY 
+        order by UNIQUE_ID_KEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as ACTIVITY_NAME_TYPE, 
+     last_value(ACTIVITY_CONTEXT_TYPE_NAME) over 
+        (partition by UNIQUE_ID_KEY 
+        order by UNIQUE_ID_KEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as ACTIVITY_CONTEXT_TYPE_NAME, 
+     last_value(ACTIVITY_SUBCONTEXT_TYPE_NAME) over 
+        (partition by UNIQUE_ID_KEY 
+        order by UNIQUE_ID_KEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as ACTIVITY_SUBCONTEXT_TYPE_NAME, 
+     last_value(PROCESS_AREA) over 
+        (partition by UNIQUE_ID_KEY 
+        order by UNIQUE_ID_KEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as PROCESS_AREA,
+     last_value(USER_FUNCTIONAL_ROLE_DESC) over 
+        (partition by UNIQUE_ID_KEY 
+        order by UNIQUE_ID_KEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as USER_FUNCTIONAL_ROLE_DESC            
+	FROM EDW_STAGING.DIM_ACTIVITY_SCDALL_STEP2),
+
+ETL AS( 
+SELECT
+     UNIQUE_ID_KEY AS ACTIVITY_HKEY
+    ,UNIQUE_ID_KEY
+    ,ACTION_TYPE
+    ,ACTIVITY_NAME_TYPE
+    ,ACTIVITY_CONTEXT_TYPE_NAME
+    ,ACTIVITY_SUBCONTEXT_TYPE_NAME
+    ,PROCESS_AREA
+    ,USER_FUNCTIONAL_ROLE_DESC
+    ,CURRENT_TIMESTAMP AS  LOAD_DATETIME
+    ,TRY_TO_TIMESTAMP('Invalid') AS UPDATE_DATETIME
+    ,'CORESUITE' AS PRIMARY_SOURCE_SYSTEM 
+ from SCD
+)
+
+select * from ETL
+      );
+    

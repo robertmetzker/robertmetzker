@@ -1,0 +1,46 @@
+-- depends_on: EDW_STAGING_DIM.DIM_HOSPITAL_ICD_PROCEDURE
+
+
+
+
+
+
+
+
+
+
+
+WITH diff as (
+select
+    COVERED_FLAG, 
+    CURRENT_RECORD_IND, 
+    GENDER_SPECIFIC_CODE, 
+    GENDER_SPECIFIC_DESC, 
+    ICD_CODE_VERSION_NUMBER, 
+    ICD_DESC, 
+    ICD_PROCEDURE_CODE, 
+    MAX_AGE, 
+    MIN_AGE, 
+    PRIMARY_SOURCE_SYSTEM, 
+    UNIQUE_ID_KEY
+    from  EDW_STAGING_DIM.DIM_HOSPITAL_ICD_PROCEDURE 
+where current_record_ind = 'Y'
+minus
+select 
+    COVERED_FLAG, 
+    CURRENT_RECORD_IND, 
+    GENDER_SPECIFIC_CODE, 
+    GENDER_SPECIFIC_DESC, 
+    ICD_CODE_VERSION_NUMBER, 
+    ICD_DESC, 
+    ICD_PROCEDURE_CODE, 
+    MAX_AGE, 
+    MIN_AGE, 
+    PRIMARY_SOURCE_SYSTEM, 
+    UNIQUE_ID_KEY
+    from DEV_EDW_32600145.DIM_INCREMENTAL.DIM_HOSPITAL_ICD_PROCEDURE_INC 
+where current_record_ind = 'Y'
+),
+src as ( select * from EDW_STAGING_DIM.DIM_HOSPITAL_ICD_PROCEDURE )
+select src.* from src
+inner join diff on ( diff.UNIQUE_ID_KEY = src.UNIQUE_ID_KEY )

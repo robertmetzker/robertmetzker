@@ -1,0 +1,12 @@
+
+
+      create or replace  table DEV_EDW.EDW_STAGING.DIM_EDIT_EOB_ENTRY_SCDALL_STEP2  as
+      (
+ ----SRC LAYER----
+WITH
+SCD1 as ( SELECT DISPOSITION_DESC, SOURCE_CODE, ADJUDICATION_PHASE, DISPOSITION_CODE 
+, UNIQUE_ID_KEY    
+	from      STAGING.DSV_EDIT_EOB_ENTRY )
+select * from SCD1
+      );
+    

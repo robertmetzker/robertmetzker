@@ -1,0 +1,30 @@
+
+
+      create or replace  table DEV_EDW.EDW_STAGING.DIM_INJURED_WORKER_SCDALL_STEP2  as
+      (----SRC LAYER----
+WITH
+SCD1 as ( SELECT 
+         GENDER_TYPE_CODE,
+         DEATH_ENTRY_DATE,
+         COURTESY_TITLE_NAME as DSV_COURTESY_TITLE_NAME, 
+         FIRST_NAME as DSV_FIRST_NAME,
+         PARTICIPATION_TYPE_DESC,
+         PRIMARY_LANGUAGE_TYPE_DESC,
+         BIRTH_DATE,
+         DEATH_DATE,
+         GENDER_TYPE_DESC,
+         FOREIGN_CITIZEN_IND, 
+         PARTICIPATION_TYPE_CODE, 
+         RETIREMENT_DATE, 
+         CUSTOMER_NUMBER ,
+         UNIQUE_ID_KEY
+	--, '1901-01-01' as DBT_VALID_FROM, '2099-12-31' as DBT_VALID_TO
+	from      STAGING.DSV_INJURED_WORKER ),
+SCD2 as ( SELECT *    
+	from      EDW_STAGING_SNAPSHOT.DIM_INJURED_WORKER_SNAPSHOT_STEP1 ),
+FINAL as ( SELECT * 
+            from  SCD2 
+                INNER JOIN SCD1 USING( UNIQUE_ID_KEY )  )
+select * from FINAL
+      );
+    

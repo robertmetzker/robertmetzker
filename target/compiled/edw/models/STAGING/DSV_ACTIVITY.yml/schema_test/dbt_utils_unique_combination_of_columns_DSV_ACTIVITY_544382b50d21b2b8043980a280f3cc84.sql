@@ -1,0 +1,21 @@
+
+
+
+
+
+
+with validation_errors as (
+
+    select
+        ACTION_TYPE, ACTIVITY_NAME_TYPE, ACTIVITY_CONTEXT_TYPE_NAME, ACTIVITY_SUBCONTEXT_TYPE_NAME, PROCESS_AREA
+    from STAGING.DSV_ACTIVITY
+
+    group by ACTION_TYPE, ACTIVITY_NAME_TYPE, ACTIVITY_CONTEXT_TYPE_NAME, ACTIVITY_SUBCONTEXT_TYPE_NAME, PROCESS_AREA
+    having count(*) > 1
+
+)
+
+select count(*)
+from validation_errors
+
+

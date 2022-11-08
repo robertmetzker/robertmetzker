@@ -1,0 +1,48 @@
+-- depends_on: EDW_STAGING_DIM.DIM_EDIT
+
+
+
+
+
+
+
+
+
+
+
+WITH diff as (
+select
+    APPLIED_BY_DESCRIPTION, 
+    CURRENT_RECORD_IND, 
+    DATE_RANGE_DESC, 
+    EDIT_CATEGORY_CODE, 
+    EDIT_CATEGORY_DESCRIPTION, 
+    EDIT_CODE, 
+    EDIT_EFFECTIVE_DATE, 
+    EDIT_END_DATE, 
+    EDIT_LONG_DESCRIPTION, 
+    EDIT_SHORT_DESCRIPTION, 
+    PRIMARY_SOURCE_SYSTEM, 
+    UNIQUE_ID_KEY
+    from  EDW_STAGING_DIM.DIM_EDIT 
+where current_record_ind = 'Y'
+minus
+select 
+    APPLIED_BY_DESCRIPTION, 
+    CURRENT_RECORD_IND, 
+    DATE_RANGE_DESC, 
+    EDIT_CATEGORY_CODE, 
+    EDIT_CATEGORY_DESCRIPTION, 
+    EDIT_CODE, 
+    EDIT_EFFECTIVE_DATE, 
+    EDIT_END_DATE, 
+    EDIT_LONG_DESCRIPTION, 
+    EDIT_SHORT_DESCRIPTION, 
+    PRIMARY_SOURCE_SYSTEM, 
+    UNIQUE_ID_KEY
+    from DEV_EDW_32600145.DIM_INCREMENTAL.DIM_EDIT_INC 
+where current_record_ind = 'Y'
+),
+src as ( select * from EDW_STAGING_DIM.DIM_EDIT )
+select src.* from src
+inner join diff on ( diff.UNIQUE_ID_KEY = src.UNIQUE_ID_KEY )

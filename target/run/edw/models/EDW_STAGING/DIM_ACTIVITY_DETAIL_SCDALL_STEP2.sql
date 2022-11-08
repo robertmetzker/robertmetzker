@@ -1,0 +1,12 @@
+
+
+      create or replace  table DEV_EDW.EDW_STAGING.DIM_ACTIVITY_DETAIL_SCDALL_STEP2  as
+      (----SRC LAYER----
+WITH
+SCD1 as ( SELECT  ACTIVITY_DETAIL_DESC , UNIQUE_ID_KEY    
+	--, '1901-01-01' as DBT_VALID_FROM, '2099-12-31' as DBT_VALID_TO
+	from      STAGING.DSV_ACTIVITY_DETAIL )
+
+select * from SCD1
+      );
+    

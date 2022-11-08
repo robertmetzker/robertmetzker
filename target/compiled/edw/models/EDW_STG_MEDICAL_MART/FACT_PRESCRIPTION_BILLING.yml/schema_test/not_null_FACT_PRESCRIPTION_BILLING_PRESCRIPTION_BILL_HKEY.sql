@@ -1,0 +1,11 @@
+
+    
+    
+
+
+
+select count(*) as validation_errors
+from EDW_STG_MEDICAL_MART.FACT_PRESCRIPTION_BILLING
+where PRESCRIPTION_BILL_HKEY is null
+
+

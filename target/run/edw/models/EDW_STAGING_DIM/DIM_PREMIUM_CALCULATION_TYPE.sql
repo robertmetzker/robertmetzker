@@ -1,0 +1,72 @@
+
+
+      create or replace  table DEV_EDW.EDW_STAGING_DIM.DIM_PREMIUM_CALCULATION_TYPE  as
+      (
+
+ WITH  SCD AS ( 
+	SELECT  UNIQUE_ID_KEY,
+     last_value(PREMIUM_CALCULATION_TYPE_DESC) over 
+        (partition by UNIQUE_ID_KEY 
+        order by UNIQUE_ID_KEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as PREMIUM_CALCULATION_TYPE_DESC, 
+     last_value(CURRENT_PREMIUM_CALCULATION_IND) over 
+        (partition by UNIQUE_ID_KEY 
+        order by UNIQUE_ID_KEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as CURRENT_PREMIUM_CALCULATION_IND,
+     last_value(EXPOSURE_TYPE_CODE) over 
+        (partition by UNIQUE_ID_KEY 
+        order by UNIQUE_ID_KEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as EXPOSURE_TYPE_CODE,
+     last_value(EXPOSURE_TYPE_DESC) over 
+        (partition by UNIQUE_ID_KEY 
+        order by UNIQUE_ID_KEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as EXPOSURE_TYPE_DESC,
+     last_value(EXPOSURE_AUDIT_TYPE_CODE) over 
+        (partition by UNIQUE_ID_KEY 
+        order by UNIQUE_ID_KEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as EXPOSURE_AUDIT_TYPE_CODE,
+     last_value(EXPOSURE_AUDIT_TYPE_DESC) over 
+        (partition by UNIQUE_ID_KEY 
+        order by UNIQUE_ID_KEY 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ) as EXPOSURE_AUDIT_TYPE_DESC
+	FROM EDW_STAGING.DIM_PREMIUM_CALCULATION_TYPE_SCDALL_STEP2)
+---------ETL LAYER--------
+,ETL AS( 
+SELECT
+    md5(cast(
+    
+    coalesce(cast(PREMIUM_CALCULATION_TYPE_DESC as 
+    varchar
+), '') || '-' || coalesce(cast(CURRENT_PREMIUM_CALCULATION_IND as 
+    varchar
+), '') || '-' || coalesce(cast(EXPOSURE_TYPE_CODE as 
+    varchar
+), '') || '-' || coalesce(cast(EXPOSURE_AUDIT_TYPE_CODE as 
+    varchar
+), '')
+
+ as 
+    varchar
+)) AS PREMIUM_CALCULATION_TYPE_HKEY
+    ,UNIQUE_ID_KEY
+    ,CURRENT_PREMIUM_CALCULATION_IND
+    ,PREMIUM_CALCULATION_TYPE_DESC
+    ,EXPOSURE_TYPE_CODE
+    ,EXPOSURE_TYPE_DESC
+    ,EXPOSURE_AUDIT_TYPE_CODE
+    ,EXPOSURE_AUDIT_TYPE_DESC
+    ,CURRENT_TIMESTAMP AS  LOAD_DATETIME
+    ,TRY_TO_TIMESTAMP('Invalid') AS UPDATE_DATETIME
+    ,'CORESUITE' AS PRIMARY_SOURCE_SYSTEM 
+ from SCD
+)
+
+select * from ETL
+      );
+    

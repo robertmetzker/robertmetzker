@@ -1,0 +1,1 @@
+insert into  DEV_EDW.PUBLIC.DEV_UAT_CHANGELOG ( select current_date as CHANGE_DT, a.* from DEV_EDW.PUBLIC.DEV_UAT_CHANGES a)

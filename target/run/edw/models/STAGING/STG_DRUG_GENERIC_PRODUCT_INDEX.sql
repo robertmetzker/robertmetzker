@@ -1,0 +1,37 @@
+
+
+      create or replace  table DEV_EDW.STAGING.STG_DRUG_GENERIC_PRODUCT_INDEX  as
+      (---SRC LAYER----
+WITH
+SRC_GPI as ( SELECT *     from      DEV_VIEWS.PCMP.DRUG_GENERIC_PRODUCT_INDEX )
+//SRC_GPI as ( SELECT *     from      DRUG_GENERIC_PRODUCT_INDEX)
+----LOGIC LAYER----
+,
+LOGIC_GPI as ( SELECT 
+		DGPI_ID AS DGPI_ID,
+		TRIM(DGPI_CD) AS DGPI_CD,
+		cast(DGPI_EFF_DT as DATE) AS DGPI_EFF_DT,
+		cast(DGPI_END_DT as DATE) AS DGPI_END_DT,
+		TRIM(replace(DGPI_NM,'*','')) AS DGPI_NM,
+		UPPER(VOID_IND) AS VOID_IND 
+				from SRC_GPI
+            )
+----RENAME LAYER ----
+,
+RENAME_GPI as ( SELECT DGPI_ID AS DGPI_ID,DGPI_CD AS DGPI_CD,DGPI_EFF_DT AS DGPI_EFF_DT,DGPI_END_DT AS DGPI_END_DT,DGPI_NM AS DGPI_NM,VOID_IND AS VOID_IND 
+			from      LOGIC_GPI
+        )
+----FILTER LAYER(uses aliases)----
+,
+
+        FILTER_GPI as ( SELECT  * 
+			from     RENAME_GPI 
+            WHERE VOID_IND='N'
+        )
+----JOIN LAYER----
+,
+ JOIN_GPI as ( SELECT * 
+			from  FILTER_GPI )
+ SELECT * FROM JOIN_GPI
+      );
+    
