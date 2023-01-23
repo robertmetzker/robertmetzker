@@ -1,0 +1,61 @@
+version: 2
+
+exposures:
+  
+  - name: FACT_HOSPITAL_INPATIENT_BILLING
+    type: dashboard
+    maturity: high
+    url: https://analyticsra.das.ohio.gov/#/site/BWC/projects/666
+    description: >
+      Information related to Inpatient data in the Medical Mart
+
+    depends_on:
+    	- ref('DIM_ADMISSION') 
+      - ref('DIM_BWC_CALC_DRG_OUTPUT') 
+      - ref('DIM_CLAIM_DETAIL') 
+      - ref('DIM_CLAIM_STATUS') 
+      - ref('DIM_CPT') 
+      - ref('DIM_DATE') 
+      - ref('DIM_DIAGNOSIS_RELATED_GROUP') 
+      - ref('DIM_ICD')  
+      - ref('DIM_INJURED_WORKER') 
+      - ref('DIM_INVOICE_PROFILE') 
+      - ref('DIM_INVOICE_STATUS') 
+      - ref('DIM_MODIFIER_SEQUENCE') 
+      - ref('DIM_NETWORK')  
+      - ref('DIM_POLICY_STANDING') 
+      - ref('DIM_PROVIDER') 
+      - ref('DIM_REVENUE_CENTER') 
+
+    owner:
+      name: Paul Balzer
+      email: Paul.B.1@bwc.state.oh.us
+
+  - name: FACT_HOSPITAL_OUTPATIENT_BILLING
+    type: dashboard
+    maturity: high
+    url: https://analyticsra.das.ohio.gov/#/site/BWC/projects/666
+    description: >
+      Information related to Outpatient data in the Medical Mart
+
+    depends_on:
+      - ref('DIMENSIONS.DIM_ADMISSION') 
+      - ref('DIMENSIONS.DIM_AMBULATORY_PAYMENT_CLASSIFICATION') 
+      - ref('DIMENSIONS.DIM_CLAIM_DETAIL') 
+      - ref('DIMENSIONS.DIM_CLAIM_TYPE_STATUS') 
+      - ref('DIMENSIONS.DIM_CPT') 
+      - ref('DIMENSIONS.DIM_DATE')  
+      - ref('DIMENSIONS.DIM_ICD') 
+      - ref('DIMENSIONS.DIM_INJURED_WORKER') 
+      - ref('DIMENSIONS.DIM_INVOICE_PROFILE') 
+      - ref('DIMENSIONS.DIM_INVOICE_STATUS') 
+      - ref('DIMENSIONS.DIM_MODIFIER_SEQUENCE') 
+      - ref('DIMENSIONS.DIM_NETWORK') 
+      - ref('DIMENSIONS.DIM_OUTPATIENT_GROUPER') 
+      - ref('DIMENSIONS.DIM_POLICY_STANDING')  
+      - ref('DIMENSIONS.DIM_PROVIDER') 
+      - ref('DIMENSIONS.DIM_REVENUE_CENTER') 
+
+    owner:
+      name: Paul Balzer
+      email: Paul.B.1@bwc.state.oh.us
