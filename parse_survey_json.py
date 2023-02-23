@@ -109,9 +109,16 @@ def show_responses(response_data, parsed_questions):
 
     for answer in response_data["pages"][0]["questions"]:
         qid = answer["id"]
-        aid = answer["answers"][0]["choice_id"]
-        print( f'QUESTION: {qid},  {parsed_questions[qid]}' )
-        print( f'  ANSWER: {aid}, {parsed_questions[aid]}' )
+        aid = answer["answers"][0].get("choice_id",'Free Form Field')
+        print( f'QUESTION: {qid} >  {parsed_questions[qid]}' )
+        if "tag_data" in answer["answers"][0]:
+            aid = 'Free Form'
+            try:
+                print( f'  ANSWER: {aid} ** > {answer["answers"][0]["text"]}' )
+            except:
+                print( f'{answer}')
+        if aid != 'Free Form':
+            print( f'  ANSWER: {aid}>  {parsed_questions.get(aid)}' )
 
 
 def add_response_to_dict(response_info: dict, response_data: dict):
@@ -168,19 +175,21 @@ def main():
 
     print(f'\n\n##- Parsing example response data --')
     all_response_data = response_info[0]['data']
-    response_data = all_response_data[0]
+    response_data = all_response_data[1]
     # print(response_data)
-    # show_responses( response_data, parsed_questions )
+    show_responses( response_data, parsed_questions )
 
     response_dict = {}
     all_responses = []
     # Test a single response
+
+
     print('\n## Converting response to dictionary')
     # response_dict = add_response_to_dict(response_dict, response_data)
-    for response in all_response_data:
-        response_dict = add_response_to_dict(response_dict, response)
-        all_responses.append(response_dict)
-    print(all_responses)
+    # for response in all_response_data:
+    #     response_dict = add_response_to_dict(response_dict, response)
+    #     all_responses.append(response_dict)
+    # print(all_responses)
 
 if __name__ == "__main__":
     main()
