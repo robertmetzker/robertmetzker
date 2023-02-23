@@ -39,19 +39,14 @@ class Survey:
 
 # pass filenames containing the survey details and responses
 
-def read_details_from_file(filename):
+def read_json_from_file(filename):
     with open(filename) as f:
-        details = json.load(f)
-    return details
-
-
-def read_responses_from_file(filename):
-    with open(filename) as f:
-        responses = json.load(f)
-    return responses
+        json_info = json.load(f)
+    return json_info
 
 
 def show_questions(detail_info):
+    print('\n## Parsed Questions ##')
     print( f'TITLE:  {detail_info["title"]}' )
     print( f'QUESTIONS: {detail_info["question_count"]}' )
     print( f'CREATED: {detail_info["date_created"]}' )
@@ -69,7 +64,7 @@ def show_questions(detail_info):
                 print( f'\t ESSAY:' )
 
 
-def add_question_answers_to_df(df: dict, detail_info: dict):
+def add_question_answers_to_dict(df: dict, detail_info: dict):
     survey_info = df.copy()
 
     for question in detail_info['pages'][0]['questions']:
@@ -104,24 +99,43 @@ def add_question_answers_to_df(df: dict, detail_info: dict):
 
 def show_responses(response_data, parsed_questions):
     # print( response_data )
-    print('Recipent: ', response_data[0]["recipient_id"]) 
-    print('FName: ', response_data[0]["first_name"]) 
-    print('LName: ', response_data[0]["last_name"]) 
-    print('Email: ', response_data[0]["metadata"]["contact"]["email"]["value"]) 
+    print('Recipent: ', response_data["recipient_id"]) 
+    print('FName: ', response_data["first_name"]) 
+    print('LName: ', response_data["last_name"]) 
+    print('Email: ', response_data["metadata"]["contact"]["email"]["value"]) 
 
-    print('SurveyID: ', response_data[0]["survey_id"]) 
+    print('SurveyID: ', response_data["survey_id"]) 
     # print('Answers: ', response_data[0]["pages"][0]["questions"]) 
 
-    for answer in response_data[0]["pages"][0]["questions"]:
+    for answer in response_data["pages"][0]["questions"]:
         qid = answer["id"]
         aid = answer["answers"][0]["choice_id"]
         print( f'QUESTION: {qid},  {parsed_questions[qid]}' )
         print( f'  ANSWER: {aid}, {parsed_questions[aid]}' )
 
 
+def add_response_to_dict(response_info: dict, response_data: dict):
+    # { 'recipent':'6070975071' ,'fname':'1599387', 'lname':'TGW-SYSTEMS INC', 'email':'laura.butrick@tgw-group.com', 'surveyid':'300747984', 'responses': {'605148537':'3982038472', '605148539':'3982038484', '605148542':'3982038498', '605148543':'3982038503', '605148544':'3982038508', '605148545':'3982038511', '605148546':'3982038514', '605148547':'3982038520', '605148548':'3982038523', '605148549':'3982038528', '605148550':'3982038534'} }
+    df = response_info.copy()
+    df["recipent"] = response_data["recipient_id"]
+    df["fname"] = response_data["first_name"]
+    df["lname"] = response_data["last_name"]
+    df["email"] = response_data["metadata"]["contact"]["email"]["value"]
+    df["surveyid"] = response_data["survey_id"]
+
+    response_dict = {}
+    for answer in response_data["pages"][0]["questions"]:
+        qid = answer["id"]
+        aid = answer["answers"][0].get("choice_id","None")
+        response_dict[qid] = aid
+    
+    df["responses"] = response_dict
+    # print(df)
+    return df
+
 def main():
     # create a list of Survey objects
-    filepath = Path( '/Users/rmetzk/Desktop/python/robertmetzker/survey-monkey-api-wrapper-master/' )
+    filepath = Path( './' )
     surveys = [ Survey(**survey) for survey in all_surveys['data'] ]
     #print survey titles
     print(f'--SURVEYS available: {len(surveys)} --')
@@ -130,13 +144,17 @@ def main():
     print('-'*40)
 
     detail1 = 'OHIO_BUREAU_OF_WORKERS_COMPENSATION_EMPLOYER_AUDIT_SURVEY_details.json'
+    response1 = 'OHIO_BUREAU_OF_WORKERS_COMPENSATION_EMPLOYER_AUDIT_SURVEY_responses.json'
     print( f'--- Reading survey details from {detail1} ---' )
-    detail_info = read_details_from_file( filepath/detail1 )
+    detail_info = read_json_from_file( filepath/detail1 )
+
+    print( f'--- Reading response information from {response1} ---' )
+    response_info = read_json_from_file( filepath/response1 )
 
     survey_info = {}
 
-    survey_info['id'] = detail_info['id']
-    survey_info['title'] = detail_info['title']
+    survey_info['surveyid'] = detail_info['id']
+    survey_info[detail_info['id']] = detail_info['title']
     survey_info['question_count'] = detail_info['question_count']
     survey_info['date_created'] = detail_info['date_created']
 
@@ -145,12 +163,27 @@ def main():
     print('-'*40)
 
     show_questions( detail_info )
-    parsed_questions = add_question_answers_to_df(survey_info, detail_info)
-    print( parsed_questions )
+    parsed_questions = add_question_answers_to_dict(survey_info, detail_info)
+    # print( parsed_questions )
 
     print(f'\n\n##- Parsing example response data --')
-    show_responses( response_data, parsed_questions )
+    all_response_data = response_info[0]['data']
+    response_data = all_response_data[0]
+    # print(response_data)
+    # show_responses( response_data, parsed_questions )
+
+    response_dict = {}
+    all_responses = []
+    # Test a single response
+    print('\n## Converting response to dictionary')
+    # response_dict = add_response_to_dict(response_dict, response_data)
+    for response in all_response_data:
+        response_dict = add_response_to_dict(response_dict, response)
+        all_responses.append(response_dict)
+    print(all_responses)
 
 if __name__ == "__main__":
     main()
     
+# Target response data should look like a dictionary for each reco[oent with the following structure:
+# { 'recipent':'6070975071' ,'fname':'1599387', 'lname':'TGW-SYSTEMS INC', 'email':'laura.butrick@tgw-group.com', 'surveyid':'300747984', 'responses': {'605148537':'3982038472', '605148539':'3982038484', '605148542':'3982038498', '605148543':'3982038503', '605148544':'3982038508', '605148545':'3982038511', '605148546':'3982038514', '605148547':'3982038520', '605148548':'3982038523', '605148549':'3982038528', '605148550':'3982038534'} }
