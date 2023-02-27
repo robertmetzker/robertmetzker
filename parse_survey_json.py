@@ -232,7 +232,8 @@ def output_responses(all_responses):
             for q,a  in  ans_list.items() :
                 ans = a
                 if not a: ans= 'None'
-                ans.replace("'","''").replace("\n"," ")
+                #replace all single quotes with two single quotes
+                ans = ans.replace("'","''").replace("\n"," ").replace("\r", " ")
                 print( f"{stmt} {person_dict.get('surveyid')!r}, {person_dict.get('person')!r}, {q!r}, '{ans}' );" )
         except:
             print( f'##### ERROR:  {person}')
@@ -275,7 +276,7 @@ def main():
 
     output_answers( detail_info )
 
-    print(f'\n\n##- Parsing example response data --')
+    print(f'\n\n//- Parsing example response data --')
     all_response_data = response_info[0]['data']
 
     # Test a single response
@@ -285,7 +286,7 @@ def main():
 
     response_dict = {}
     all_responses = []
-    print('\n## Converting response to dictionary')
+    print('\n-- Converting response to dictionary')
     response_dict = add_response_to_dict(response_dict, response_data)
 
     for response in  all_response_data:
