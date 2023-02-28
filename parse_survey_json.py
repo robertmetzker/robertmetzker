@@ -33,7 +33,7 @@ class Survey:
     def __post_init__(self):
         self.detail_url = self.href + '/details'                    # Details url containing the questions and answera available for the survey
         self.responses_url = self.href + '/responses/bulk'          # Responses url containing the responses for the survey
-        self.title = self.title.replace("'","''")
+        # self.title = self.title.replace("'","''")
 
 
 
@@ -152,24 +152,25 @@ def add_response_to_dict(response_info: dict, response_data: dict):
 
 
 def output_questions( detail_info ):
+    question_headers = "SURVEY_ID,QUESTION_NO,QUESTION_ID,QUESTION_TXT"
     questions_str = []
-    questions_str.append( f'\n\n--- INSERT STATEMENTS for QUESTIONS ---\n')
     surveyid = detail_info['id']
 
     for question in detail_info['pages'][0]['questions']:
         qid = question["id"]
         qno = question["position"]
-        qtxt =  question["headings"][0]["heading"].replace("'","''")
- 
-        str =  f"insert into SURVEY_MONKEY.QUESTIONS values( {surveyid!r}, {qno},  {qid!r},'{qtxt}' );\n" 
+        qtxt =  question["headings"][0]["heading"]
+        # qtxt =  question["headings"][0]["heading"].replace("'","''") 
+        # sql_tr =  f"insert into SURVEY_MONKEY.QUESTIONS values( {surveyid!r}, {qno},  {qid!r},'{qtxt}' );\n" 
+        str =  f'{surveyid!r},{qno},{qid!r},"{qtxt}"\n' 
         questions_str.append( str )
 
-    return questions_str
+    return question_headers, questions_str
 
 
 def output_answers( detail_info ):
+    answer_headers = "SURVEY_ID,QUESTION_ID,ANSWER_ID,ANSWER_TXT"
     answers_str = []
-    answers_str.append( '\n\n--- PRINTING ANSWERS ---\n')
     surveyid = detail_info['id']
 
     for question in detail_info['pages'][0]['questions']:
@@ -182,23 +183,27 @@ def output_answers( detail_info ):
             for answer in question["answers"]["choices"]:
                 aid = answer["id"]
                 atxt = answer["text"]
-                atxt = atxt.replace("'","''").replace("\n"," ").replace("\r"," ")
-                str =  f"insert into SURVEY_MONKEY.ANSWERS values(  {surveyid!r}, {qid!r},  {aid!r},{atxt!r} );\n"
+                atxt = atxt.replace("\n"," ").replace("\r"," ")
+                # atxt = atxt.replace("'","''").replace("\n"," ").replace("\r"," ")
+                # sql_str =  f"insert into SURVEY_MONKEY.ANSWERS values(  {surveyid!r}, {qid!r},  {aid!r},{atxt!r} );\n"
+                str =  f'{surveyid!r},{qid!r},{aid!r},"{atxt}"\n'
                 answers_str.append( str )
         except:
-            str = f"insert into SURVEY_MONKEY.ANSWERS values(  {surveyid!r}, {qid!r},  {aid!r},{atxt!r} );\n" 
-            answers_str.append( str )
+            pass
+            # Possible to not have an answer, and if so, parse the other field
+            # str = f"insert into SURVEY_MONKEY.ANSWERS values(  {surveyid!r}, {qid!r},  {aid!r},{atxt!r} );\n" 
+            # answers_str.append( str )
 
         if "other" in question.get("answers","None"):
             aid = question["answers"]["other"]["id"]
             atxt = question["answers"]["other"]["text"]
             atxt = atxt.replace("\n"," ").replace("\r"," ")
-            atxt = atxt.replace("'","''")
-
-            str =  f"insert into SURVEY_MONKEY.ANSWERS values(  {surveyid!r}, {qid!r},  {aid!r},{atxt!r} );\n" 
+            # atxt = atxt.replace("'","''")
+            # sql_str =  f"insert into SURVEY_MONKEY.ANSWERS values(  {surveyid!r}, {qid!r},  {aid!r},{atxt!r} );\n" 
+            str =  f'{surveyid!r},{qid!r},{aid!r},"{atxt}"\n'
             answers_str.append( str )
 
-    return answers_str
+    return answer_headers, answers_str
 
 
 def output_participants(all_responses):
@@ -209,16 +214,17 @@ def output_participants(all_responses):
     LAST_NAME       text,
     EMAIL           text
     '''
+    participant_headers = "PARTICIPANT_ID,FIRST_NAME,LAST_NAME,EMAIL"
     stmt = 'insert into SURVEY_MONKEY.PARTICIPANTS values ('
     participant_str = []
     
-    participant_str.append( "\n\n--- INSERT STATEMENTS for PARTICIPANTS ---\n")
     for person in all_responses:
         person_dict = dict( person )
-        str = f"{stmt} {person_dict.get('person')!r}, {person_dict.get('fname')!r}, {person_dict.get('lname')!r}, {person_dict.get('email')!r} );\n"
+        # sql_str = f"{stmt} {person_dict.get('person')!r}, {person_dict.get('fname')!r}, {person_dict.get('lname')!r}, {person_dict.get('email')!r} );\n"
+        str = f"{person_dict.get('person')!r},{person_dict.get('fname')!r},{person_dict.get('lname')!r},{person_dict.get('email')!r}\n"
         participant_str.append( str )
 
-    return participant_str
+    return participant_headers, participant_str
 
 
 def output_responses(all_responses):
@@ -226,16 +232,13 @@ def output_responses(all_responses):
     SURVEY_ID       text,    --300747984
     PARTICIPANT_ID  text,
     QUESTION_ID     text,
-    ANSWER_ID       text,
-    ANSWER_TXT      text,   -- For Free Form
+    ANSWER_ID       text    -- May also be free form text
     '''
     response_str = []
-    stmt = 'insert into SURVEY_MONKEY.RESPONSES values ('
+    response_headers = "SURVEY_ID,PARTICIPANT_ID,QUESTION_ID,ANSWER_ID"
 
-    response_str.append( "\n\n--- INSERT STATEMENTS for RESPONSES ---\n")
     for person in all_responses:
-        # print(person)
-        # print('---')
+        #{'person': '7565351911', 'fname': '244198', 'lname': 'ROMPS WATER PORT INC', 'email': 'office@romps.com', 'surveyid': '300747984', 'surveydate': '2023-02-08T20:27:09+00:00', 'totaltime': 75, 'responses': {'605148537': '3982038472', '605148539': '3982038483', '605148542': '3982038499', '605148543': '3982038504', '605148544': '3982038508', '605148545': '3982038511', '605148546': '3982038515', '605148547': '3982038519', '605148548': '3982038523', '605148549': '3982038529', '605148550': '3982038534'}}
 
         try:
             person_dict = dict( person )
@@ -244,21 +247,24 @@ def output_responses(all_responses):
                 ans = a
                 if not a: ans= 'None'
                 #replace all single quotes with two single quotes
-                ans = ans.replace("'","''").replace("\n"," ").replace("\r", " ")
-                str = f"{stmt} {person_dict.get('surveyid')!r}, {person_dict.get('person')!r}, {q!r}, '{ans}' );\n"
+                ans = ans.replace("\n"," ").replace("\r", " ")
+                # ans = ans.replace("'","''").replace("\n"," ").replace("\r", " ")
+                # sql_str = f"{stmt} {person_dict.get('surveyid')!r}, {person_dict.get('person')!r}, {q!r}, '{ans}' );\n"
+                str = f"{person_dict.get('surveyid')!r},{person_dict.get('person')!r},{q!r},\"{ans}\"\n"
                 response_str.append( str )
         except:
             print( f'##### ERROR:  {person}')
 
-    return response_str
+    return response_headers, response_str
 
 
-def writecsv( func, results ):
+def writecsv( func, headers, results ):
     schema_name = 'SURVEY_MONKEY'
     filename = f".\{schema_name}_{func}_OUTPUT.csv"
 
     # write_csv(fname,rows,raw=False,delim='\t',term='\n',prefix='',sortit=True,log=None,verify=False):
     with open( filename, 'w', newline = '') as file2write:
+        file2write.write( f'{headers}\n')
         for row in results:
             file2write.write( row )
             
@@ -272,12 +278,13 @@ def main():
     #print survey titles
 
     survey_sql = []
-    survey_sql.append( f'--SURVEYS available: {len(surveys)} --\n')
+    survey_headers = "SURVEY_ID,SURVEY_NAME"
+    # survey_sql.append( f'--SURVEYS available: {len(surveys)} --\n')
 
     for survey in surveys:
-        str =  f"insert into SURVEY_MONKEY.SURVEYS values ( {survey.id!r}, '{survey.title}' );\n"
+        # sql_str =  f"insert into SURVEY_MONKEY.SURVEYS values ( {survey.id!r}, '{survey.title}' );\n"
+        str =  f'{survey.id!r},"{survey.title}"\n'
         survey_sql.append( str )
-        # print(survey.id, ':', survey.title)
 
     detail1 = 'OHIO_BUREAU_OF_WORKERS_COMPENSATION_EMPLOYER_AUDIT_SURVEY_details.json'
     response1 = 'OHIO_BUREAU_OF_WORKERS_COMPENSATION_EMPLOYER_AUDIT_SURVEY_responses.json'
@@ -295,11 +302,11 @@ def main():
     survey_info['date_created'] = detail_info['date_created']
 
     # show_questions( detail_info )
-    question_sql = output_questions( detail_info )
+    question_headers, question_sql = output_questions( detail_info )
     parsed_questions = add_question_answers_to_dict(survey_info, detail_info)
     # print( parsed_questions )
 
-    answer_sql = output_answers( detail_info )
+    answer_headers, answer_sql = output_answers( detail_info )
 
     print(f'\n\n//- Parsing example response data --')
     # print( len( response_info));input("!!!!!")      # 40 pages
@@ -325,14 +332,14 @@ def main():
             all_responses.append(response_dict)
 
     # print(all_responses)
-    participant_sql = output_participants(all_responses)
-    response_sql = output_responses(all_responses)
+    participant_headers, participant_sql = output_participants(all_responses)
+    response_headers, response_sql = output_responses(all_responses)
 
-    writecsv( 'SURVEYS', survey_sql )
-    writecsv( 'QUESTION', question_sql )
-    writecsv( 'ANSWERS', answer_sql )
-    writecsv( 'PARTICIPANTS', participant_sql )
-    writecsv( 'RESPONSES', response_sql )
+    writecsv( 'SURVEYS', survey_headers, survey_sql )
+    writecsv( 'QUESTION', question_headers, question_sql )
+    writecsv( 'ANSWERS', answer_headers, answer_sql )
+    writecsv( 'PARTICIPANTS', participant_headers, participant_sql )
+    writecsv( 'RESPONSES', response_headers, response_sql )
     
 
 if __name__ == "__main__":
