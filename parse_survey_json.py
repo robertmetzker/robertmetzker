@@ -1,4 +1,4 @@
-import requests, json
+import csv, json
 from pathlib import Path
 from dataclasses import dataclass, field
 
@@ -152,7 +152,8 @@ def add_response_to_dict(response_info: dict, response_data: dict):
 
 
 def output_questions( detail_info ):
-    print(f'\n\n--- INSERT STATEMENTS for QUESTIONS ---')
+    questions_str = []
+    questions_str.append( f'\n\n--- INSERT STATEMENTS for QUESTIONS ---\n')
     surveyid = detail_info['id']
 
     for question in detail_info['pages'][0]['questions']:
@@ -160,15 +161,16 @@ def output_questions( detail_info ):
         qno = question["position"]
         qtxt =  question["headings"][0]["heading"].replace("'","''")
  
-        print( f"insert into SURVEY_MONKEY.QUESTIONS values( {surveyid!r}, {qno},  {qid!r},'{qtxt}' );" )
+        str =  f"insert into SURVEY_MONKEY.QUESTIONS values( {surveyid!r}, {qno},  {qid!r},'{qtxt}' );\n" 
+        questions_str.append( str )
+
+    return questions_str
 
 
 def output_answers( detail_info ):
-    
-    print('-'*20)
-    print( '\n\n--- PRINTING ANSWERS ---')
+    answers_str = []
+    answers_str.append( '\n\n--- PRINTING ANSWERS ---\n')
     surveyid = detail_info['id']
-
 
     for question in detail_info['pages'][0]['questions']:
         qid = question["id"]
@@ -176,15 +178,16 @@ def output_answers( detail_info ):
             aid = question["answers"]["other"]["id"]
             atxt = question["answers"]["other"]["text"]
 
-
         try:
             for answer in question["answers"]["choices"]:
                 aid = answer["id"]
                 atxt = answer["text"]
                 atxt = atxt.replace("'","''").replace("\n"," ").replace("\r"," ")
-                print( f"insert into SURVEY_MONKEY.ANSWERS values(  {surveyid!r}, {qid!r},  {aid!r},{atxt!r} );" )
+                str =  f"insert into SURVEY_MONKEY.ANSWERS values(  {surveyid!r}, {qid!r},  {aid!r},{atxt!r} );\n"
+                answers_str.append( str )
         except:
-            print( f"insert into SURVEY_MONKEY.ANSWERS values(  {surveyid!r}, {qid!r},  {aid!r},{atxt!r} );" )
+            str = f"insert into SURVEY_MONKEY.ANSWERS values(  {surveyid!r}, {qid!r},  {aid!r},{atxt!r} );\n" 
+            answers_str.append( str )
 
         if "other" in question.get("answers","None"):
             aid = question["answers"]["other"]["id"]
@@ -192,7 +195,10 @@ def output_answers( detail_info ):
             atxt = atxt.replace("\n"," ").replace("\r"," ")
             atxt = atxt.replace("'","''")
 
-            print( f"insert into SURVEY_MONKEY.ANSWERS values(  {surveyid!r}, {qid!r},  {aid!r},{atxt!r} );" )
+            str =  f"insert into SURVEY_MONKEY.ANSWERS values(  {surveyid!r}, {qid!r},  {aid!r},{atxt!r} );\n" 
+            answers_str.append( str )
+
+    return answers_str
 
 
 def output_participants(all_responses):
@@ -204,11 +210,15 @@ def output_participants(all_responses):
     EMAIL           text
     '''
     stmt = 'insert into SURVEY_MONKEY.PARTICIPANTS values ('
-
-    print("--- INSERT STATEMENTS for PARTICIPANTS ---")
+    participant_str = []
+    
+    participant_str.append( "\n\n--- INSERT STATEMENTS for PARTICIPANTS ---\n")
     for person in all_responses:
         person_dict = dict( person )
-        print( f"{stmt} {person_dict.get('person')!r}, {person_dict.get('fname')!r}, {person_dict.get('lname')!r}, {person_dict.get('email')!r} );" )
+        str = f"{stmt} {person_dict.get('person')!r}, {person_dict.get('fname')!r}, {person_dict.get('lname')!r}, {person_dict.get('email')!r} );\n"
+        participant_str.append( str )
+
+    return participant_str
 
 
 def output_responses(all_responses):
@@ -219,9 +229,10 @@ def output_responses(all_responses):
     ANSWER_ID       text,
     ANSWER_TXT      text,   -- For Free Form
     '''
+    response_str = []
     stmt = 'insert into SURVEY_MONKEY.RESPONSES values ('
 
-    print("\n\n--- INSERT STATEMENTS for RESPONSES ---")
+    response_str.append( "\n\n--- INSERT STATEMENTS for RESPONSES ---\n")
     for person in all_responses:
         # print(person)
         # print('---')
@@ -234,9 +245,24 @@ def output_responses(all_responses):
                 if not a: ans= 'None'
                 #replace all single quotes with two single quotes
                 ans = ans.replace("'","''").replace("\n"," ").replace("\r", " ")
-                print( f"{stmt} {person_dict.get('surveyid')!r}, {person_dict.get('person')!r}, {q!r}, '{ans}' );" )
+                str = f"{stmt} {person_dict.get('surveyid')!r}, {person_dict.get('person')!r}, {q!r}, '{ans}' );\n"
+                response_str.append( str )
         except:
             print( f'##### ERROR:  {person}')
+
+    return response_str
+
+
+def writecsv( func, results ):
+    schema_name = 'SURVEY_MONKEY'
+    filename = f".\{schema_name}_{func}_OUTPUT.csv"
+
+    # write_csv(fname,rows,raw=False,delim='\t',term='\n',prefix='',sortit=True,log=None,verify=False):
+    with open( filename, 'w', newline = '') as file2write:
+        for row in results:
+            file2write.write( row )
+            
+    print( f' --- Wrote {func} CSV file to: {filename}\n')
 
 
 def main():
@@ -244,11 +270,14 @@ def main():
     filepath = Path( './' )
     surveys = [ Survey(**survey) for survey in all_surveys['data'] ]
     #print survey titles
-    print(f'--SURVEYS available: {len(surveys)} --')
+
+    survey_sql = []
+    survey_sql.append( f'--SURVEYS available: {len(surveys)} --\n')
+
     for survey in surveys:
-        print( f"insert into SURVEY_MONKEY.SURVEYS values ( {survey.id!r}, '{survey.title}' );" )
+        str =  f"insert into SURVEY_MONKEY.SURVEYS values ( {survey.id!r}, '{survey.title}' );\n"
+        survey_sql.append( str )
         # print(survey.id, ':', survey.title)
-    print('-'*40)
 
     detail1 = 'OHIO_BUREAU_OF_WORKERS_COMPENSATION_EMPLOYER_AUDIT_SURVEY_details.json'
     response1 = 'OHIO_BUREAU_OF_WORKERS_COMPENSATION_EMPLOYER_AUDIT_SURVEY_responses.json'
@@ -265,42 +294,47 @@ def main():
     survey_info['question_count'] = detail_info['question_count']
     survey_info['date_created'] = detail_info['date_created']
 
-    # append each question as a dictionary to the survey_info dictionary using the ID as the key, and the question text as the value
-    print( survey_info )
-    print('-'*40)
-
     # show_questions( detail_info )
-    output_questions( detail_info )
+    question_sql = output_questions( detail_info )
     parsed_questions = add_question_answers_to_dict(survey_info, detail_info)
     # print( parsed_questions )
 
-    output_answers( detail_info )
+    answer_sql = output_answers( detail_info )
 
     print(f'\n\n//- Parsing example response data --')
-    all_response_data = response_info[0]['data']
-
-    # Test a single response
-    response_data = all_response_data[1]
-    # print(response_data)
-    # show_responses( response_data, parsed_questions )
-
+    # print( len( response_info));input("!!!!!")      # 40 pages
     response_dict = {}
     all_responses = []
-    print('\n-- Converting response to dictionary')
-    response_dict = add_response_to_dict(response_dict, response_data)
 
-    for response in  all_response_data:
-        response_dict = add_response_to_dict(response_dict, response)
-        all_responses.append(response_dict)
+    # Loop through and process each page of responses
+    print('\n-- Converting response to dictionary')
+
+    for response_set in response_info:
+        # all_response_data = response_info[0]['data']
+        all_response_data = response_set['data']
+        # Test a single response
+        # response_data = all_response_data[1]
+
+        tot_responses = len(all_response_data)
+        for idx in range(tot_responses):
+            response_data = all_response_data[idx]
+            response_dict = add_response_to_dict(response_dict, response_data)
+
+        for response in  all_response_data:
+            response_dict = add_response_to_dict(response_dict, response)
+            all_responses.append(response_dict)
 
     # print(all_responses)
-    output_participants(all_responses)
-    output_responses(all_responses)
-    
+    participant_sql = output_participants(all_responses)
+    response_sql = output_responses(all_responses)
 
+    writecsv( 'SURVEYS', survey_sql )
+    writecsv( 'QUESTION', question_sql )
+    writecsv( 'ANSWERS', answer_sql )
+    writecsv( 'PARTICIPANTS', participant_sql )
+    writecsv( 'RESPONSES', response_sql )
+    
 
 if __name__ == "__main__":
     main()
     
-# Target response data should look like a dictionary for each reco[oent with the following structure:
-# { 'recipent':'6070975071' ,'fname':'1599387', 'lname':'TGW-SYSTEMS INC', 'email':'laura.butrick@tgw-group.com', 'surveyid':'300747984', 'responses': {'605148537':'3982038472', '605148539':'3982038484', '605148542':'3982038498', '605148543':'3982038503', '605148544':'3982038508', '605148545':'3982038511', '605148546':'3982038514', '605148547':'3982038520', '605148548':'3982038523', '605148549':'3982038528', '605148550':'3982038534'} }
