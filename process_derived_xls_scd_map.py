@@ -3,7 +3,7 @@ import os, argparse
 from pathlib import Path
 
 # Other necessary libs
-import openpyxl, yaml               # pip install openpyxl
+import openpyxl, yaml               # pip install openpyxl (pyyaml)
 from operator import itemgetter
 
 
@@ -28,19 +28,20 @@ def process_args():
 
 
 def setup(args):
-    args.mapdir = args.rootdir / 'mappings'
-    args.modeldir = args.rootdir / 'models'
-    args.snapdir= args.rootdir / 'snapshots'     
-    args.archivedir = args.rootdir / 'models_archive'
+    #use global args to store the rootdir and subdirs
+    dir_list = {'mapdir':'mappings', 'modeldir':'models', 'snapdir':'snapshots', 'archivedir':'models_archive'}
+
+    for dir in dir_list.items():
+        setattr(args, dir[0], args.rootdir / dir[1])
+        if not getattr(args, dir[0]).exists(): getattr(args, dir[0]).mkdir()
+
+    print( '--Setting up directories--')
+    for dir in dir_list:
+        print( f'{dir} directory: {getattr(args, dir)}' )
+    print( f'{"-"*30}' )
 
     print( 'Mapping docs (XLS) in:', args.mapdir )
     print( 'Output (SQL, YML) going to:', args.modeldir )
-
-    # Create the Directories if they do not exist yet
-    if not args.mapdir.exists(): args.mapdir.mkdir()
-    if not args.modeldir.exists(): args.modeldir.mkdir()
-    if not args.snapdir.exists(): args.snapdir.mkdir()    
-    if not args.archivedir.exists(): args.archivedir.mkdir()
 
     # Show existing XLS files in Mapdir
     for afile in args.mapdir.glob('*.xlsx'):
@@ -48,6 +49,8 @@ def setup(args):
 
 
 def sheet2dict(sheet):
+    '''table:  {'Source Schema': 'STAGING', 'Source Table': 'DSV_CUSTOMER', 'Alias': 'C', 'Filter Conditions': None, 'Manual Filter Conditions': 'Exclude all the CUSTOMER_NUMBER  if Exists in DIM_PROVIDER & DIM_NETWORK\nPROV & NET Col Names : PROVIDER_PEACH_NUMBER,CORESUITE_CUSTOMER_NUMBER \n', 'Parent Join Number': None, 'Parent Table Join': None, 'Child Table Join': None, 'Join Type': None}
+       column: {'Source Schema': 'STAGING', 'Source Table': 'C', 'Source Column': '(derived)', 'Datatype': None, 'Automated Logic': None, 'Manual Logic': 'hash:  CUSTOMER_NUMBER,RECORD_EFFECTIVE_DATE', 'Order#': 1, 'Staging Layer Column Name': 'CUSTOMER_HKEY', 'Staging Layer Datatype': 'CHAR(32)', 'CPI': None, 'Unique': 'unique', 'Not Null': 'not_null', 'Test Expression': None, 'Model Equality': None, ...}'''
     print(f'\t<<<< Processing {sheet}')
 
     fields = None
@@ -66,8 +69,7 @@ def sheet2list(sheet):
             continue
         yield row
 
-
-###### START OF SCD SPECIFIC CODE
+###### START OF SCD SPECIFIC ADDED CODE
 def build_scd2( schema, table, cols, keycol ):
 
     #keycol = 'UNIQUE_DIM_KEY'
@@ -78,22 +80,22 @@ def build_scd2( schema, table, cols, keycol ):
     src_table = table.replace( 'DIM_' , 'DSV_' )
     snap=f'''
     
-    {{%% snapshot %s_SNAPSHOT_STEP1 %%}}
+    {{%% snapshot {table}_SNAPSHOT_STEP1 %%}}
 
     {{{{
         config(
-        target_schema='%s',
-        unique_key='%s',
+        target_schema={schema!r},
+        unique_key={keycol!r},
         strategy='check',
         check_cols={cols},
         )
     }}}}
 
     select {cols_str} 
-        from  {{{{ref('%s') }}}}
+        from  {{{{ref( {src_table!r}) }}}}
 
     {{%% endsnapshot %%}}
-    '''%(table,schema,keycol,src_table)
+    '''
 
     return snap
 
@@ -108,16 +110,12 @@ def build_scd6 ( schema, table, keycol, scd1_cols = [], scd2_cols = [], scd3_col
     'UPDATE_DATETIME', 'EFFECTIVE_TIMESTAMP', 'END_TIMESTAMP',
     'LOAD_BATCH_ID', 'UPDATE_BATCH_ID', 'PRIMARY_SOURCE_SYSTEM']
 
-    start_sql = f'''\n\n WITH  SCD AS ( \n\tSELECT  {keycol},'''
+    start_sql = f'''\n\n WITH  SCD AS ( \n\tSELECT  \n\t{keycol}'''
 
     sql2 = []
     for col in scd2_cols:
         if col in exclude_col: continue
-        #sql=f'''\n     lag({col}) over  
-        #          (partition by {keycol} 
-        #                order by dbt_updated_at
-        #           ) as PREV_{col}'''
-        sql = f'''\n {col}'''
+        sql = f'''\n\t, {col}'''
         sql2.append( sql )
 
     sql3 = []
@@ -131,45 +129,47 @@ def build_scd6 ( schema, table, keycol, scd1_cols = [], scd2_cols = [], scd3_col
         sql3.append(sql)
 
     sql1 = []
-    for col in scd1_cols:
+    for idx, col in enumerate( scd1_cols ) :
         if col in exclude_col: continue
-        sql=f'''\n     last_value({col}) over 
-        (partition by {keycol} 
+        if idx == 0: 
+            sql = f'\n      last_value({col}) over '
+        else:
+            sql = f'\n    , last_value({col}) over '
+        sql += f'''(partition by {keycol} 
         order by dbt_updated_at 
             ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
             ) as {col}'''
-            #) as CUR_{col}'''
         sql1.append(sql)
     
     sql0 = []
-    for col in scd0_cols:
+    for idx, col in enumerate( scd0_cols ):
         if col in exclude_col: continue
-        sql=f'''\n     first_value({col}) over 
-        (partition by {keycol} 
+        if idx == 0:
+            sql=f'\n     first_value({col}) over '
+        else:
+            sql=f'\n   , first_value({col}) over '
+        sql += f'''(partition by {keycol} 
         order by dbt_updated_at 
             ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
             ) as {col}'''
-            #) as CUR_{col}'''
         sql0.append( sql )
 
-    end_sql = f'''\n,DBT_VALID_FROM AS EFFECTIVE_TIMESTAMP \n,DBT_VALID_TO   AS END_TIMESTAMP \n,
-    CASE WHEN CAST(DBT_VALID_FROM AS DATE) = '1901-01-01' then CAST(DBT_VALID_FROM AS DATE)
+    end_sql = f'''\n\t, DBT_VALID_FROM AS EFFECTIVE_TIMESTAMP \n\t, DBT_VALID_TO   AS END_TIMESTAMP \n\t, CASE WHEN CAST(DBT_VALID_FROM AS DATE) = '1901-01-01' then CAST(DBT_VALID_FROM AS DATE)
       WHEN CAST(DBT_VALID_FROM AS DATE) <> '1901-01-01' THEN dateadd(day,1,CAST(DBT_VALID_FROM AS DATE))
-    else CAST(DBT_VALID_FROM AS DATE) end as EFFECTIVE_DATE\n,
-    CAST(DBT_VALID_TO AS DATE) as END_DATE \n,CASE WHEN DBT_VALID_TO IS NULL THEN 'Y' ELSE 'N' END AS CURRENT_INDICATOR'''
+      else CAST(DBT_VALID_FROM AS DATE) end as EFFECTIVE_DATE\n\t, CAST(DBT_VALID_TO AS DATE) as END_DATE \n\t, CASE WHEN DBT_VALID_TO IS NULL THEN 'Y' ELSE 'N' END AS CURRENT_INDICATOR'''
     #CAST(DBT_VALID_FROM AS DATE) as EFFECTIVE_DATE\n,
     sql1[ 0 ] = start_sql + sql1[ 0 ]
     scd_all = sql1 + sql2 + sql3 + sql0
     #+ end_sql
 
-    scd_str = ', '.join( scd_all )
+    # Previous joined with comma
+    scd_str = ' '.join( scd_all )
     scd_str = scd_str.strip(',')
 
     scd_str = scd_str + end_sql + '\n'+"     \n\tFROM {{ ref('" + table + "_SCDALL_STEP2') }})\n\n"
     scd_str += 'select * from SCD\n'
 
     return scd_str
-
 
 
 def make_scd( scd_dict ):
@@ -198,8 +198,7 @@ def make_scd( scd_dict ):
     return scd2_sql, scd6_sql
 
 
-
-def write_dbt( table, snapdir, scd2_sql, modeldir, scd6_sql):
+def write_scd_step1( table, snapdir, scd2_sql, modeldir, scd6_sql):
     snapfile = snapdir/(table+'_SNAPSHOT_STEP1.sql')
     print('\twriting to', snapfile)
     with open( snapfile, 'w') as fw:
@@ -212,7 +211,6 @@ def write_dbt( table, snapdir, scd2_sql, modeldir, scd6_sql):
     print('\twriting to', model_file)
     with open( model_file, 'w' ) as fw:
         fw.write( scd6_sql )
-
 
 
 def get_scdinfo( schema, table, col_rows):
@@ -252,7 +250,7 @@ def get_scdinfo( schema, table, col_rows):
     return scd
 
 
-def write_models( modeldir, tgt_table, scd1_sql, scd2_sql):
+def write_scd_files( modeldir, tgt_table, scd1_sql, scd2_sql):
     scd1_file = modeldir/(tgt_table+'_SCD1.sql')
     print('\twriting to', scd1_file)
     with open( scd1_file, 'w' ) as fw:
@@ -264,8 +262,7 @@ def write_models( modeldir, tgt_table, scd1_sql, scd2_sql):
         fw.write( scd2_sql )
 
 
-
-def write_final_sql( args, tgt_table, scd_dict ):
+def write_final_scd_sql( args, tgt_table, scd_dict ):
     modeldir = args.modeldir
     
     scd1_r_cols = []
@@ -279,7 +276,7 @@ def write_final_sql( args, tgt_table, scd_dict ):
 
     scd1_remaining_cols = set( scd1_cols ) - set( exclude_col )
 
-    scd1_str = ', '.join( scd1_remaining_cols )
+    scd1_str = '\n, '.join( scd1_remaining_cols )
     keycol = scd_dict[ 'KEY' ]
     
     src_table = tgt_table.replace( 'DIM_', 'DSV_' )
@@ -287,24 +284,22 @@ def write_final_sql( args, tgt_table, scd_dict ):
     # prefix = ''' {{ config(schema = 'EDW_STAGING', tags=["dim"] ) }}\n ----SRC LAYER----\nWITH\n'''
     prefix = '''\n ----SRC LAYER----\nWITH\n'''
 
-    sql1 = prefix+f'''SCD1 as ( SELECT {scd1_str} , {keycol}    \n\t--, '1901-01-01' as DBT_VALID_FROM, '2099-12-31' as DBT_VALID_TO\n\tfrom      {{{{ ref( '{src_table}') }}}} )'''
+    sql1 = prefix+f'''SCD1 as ( SELECT {scd1_str} \n, {keycol}    \n\t--, '1901-01-01' as DBT_VALID_FROM, '2099-12-31' as DBT_VALID_TO\n\tfrom      {{{{ ref( '{src_table}') }}}} )'''
     sql2 = f'''SCD2 as ( SELECT *    \n\tFROM      {{{{ ref('{tgt_table}_SNAPSHOT_STEP1') }}}} )'''
     sql3 = f'''FINAL as ( SELECT * 
             FROM  SCD2 
                 INNER JOIN SCD1 USING( {keycol} )  )\nselect * from FINAL'''
 
-    all_sql_str = ',\n'.join([ sql1, sql2, sql3 ])
+    all_sql_str = '\n\t,'.join([ sql1, sql2, sql3 ])
 
     final_file = modeldir/(tgt_table+'_SCDALL_STEP2.sql')
     print( '\twriting to', final_file )
     with open( final_file, 'w' ) as fw:
         if not args.yml: fw.write( all_sql_str )  
     print('========== done')
-
-
-
 ###### END OF SCD SPECIFIC ADDED CODE
-    
+
+
 def get_source_tables( col_rows, alias):
     # This is visited for each table in the Tables tab.
     tables_raw = {}
@@ -378,9 +373,9 @@ def get_source_tables( col_rows, alias):
         
         #If DERIVED, the source and target are set to the same value
         #unless there is Manual Logic driving the value
-        if is_derived and row[ 'Manual Logic' ]:
+        if is_derived and row.get( 'Manual Logic','') :
             src_col = tgt_col
-        elif is_derived and not row[ 'Manual Logic' ]:
+        elif is_derived and not row.get( 'Manual Logic',''):
             if not derivedname == '':
                 src_col = derivedname
             else:
@@ -660,30 +655,32 @@ def build_source_sql(args, tables, alias):
 
 
 def build_logic_sql( args, col_rows, incl_trim):
+    # Rewrite this whole process to build them as lists of dictionaries
     tables = {}
     
     for idx, row in enumerate(col_rows):
         if idx == 0: firstcol = True
         if idx == 0 and not row.get( 'Source Table' ):
-            continue
+            if row.get('Staging Layer Column Name','') == 'UNIQUE_ID_KEY':
+                continue
         elif idx > 0 and row.get( 'Source Table') == None:
             tbl = 'tbd'
-            tgt_col = row[ 'Staging Layer Column Name' ]
-            if row[ 'Source Column' ]== None:
-                src_col =  row[ 'Source Column' ]
-            elif row[ 'Source Column' ] =='(DERIVED)' :
+            tgt_col = row.get( 'Staging Layer Column Name','') 
+            if row.get( 'Source Column','' ) == None:
+                src_col =  row.get( 'Source Column','' ) 
+            elif row.get( 'Source Column','')  =='(DERIVED)' :
                 src_col = f'(DERIVED) {tgt_col}' 
                 
             col = src_col
         else:            
-            tbl = row[ 'Source Table' ]
-            if not row[ 'Source Column' ] == None:
-                src_col = row[ 'Source Column' ]
+            tbl = row.get( 'Source Table','' )
+            if not row.get( 'Source Column','' ) == None:
+                src_col = row.get( 'Source Column','')
             else:
                 src_col = ''
             col = src_col
-        tgt_col = row[ 'Staging Layer Column Name']
-        mlogic = row[ 'Manual Logic' ]
+        tgt_col = row.get( 'Staging Layer Column Name','' )
+        mlogic = row.get( 'Manual Logic','' )
         set_default = row.get('Default')
 
         hasname = ''
@@ -695,15 +692,15 @@ def build_logic_sql( args, col_rows, incl_trim):
             hasname = col.upper().replace('(DERIVED)','').strip()
 
         # If there is not Manual Logic, checkf or Automated logic and use that in its place.  Manual Trumps automatic.
-        if not row[ 'Manual Logic' ]:
+        if not row.get( 'Manual Logic' ):
             # Get Automated logic as a substitute
-            if row[ 'Automated Logic']:
-                mlogic = row[ 'Automated Logic' ]
+            if row.get( 'Automated Logic'):
+                mlogic = row.get( 'Automated Logic' )
                 mlogic = mlogic.upper()
             else:
                 mlogic = ''      
         else:
-            mlogic = row[ 'Manual Logic']
+            mlogic = row.get( 'Manual Logic' )
     
         # If the Logic is a HASH/COMPOSITE for derived columns, create the field as SURROGATE_KEY
         dtype = row[ 'Datatype' ]
@@ -757,7 +754,7 @@ def build_logic_sql( args, col_rows, incl_trim):
 
 
         #Only do these for Automated Logic
-        logic = row[ 'Automated Logic' ]
+        logic = row.get( 'Automated Logic' )
         if logic:
             logic = logic.strip()
 
@@ -773,7 +770,7 @@ def build_logic_sql( args, col_rows, incl_trim):
             firstcol = True
             tables[ src_tbl ] = []
 
-        indent = False
+            indent = False
         if dtype and ( 'VARCHAR' in dtype.upper() or 'TEXT' in dtype.upper() ):
             indent = True
             if incl_trim: 
@@ -813,12 +810,16 @@ def build_logic_sql( args, col_rows, incl_trim):
 
         # Only 1st time col is mentioned, it gets appended
         if col not in tables[ src_tbl ]:
-            tables[ src_tbl ].append(col)
+            if not tgt_col:
+                pass
+            else:
+                tables[ src_tbl ].append(col)
 
     final_sql = []
 
     has_derived = False
     for tbl, cols in tables.items():
+        # if 'tbd' is in the tables, then we have derived columns and need to move them to the final select
         if tbl == 'tbd':
             has_derived = True
             # Skip the writing of the logic layer and only write for final select
@@ -840,12 +841,13 @@ def build_logic_sql( args, col_rows, incl_trim):
 
     joined_sql = ',\n'.join( final_sql )
     if has_derived:
-        derived_sql = '\n---- DERIVED COLUMNS need to be moved into the right position in FINAL SQL\n'
+        derived_sql = '\n---- DERIVED COLUMNS need to be finalized and moved into the right position in FINAL SQL\n'
         # for col in tables['tbd']:
         #     derived_cols.append( col )
-        derived_sql += '\n'.join( tables['tbd'] )
+        derived_sql += ''.join( tables['tbd'] )
         derived_sql += '\n---END of DERIVED Columns'
-        
+    else: derived_sql = ''
+    
     return joined_sql, derived_sql
 
 
@@ -901,8 +903,8 @@ def build_join_sql(tgt, table_rows, select_cols):
     for row in table_rows:
         if not row['Source Schema']:
             continue
-        alias = row['Alias']
-        aliases[row['Source Table']] = alias
+        alias = row.get('Alias','')
+        aliases[row.get('Source Table','tbd')] = alias
         if not row['Join Type']:
             final_alias = alias
 
@@ -943,11 +945,12 @@ def build_join_sql(tgt, table_rows, select_cols):
 
 
     final_sql = f'\nSELECT {select} \nFROM {final_alias}'
-    if not all_sql:
-        sql = f' JOIN_{alias:<10}  as  ( SELECT * \n\t\t\t\tFROM  FILTER_{alias} )'
-        all_sql = [sql + '\n' + f' SELECT * FROM  JOIN_{alias}']
-    else:
-        all_sql[-1] = all_sql[-1] + final_sql
+    if len( all_sql ) > 0:
+        if not all_sql:
+            sql = f' JOIN_{alias:<10}  as  ( SELECT * \n\t\t\t\tFROM  FILTER_{alias} )'
+            all_sql = [sql + '\n' + f' SELECT * FROM  JOIN_{alias}']
+        else:
+            all_sql[-1] = all_sql[-1] + final_sql
 
     all_sql_str = ',\n'.join(all_sql)
 
@@ -1307,6 +1310,7 @@ def build( args, modeldir, tgt_table, table_rows, col_rows, alter_sql, dml_block
     incl_trim = False
 
     for thisrow in table_rows:
+        '''{'Source Schema': None, 'Source Table': None, 'Alias': None, 'Filter Conditions': None, 'Parent Join Number': None, 'Parent Table Join': None, 'Child Table Join': None, 'Join Type': None}'''
         thisrow_dict = {}
         for key, value in thisrow.items():
             if not value: value = ''
@@ -1365,7 +1369,10 @@ def build( args, modeldir, tgt_table, table_rows, col_rows, alter_sql, dml_block
     # LOGIC LAYER                   $$$ FIX FORMATTING
     # if tgt_table.startswith( 'DST' ) or tgt_table.startswith( 'STG' ): incl_trim = True
     if tgt_table.startswith( 'STG' ): incl_trim = True
-    all_sql[ -1 ] += '\n\n---- LOGIC LAYER ----\n'
+    if all_sql:
+        all_sql[ -1 ] += '\n\n---- LOGIC LAYER ----\n'
+    else:
+        all_sql = []
     logic_sql, derived_sql  = build_logic_sql( args, col_rows, incl_trim )
     all_sql.append( logic_sql )
 
@@ -1409,36 +1416,69 @@ def build( args, modeldir, tgt_table, table_rows, col_rows, alter_sql, dml_block
     # print(f'\n\n===== CURRENT SQL =\n{sql_str}')                   # DEBUG
 
 
-def main():
-    args = process_args()
-    setup(args)
-    count = 0
-    plural = ''
-    scd6_sql = ''
+def process_unified_map( args, xls ):
+    #  CHECK for new Layout:  DSV_TABLES, DST_TABLES, DIM_TABLES,
+    #    DST_COLUMNS, DSV_COLUMS, DIM_COLUMNS
+    new_sheets = [ 'STG Tables', 'STG Tables', 'DST Tables', 'DSV Tables', 'DIM Tables', 'DST Columns', 'DSV Columns', 'DIM Columns', 'DML']
+    missing_sheets =[]
+    expected_cols = [ 'Source Schema', 'Source Table', 'Source Column', 'Datatype', 'Automated Logic', 'Manual Logic', 'Order#' ,'Staging Layer Column Name' ,'Staging Layer Datatype', 'CPI' ,'Unique' ,'Not Null' ,'Test Expression' ,'Accepted Values', 'SCD' ]
 
-    print('\n-----')
-    for xls in args.mapdir.iterdir():
-        print(f'\t<< Processing: {xls}')
-        if xls.name.startswith('XDIM_'):
-            print(f'\t\tNOT STAGE MAPPING -- skipping: {xls.name}')
-            continue
-        elif 'xls' not in xls.suffix.lower():
-            print(f'\t-- Skipping  : {xls}')
-            continue
-
-        print(f"in {os.path.basename(xls)}")
+    # If the workbook contains a DML tab, capture it to append to the CONFIG block
+    print( '-'*30 )
+    try:
         wb = openpyxl.load_workbook(xls)
+    except ValueError as e:
+        print(f'### ERROR: {e}\n ## > Please check if the following file is OPEN:\n\t {xls}')
+        sys.exit(1)
 
-        print(f'\n\n==== FOUND WORKBOOKS: {wb.sheetnames}')         # DEBUG
+    print(f'\n\n==== FOUND WORKBOOKS: {wb.sheetnames}')         # DEBUG
+    for each_sheet in new_sheets:
+        if each_sheet in wb.sheetnames: 
+            continue 
+        else:
+            missing_sheets.append( each_sheet )
 
-        #  CHECK for new Layout:  DSV_TABLES, DST_TABLES, DIM_TABLES,
-        #    DST_COLUMNS, DSV_COLUMS, DIM_COLUMNS
-        new_sheets = [ 'STG Tables', 'STG Tables', 'DST Tables', 'DSV Tables', 'DIM Tables', 'DST Columns', 'DSV Columns', 'DIM Columns', 'DML']
-        missing_sheets =[]
-        expected_cols = [ 'Source Schema', 'Source Table', 'Source Column', 'Datatype', 'Automated Logic', 'Manual Logic', 'Order#' ,'Staging Layer Column Name' ,'Staging Layer Datatype', 'CPI' ,'Unique' ,'Not Null' ,'Test Expression' ,'Accepted Values', 'SCD' ]
+    if len( missing_sheets ) > 0:
+        missing_sheets =  list(set( missing_sheets ))
+        print( f'\n\n~~~ There are missing sheets for the UNIFIED format: {missing_sheets}')
+
+    buildorder = ['STG','DST','DSV','DIM']
+    for currentorder in buildorder:
+        tgt_table = xls.stem.replace('UNIFIED', currentorder )
+        curtable = f"{currentorder} Tables"
+        curcol =   f"{currentorder} Columns"
+        maxrow = wb[curtable].max_row
+        print( f'Processing Unified Mapping for {tgt_table}' )
+        print(f'{curtable} contains {maxrow} rows')
         
-        # If the workbook contains a DML tab, capture it to append to the CONFIG block
+        if maxrow <= 2: 
+            # Check to see if the First Cell of the table has a value, if not, append to missing_sheets
+            testfield = wb[curtable].cell(2,1).value
+            if testfield == None:
+                missing_sheets.append( curtable )
+                missing_sheets.append( curcol )
+                continue
+        else:
+            # It is possible that all of the rows are empty, so check to see if the first cell of the first row has a value
+            # If not, append to missing_sheets
+            print( f'Checking {curtable} for empty rows' )
+            testrows = wb[curtable].rows
+            for idx, row in enumerate(testrows):
+                if idx == 0: continue
+                # Check to see if the first column is empty
+                if row[0].value == None:
+                    missing_sheets.append( curtable )
+                    missing_sheets.append( curcol )
+                    table_rows, col_rows = [],[]
+                    break
+                else:
+                    continue
 
+        # Moved to be outside of DIM table creation script
+        alter_sql = ''
+        args.currentorder = currentorder
+
+        # If the workbook contains a DML tab, capture it to append to the CONFIG block
         dml_block, dml_sql = '',''
         if 'DML' in wb.sheetnames:
             dml_tab = wb['DML']
@@ -1454,157 +1494,178 @@ def main():
                 print(f'\t\tERROR: {e}')
                 continue
 
-        # Try to BULK handle the UNIFIED Columns/tables
-        if xls.name.startswith('UNIFIED'):
-
-            for each_sheet in new_sheets:
-                if each_sheet in wb.sheetnames: 
-                    continue 
-                else:
-                    missing_sheets.append( each_sheet )
-
-            if len( missing_sheets ) > 0:
-                missing_sheets =  list(set( missing_sheets ))
-                print( f'\n\n~~~ There are missing sheets for the new format: {missing_sheets}')
-
-            buildorder = ['STG','DST','DSV','DIM']
-
-            for currentorder in buildorder:
-                tgt_table = xls.stem.replace('UNIFIED', currentorder )
-                curtable = f"{currentorder} Tables"
-                curcol =   f"{currentorder} Columns"
-                maxrow = wb[curtable].max_row
-                print(f'{curtable} contains {maxrow} rows')
-                
-                if maxrow <= 2: 
-                    # Check to see if the First Cell of the table has a value, if not, append to missing_sheets
-                    testfield = wb[curtable].cell(2,1).value
-                    if testfield == None:
-                        missing_sheets.append( curtable )
-                        missing_sheets.append( curcol )
-                        continue
-                                
-                # Moved to be outside of DIM table creation script
-                alter_sql = ''
-                args.currentorder = currentorder
-
-                # print (f"<< Testing for {eachval} Table for >> {tgt_table}'")
-                if not curtable in missing_sheets:
-                    table_rows = [row for row in sheet2dict(wb[ curtable ])]
-                    col_rows = [row for row in sheet2dict(wb[ curcol ])]
-
-                    # Only check on SCD for the DIM tables/columns
-                    is_scd=False
-                    if currentorder == 'DIM':
-                        if not args.silent:
-                            print( f'\n\n~~Current tab/cols are: {curtable}; {curcol}')         # DEBUG
-
-                            missing_cols =[]        
-                            for each_col in expected_cols:
-                                if each_col in col_rows[0].keys(): 
-                                    continue 
-                                else:
-                                    missing_cols.append( each_col )
-                            if len(missing_cols)>0:
-                                missing_cols =  list(set( missing_cols ))
-                                print( f'\n\n~~~ There are missing colums for the current table: {missing_cols}')
-
-                        for row in col_rows:
-                        #print(row)
-                            if row.get( 'SCD' ): is_scd = True; break
-                            # print('NOT DIM MAPPING, skipping',xls)
-                            break
-                        if not is_scd: continue
-                    
-                    # replaced tgt_table with curtable < If this fails
-                        scd_dict = get_scdinfo( args.schema, tgt_table, col_rows)
-                        scd2_sql, scd6_sql = make_scd( scd_dict )
-
-                        # Workbook name is Case Sensitive.  Need to correct
-                        if 'Alter' in wb:
-                            alter_sql = '\n'
-                            for sql in sheet2list(wb['Alter']):
-                                if not sql[0]:
-                                    continue
-                                alter_sql += sql[0] + '\n'
-                            alter_sql = alter_sql.replace('\\xa0', ' ')
-
-                        # Put config in front of scd6_sql
-                        config = get_config( alter_sql, tgt_table, dml_block )
-                        scd6_sql = config + scd6_sql
-
-                        # write_dbt: replaced scd_dict['table'] w/ curtable
-                        if not args.yml:
-                            write_dbt( scd_dict[ 'table' ], args.modeldir, scd2_sql, args.modeldir, scd6_sql )
-                            write_final_sql( args, tgt_table, scd_dict )
-
-                # tgt_table = xls.stem
-                print(f'Tgt table: {tgt_table} ')  # Should be the XLS filename
-
-                # Start to process the build of each Layer
-                build(args, args.modeldir, tgt_table, table_rows, col_rows, alter_sql, dml_block)
-
-        ##############
-        # Standard file processing...
-        if not xls.name.startswith('UNIFIED'):
-            tgt_table = xls.stem
-            print(f'Tgt table: {tgt_table} ')  # Should be the XLS filename
-            alter_sql = ''
-            config = ''
-            # args.currentorder = {tgt_table}.split()
-
-            table_rows = [row for row in sheet2dict(wb['Tables'])]
-            col_rows = [row for row in sheet2dict(wb['Columns'])]
-            missing_cols =[]
-        
-            for each_col in expected_cols:
-                if each_col in col_rows[0].keys(): 
-                    continue 
-                else:
-                    missing_cols.append( each_col )
-            if len(missing_cols)>0:
-                missing_cols =  list(set( missing_cols ))
-                print( f'\n\n~~~ There are missing colums for the current table: {missing_cols}')
-
-        # Workbook name is Case Sensitive.  Need to correct
-            if 'Alter' in wb:
-                alter_sql = '\n'
-                for sql in sheet2list(wb['Alter']):
-                    if not sql[0]:
-                        continue
-                    alter_sql += sql[0] + '\n'
-                alter_sql = alter_sql.replace('\\xa0', ' ')
-                config = get_config( alter_sql, tgt_table, dml_block )
+        # print (f"<< Testing for {eachval} Table for >> {tgt_table}'")
+        if not curtable in missing_sheets:
+            table_rows = [row for row in sheet2dict(wb[ curtable ])]
+            col_rows = [row for row in sheet2dict(wb[ curcol ])]
 
             # Only check on SCD for the DIM tables/columns
-            if xls.name.startswith('DIM'):
-                is_scd = False
+            is_scd=False
+            if currentorder == 'DIM':
+                if not args.silent:
+                    print( f'\n\n~~Current tab/cols are: {curtable}; {curcol}')         # DEBUG
+
+                    missing_cols =[]        
+                    for each_col in expected_cols:
+                        if each_col in col_rows[0].keys(): 
+                            continue 
+                        else:
+                            missing_cols.append( each_col )
+                    if len(missing_cols)>0:
+                        missing_cols =  list(set( missing_cols ))
+                        print( f'\n\n~~~ There are missing colums for the current table: {missing_cols}')
+
                 for row in col_rows:
-                    #print(row)
+                #print(row)
                     if row.get( 'SCD' ): is_scd = True; break
                     # print('NOT DIM MAPPING, skipping',xls)
                     break
                 if not is_scd: continue
-                
-                # replaced tgt_table with curtable < If this fails
-                # Put config in front of scd6_sql
+            
+            # replaced tgt_table with curtable < If this fails
                 scd_dict = get_scdinfo( args.schema, tgt_table, col_rows)
-                
-                if is_scd:
-                    scd2_sql, scd6_sql = make_scd( scd_dict )
-                    scd6_sql = config + scd6_sql
-                else:
-                    scd6_sql = config
+                scd2_sql, scd6_sql = make_scd( scd_dict )
+
+                # Workbook name is Case Sensitive.  Need to correct
+                if 'Alter' in wb:
+                    alter_sql = '\n'
+                    for sql in sheet2list(wb['Alter']):
+                        if not sql[0]:
+                            continue
+                        alter_sql += sql[0] + '\n'
+                    alter_sql = alter_sql.replace('\\xa0', ' ')
+
+                # Put config in front of scd6_sql
+                config = get_config( alter_sql, tgt_table, dml_block )
+                scd6_sql = config + scd6_sql
 
                 # write_dbt: replaced scd_dict['table'] w/ curtable
                 if not args.yml:
-                    write_dbt( scd_dict[ 'table' ], args.modeldir, scd2_sql, args.modeldir, scd6_sql )
-                    write_final_sql( args, tgt_table, scd_dict)
+                    write_scd_step1( scd_dict[ 'table' ], args.modeldir, scd2_sql, args.modeldir, scd6_sql )
+                    write_final_scd_sql( args, tgt_table, scd_dict )
+
+            # tgt_table = xls.stem
+            print(f'Tgt table: {tgt_table} ')  # Should be the XLS filename
 
             # Start to process the build of each Layer
-            build(args, args.modeldir, tgt_table, table_rows, col_rows, alter_sql, dml_block)
+            # fix table_rows reference
+        build(args, args.modeldir, tgt_table, table_rows, col_rows, alter_sql, dml_block)
 
+
+def process_std_map( args, xls ):
+    # If the workbook contains a DML tab, capture it to append to the CONFIG block
+    tgt_table = xls.stem
+    print( '-'*30 )
+    print( f'Processing Standard Mapping for {tgt_table}' )
+    missing_sheets =[]
+    expected_cols = [ 'Source Schema', 'Source Table', 'Source Column', 'Datatype', 'Automated Logic', 'Manual Logic', 'Order#' ,'Staging Layer Column Name' ,'Staging Layer Datatype', 'CPI' ,'Unique' ,'Not Null' ,'Test Expression' ,'Accepted Values', 'SCD' ]
+
+##############
+# Standard file processing...
+    wb = openpyxl.load_workbook(xls)
+
+    print(f'Tgt table: {tgt_table} ')  # Should be the XLS filename
+    alter_sql, config, dml_block, dml_sql = '','','',''
+
+    if 'DML' in wb.sheetnames:
+        dml_tab = wb['DML']
+        #replace all newlines in the cell value with a space
+        # save the contents of the first column of the dml tab to a string
+        try:
+            for row in dml_tab.rows:
+                if row[0].value is not None:
+                    dml_sql += row[0].value.replace('\n', ' ')
+            # dml_sql = '\n'.join([' '.join( row[0].value.replace('\n',' ') ) for row in dml_tab.rows])
+            dml_block = f'\n{dml_sql}'
+        except Exception as e:
+            print(f'\t\tERROR: {e}')
+
+    # args.currentorder = {tgt_table}.split()
+
+    table_rows = [row for row in sheet2dict(wb['Tables'])]
+    col_rows = [row for row in sheet2dict(wb['Columns'])]
+    missing_cols =[]
+
+    for each_col in expected_cols:
+        if each_col in col_rows[0].keys(): 
+            continue 
+        else:
+            missing_cols.append( each_col )
+    if len(missing_cols)>0:
+        missing_cols =  list(set( missing_cols ))
+        print( f'\n\n~~~ There are missing colums for the current table: {missing_cols}')
+
+# Workbook name is Case Sensitive.  Need to correct
+# Build the CONFIG block
+    if 'Alter' in wb:
+        alter_sql = '\n'
+        for sql in sheet2list(wb['Alter']):
+            if not sql[0]:
+                continue
+            alter_sql += sql[0] + '\n'
+        alter_sql = alter_sql.replace('\\xa0', ' ')
+        config = get_config( alter_sql, tgt_table, dml_block )
+
+    # Only check on SCD for the DIM tables/columns
+    if xls.name.startswith('DIM'):
+        is_scd = False
+        for row in col_rows:
+            #print(row)
+            if row.get( 'SCD' ): 
+                is_scd = True; break
+            # print('NOT DIM MAPPING, skipping',xls)
+
+        # replaced tgt_table with curtable < If this fails
+        # Put config in front of scd6_sql
+        scd_dict = get_scdinfo( args.schema, tgt_table, col_rows)
+        
+        if is_scd:
+            scd2_sql, scd6_sql = make_scd( scd_dict )
+            scd6_sql = config + scd6_sql
+        else:
+            scd6_sql = config
+
+        # write_dbt: replaced scd_dict['table'] w/ curtable
+        if not args.yml:
+            write_scd_step1( scd_dict[ 'table' ], args.modeldir, scd2_sql, args.modeldir, scd6_sql )
+            write_final_scd_sql( args, tgt_table, scd_dict)
+
+    # Start to process the build of each Layer
+    build(args, args.modeldir, tgt_table, table_rows, col_rows, alter_sql, dml_block)
+
+
+
+def main():
+    args = process_args()
+    setup(args)
+    count = 0
+    plural, scd6_sql, dml_block, dml_sql  = '', '', '',''
+
+    print('\n' + '-'*30)
+
+    #Process each xls file in the directory
+    for xls in args.mapdir.iterdir():
+        print(f'\t<< Processing: {xls}')
+        if xls.name.startswith('XDIM_'):
+            print(f'\t\tNOT STAGE MAPPING -- skipping: {xls.name}')
+            continue
+        elif 'xls' not in xls.suffix.lower():
+            print(f'\t-- Skipping non-XLS file: {xls}')
+            continue
+
+        print(f'-'*30)
+        print(f"Currently processing {os.path.basename(xls)}")
+
+        # Determine if it is UNIFIED or not
+        if 'UNIFIED' in xls.name.upper():
+            print(f'\t-- UNIFIED MAPPING: {xls.name}')
+            process_unified_map( args, xls )
+        else:
+            print(f'\t-- Standard MAPPING: {xls.name}')
+            process_std_map( args, xls )
+        
         count += 1
+
     if count > 1: plural = 's.'
     else: plural = '.'
 
