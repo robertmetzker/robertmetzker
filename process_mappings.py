@@ -3,7 +3,7 @@ from pathlib import Path
 
 # Other necessary libs
 import openpyxl, yaml               # pip install openpyxl (pyyaml)
-import pandas as pd
+from openpyxl.utils import get_column_letter
 from operator import itemgetter
 
 # Global variables
@@ -114,6 +114,7 @@ def process_unified( args, xls ):
     # get the sheet names using pandas
     # found_sheets = wb.sheet_names
 
+    # use pandas to read the xls file
     wb = openpyxl.load_workbook(xls)
     found_sheets = wb.sheetnames
 
@@ -136,51 +137,61 @@ def process_unified( args, xls ):
 
         # BUILD EACH LAYER
         if this_layer == 'STG':
-            pass
-            print(f'STG table: {table_name} ')  # Should be the XLS filename
-            build(args, args.modeldir, table_name, tables, columns)
+            if tables:
+                print(f'STG table: {table_name} ')  # Should be the XLS filename
+                build(args, args.modeldir, table_name, tables, columns)
+            else:
+                print(f'\t\t-- No STG tables found in: {xls.name}' )
 
         elif this_layer == 'DST':
-            print(f'\nDST table: {table_name} ')  # Should be the XLS filename
-            build(args, args.modeldir, table_name, tables, columns)
+            if tables:
+                print(f'\nDST table: {table_name} ')  # Should be the XLS filename
+                build(args, args.modeldir, table_name, tables, columns)
+            else:
+                print(f'\t\t-- No DST tables found in: {xls.name}' )
 
         elif this_layer == 'DSV':
-            print(f'\nDSV table: {table_name} ')  # Should be the XLS filename
-            build(args, args.modeldir, table_name, tables, columns)
+            if tables:
+                print(f'\nDSV table: {table_name} ')  # Should be the XLS filename
+                build(args, args.modeldir, table_name, tables, columns)
+            else:
+                print(f'\t\t-- No DSV tables found in: {xls.name}' )
 
         elif this_layer == 'DIM':
-            print(f'\nDIM table: {table_name} ')  # Should be the XLS filename
-            # Need to check for SCD1, SCD2 columns
+            if tables:
+                print(f'\nDIM table: {table_name} ')  # Should be the XLS filename
+                # Need to check for SCD1, SCD2 columns
 
-            # Need to process Alter tab for constraints
-            alter_sql = process_alter( args, wb, 'Alter' )
-            # Need to process DML tab for INSERT statements
-            dml_block = process_dml( args, wb, 'DML' )
+                # Need to process Alter tab for constraints
+                alter_sql = process_alter( args, wb, 'Alter' )
+                # Need to process DML tab for INSERT statements
+                dml_block = process_dml( args, wb, 'DML' )
 
-            # Combine the alter/dml to build the configuration
-            config = get_config( cur_layer= table_name, alter_sql= alter_sql, dml_block= dml_block )
+                # Combine the alter/dml to build the configuration
+                config = get_config( cur_layer= table_name, alter_sql= alter_sql, dml_block= dml_block )
 
-            # Determine if there are any SCD columns
-            is_scd = False
-            for col in columns.values():
-                if col.get('SCD','') == None:
-                    is_scd = True
-                    break
-            
-            scd_dict = get_scdinfo( schema, table_name, columns )
-            if is_scd:
-                scd2_sql, scd6_sql = make_scd( schema, table_name, scd_dict )
-                scd6_sql = config + scd6_sql
+                # Determine if there are any SCD columns
+                is_scd = False
+                for col in columns.values():
+                    if col.get('SCD','') == None:
+                        is_scd = True
+                        break
+                
+                scd_dict = get_scdinfo( schema, table_name, columns )
+                if is_scd:
+                    scd2_sql, scd6_sql = make_scd( schema, table_name, scd_dict )
+                    scd6_sql = config + scd6_sql
+                else:
+                    scd6_sql = config
+
+                write_snap_step1( table_name, args.modeldir, scd2_sql, args.modeldir, scd6_sql )
+                write_scd_step2( args, table_name, scd_dict )
+
+                # print( config_sql )
+                # build(args, args.modeldir, table_name, tables, columns, alter_sql= alter_sql, dml_block= dml_block, config_sql = config_sql )
+                build(args, args.modeldir, table_name, tables, columns )
             else:
-                scd6_sql = config
-
-            write_snap_step1( table_name, args.modeldir, scd2_sql, args.modeldir, scd6_sql )
-            write_scd_step2( args, table_name, scd_dict )
-
-            # print( config_sql )
-            # build(args, args.modeldir, table_name, tables, columns, alter_sql= alter_sql, dml_block= dml_block, config_sql = config_sql )
-            build(args, args.modeldir, table_name, tables, columns )
-
+                print(f'\t\t-- No DIM tables found in: {xls.name}' )
 
 
 
@@ -331,63 +342,68 @@ def make_scd( schema, table_name, scd_dict):
     return scd2_sql, scd6_sql
 
 
-def process_tables( args, wb, tables_tab ):
+def sheet2dict(sheet):
+    print(f'\t<<<< Processing {sheet}')
+
+    fields = None
+    for rownum, row in enumerate( sheet.iter_rows( values_only = True) ):
+        if rownum == 0:
+            fields = row
+            continue
+        row = dict(zip( fields, row ))
+
+        yield row
+
+def sheet2list(sheet):
+    for row in sheet.iter_rows( values_only = True ):
+        if not row:
+            continue
+        yield row
+
+
+def process_tables(args, wb, tables_tab):
     print(f'\t\t-- {tables_tab} Tables ...' )
     # read the tables tab and convert to a dictionary
-    expected_cols = ['Source Schema', 'Source Table', 'Alias', 'Filter Conditions' ,'Parent Join Number', 'Parent Table Join' ,'Child Table Join', 'Join Type']
-    missing_cols, extra_cols, found_cols = [],[],[]
+    expected_cols = ['Source Schema', 'Source Table', 'Alias', 'Filter Conditions', 'Parent Join Number', 'Parent Table Join', 'Child Table Join', 'Join Type']
+    missing_cols, extra_cols, found_cols = [], [], []
 
     ws = wb[tables_tab]
     tables_dict = {}
 
+    # get all cell values in the first row
+    for cell in ws[1]:
+        found_cols.append(cell.value)
+
     # Check for extra columns
-    for col in ws.iter_cols(min_row=1, max_row=1, values_only=True):
-        for cell in col:
-            if cell != '':
-                found_cols.append(cell)
-
-    # Check for missing columns and convert to a list
-    missing_cols=[x for x in expected_cols if x not in found_cols]
-    extra_cols=[x for x in found_cols if x not in expected_cols]
-
-    # Summarize the results
-    if len(extra_cols) > 0:
+    extra_cols = [col for col in found_cols if col not in expected_cols]
+    if extra_cols:
         print(f'\t\t\t-- Found Extra columns: {extra_cols}')
-    if len(missing_cols) > 0:
+
+    # Check for missing columns
+    missing_cols = [col for col in expected_cols if col not in found_cols]
+    if missing_cols:
         print(f'\t\t\t-- Missing columns: {missing_cols}')
 
     # Read the table rows and add to the dictionary
-    df = pd.DataFrame(ws.values)
-
-    # Use the 'Alias' to define the dictionary key and add all other column header/values as pairs
-    '''Index(['Source Schema', 'Source Table', 'Alias', 'Filter Conditions',
-       'Parent Join Number', 'Parent Table Join', 'Child Table Join',
-       'Parent Table Join2', 'Child Table Join2', 'Join Type'],
-      dtype='object', name=0)'''
-
-    col_lookup = {}
-    for i, col in enumerate(found_cols):
-        col_lookup[col] = i+1
-
-    for row in df.itertuples():
-
-        if row.Index == 0: continue
-        if row[1] != None:
-            rown = row.Index
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        # Use the Table Alias as the key
+        if row[2] != None:
+            rown = row[2]
             tables_dict[rown] = {}
-            for col in found_cols:
-                # Add dicionary entry for each column using the col_lookup dictionary to get the column number
-                tables_dict[rown][col] = row[ col_lookup.get(col) ]
-                # add the missing cols to the dictionary
-                for col in missing_cols:
-                    tables_dict[rown][col] = ''
+            for i, col in enumerate(found_cols):
+                tables_dict[rown][col] = row[i] if i < len(row) else ''
+
+            # add the missing cols to the dictionary
+            for col in missing_cols:
+                tables_dict[rown][col] = ''
 
     return tables_dict
 
-def process_columns( args, wb, columns_tab ):
-    print(f'\t\t-- {columns_tab} Columns ...' )
+def process_columns(args, wb, columns_tab):
+    print(f'\t\t-- {columns_tab} Columns ...')
+    
     # read the tables tab and convert to a dictionary
-    expected_cols = ['Source Schema', 'Source Table', 'Source Column', 'Datatype', 'Automated Logic', 'Manual Logic' ,'Mapping Rule', 'Order#',	'Staging Layer Column Name', 'Staging Layer Datatype', 'CPI', 'Unique', 'Not Null',	'Remove Column', 'Test Expression', 'Accepted Values']
+    expected_cols = ['Source Schema', 'Source Table', 'Source Column', 'Datatype', 'Automated Logic', 'Manual Logic' ,'Mapping Rule', 'Order#', 'Staging Layer Column Name', 'Staging Layer Datatype', 'CPI', 'Unique', 'Not Null', 'Remove Column', 'Test Expression', 'Accepted Values']
     dim_cols = ['Model Equality', 'Model Equal Rowcount', 'SCD']
     missing_cols, extra_cols, found_cols = [],[],[]
     cur_layer = columns_tab.split(' ')[0]
@@ -399,9 +415,9 @@ def process_columns( args, wb, columns_tab ):
     columns_dict = {}
 
     # Check for extra columns
-    for col in ws.iter_cols(min_row=1, max_row=1, values_only=True):
-        for cell in col:
-            if cell != '':
+    for row in ws.iter_rows(min_row=1, max_row=1, values_only=True):
+        for cell in row:
+            if cell is not None:
                 found_cols.append(cell)
 
     # Check for missing columns and convert to a list
@@ -415,8 +431,9 @@ def process_columns( args, wb, columns_tab ):
         print(f'\t\t\t-- Missing columns: {missing_cols}')
 
     # Read the table rows and add to the dictionary
-    df = pd.DataFrame(ws.values)
-
+    rows = ws.values
+    headers = next(rows)
+    
     # Use the 'Order#' to define the dictionary key and add all other column header/values as pairs
     '''Index(['Source Schema', 'Source Table', 'Source Column', 'Datatype',
        'Automated Logic', 'Manual Logic', 'Mapping Rule', 'Order#',
@@ -424,23 +441,21 @@ def process_columns( args, wb, columns_tab ):
        'Not Null', 'Test Expression', 'Model Equality', 'Model Equal Rowcount',
        'Accepted Values', 'SCD'],'''
     # column order is based on the order of columns in the found_cols list
-    # make a dictionary of the columns and their order
     col_lookup = {}
     for i, col in enumerate(found_cols):
-        col_lookup[col] = i+1
+        col_lookup[col] = i
 
-    for row in df.itertuples():
-
-        if row.Index == 0: continue
-        rown = row.Index
+    for row in rows:
+        if row[7] is None:
+            continue
         
-        columns_dict[rown] = {}
-        for col in found_cols:
-            # Add dicionary entry for each column using the col_lookup dictionary to get the column number
-            columns_dict[rown][col] = row[ col_lookup.get(col) ]
-            # add the missing cols to the dictionary
-            for col in missing_cols:
-                columns_dict[rown][col] = ''
+        columns_dict[row[7]] = {}
+        for i in range(len(row)):
+            columns_dict[row[7]][headers[i]] = row[i]
+        
+        # add the missing cols to the dictionary
+        for col in missing_cols:
+            columns_dict[row[7]][col] = ''
 
     # if the Staging Layer Column Name is blank, remove the row from the dictionary
     # Clean up extra rows created by the blank rows in the excel sheet
@@ -451,7 +466,7 @@ def process_columns( args, wb, columns_tab ):
     for rown in blank_rows:
         del columns_dict[rown]
 
-    return columns_dict 
+    return columns_dict
 
 
 def process_alter( args, wb, alter_tab ):
@@ -1075,7 +1090,7 @@ def build_logic_layer( columns, tables ):
 
     for row in columns.values():
         row_sql = ''
-        tbl = row.get('Source Table')
+        tbl = row.get('Source Table','')
         if tbl:
             row_sql = row.get('SQL','')
             table_cols[tbl]['cols'].append( row_sql )
