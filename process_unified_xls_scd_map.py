@@ -1269,11 +1269,10 @@ def get_column_tests(row, tgt):
     return tests
 
 
-def build( args, modeldir, tgt_table, table_rows, col_rows, alter_sql, dml_block ):
+def build( args, modeldir, tgt_table, table_rows, col_rows, alter_sql, dml_block, incl_trim ):
     yml = make_yml( tgt_table, table_rows, col_rows )
     alias = {}
     newvalue = ''
-    incl_trim = False
 
     for thisrow in table_rows:
         thisrow_dict = {}
@@ -1506,7 +1505,11 @@ def main():
                 print(f'Tgt table: {tgt_table} ')  # Should be the XLS filename
 
                 # Start to process the build of each Layer
-                build(args, args.modeldir, tgt_table, table_rows, col_rows, alter_sql, dml_block)
+                if currentorder == 'STG':
+                    incl_trim = True
+                else:
+                    incl_trim = False
+                build(args, args.modeldir, tgt_table, table_rows, col_rows, alter_sql, dml_block, incl_trim )
 
         ##############
         # Standard file processing...
@@ -1566,7 +1569,11 @@ def main():
                     write_final_sql( args, tgt_table, scd_dict)
 
             # Start to process the build of each Layer
-            build(args, args.modeldir, tgt_table, table_rows, col_rows, alter_sql, dml_block)
+            if  xls.name.startswith('STG'):
+                incl_trim = True
+            else:
+                incl_trim = False
+            build(args, args.modeldir, tgt_table, table_rows, col_rows, alter_sql, dml_block, incl_trim)
 
         count += 1
     if count > 1: plural = 's.'
