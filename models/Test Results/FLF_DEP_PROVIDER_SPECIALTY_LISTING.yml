@@ -1,0 +1,58 @@
+models:
+- columns:
+  - name: DEP_PROVIDER_HKEY
+    tests:
+    - unique:
+        severity: warn
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: PROVIDER_HKEY
+        from_condition: 'DEP_PROVIDER_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_PROVIDER' )
+  - name: DEP_PROVIDER_SPECIALIZATION_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DEP_PROVIDER_SPECIALIZATION_HKEY
+        from_condition: 'DEP_PROVIDER_SPECIALIZATION_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_DEP_PROVIDER_SPECIALIZATION' )
+  - name: EQUIVALENT_REQUESTED_EXAM_TYPE_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: EXAM_TYPE_HKEY
+        from_condition: 'EQUIVALENT_REQUESTED_EXAM_TYPE_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_EXAM_TYPE' )
+  - name: DEP_PROVIDER_LOCATION_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DEP_PROVIDER_LOCATION_HKEY
+        from_condition: 'DEP_PROVIDER_LOCATION_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_DEP_PROVIDER_LOCATION' )
+  - name: LOAD_DATETIME
+    tests:
+    - not_null:
+        severity: warn
+  - name: PRIMARY_SOURCE_SYSTEM
+    tests:
+    - not_null:
+        severity: warn
+  name: FLF_DEP_PROVIDER_SPECIALTY_LISTING
+  tests:
+  - dbt_utils.unique_combination_of_columns:
+      combination_of_columns:
+      - DEP_PROVIDER_HKEY
+      - DEP_PROVIDER_SPECIALIZATION_HKEY
+      - EQUIVALENT_REQUESTED_EXAM_TYPE_HKEY
+      - DEP_PROVIDER_LOCATION_HKEY
+      severity: warn
+version: 2

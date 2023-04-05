@@ -1,0 +1,59 @@
+models:
+- columns:
+  - name: AGRE_ID
+    tests:
+    - unique:
+        severity: warn
+    - not_null:
+        severity: warn
+  - name: CLM_NO
+    tests:
+    - not_null:
+        severity: warn
+  - name: COMBINED_CLAIM_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+  - name: FIREFIGHTER_CANCER_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+        - U
+  - name: SB223_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+        - U
+  - name: EMPLOYER_PREMISES_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+        - U
+  - name: EMPLOYER_PAID_PROGRAM_ENROLLMENT_DESC
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - 'YES'
+        - 'NO'
+        - UNKNOWN
+  name: STG_CLAIM_ELEMENT
+  tests: []
+version: 2

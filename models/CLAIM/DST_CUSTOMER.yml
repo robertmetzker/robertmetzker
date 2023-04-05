@@ -1,0 +1,37 @@
+models:
+- columns:
+  - name: UNIQUE_ID_KEY
+    tests:
+    - unique:
+        severity: warn
+    - not_null:
+        severity: warn
+  - name: CUST_ID
+    tests:
+    - unique:
+        severity: warn
+    - not_null:
+        severity: warn
+  - name: EMPLOYER_IND
+    tests:
+    - not_null:
+        severity: warn
+  - name: LEGAL_REPRESENTATIVE_IND
+    tests:
+    - not_null:
+        severity: warn
+  - name: INJURED_WORKER_IND
+    tests:
+    - not_null:
+        severity: warn
+  - name: COVERED_INDIVIDUAL_IND
+    tests:
+    - not_null:
+        severity: warn
+  - name: MISC_CUST_IND
+    tests:
+    - not_null:
+        severity: warn
+  name: DST_CUSTOMER
+  tests: []
+version: 2

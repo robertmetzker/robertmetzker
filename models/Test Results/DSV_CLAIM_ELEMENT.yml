@@ -1,0 +1,11 @@
+models:
+- columns:
+  - name: UNIQUE_ID_KEY
+    tests:
+    - unique:
+        severity: warn
+    - not_null:
+        severity: warn
+  name: DSV_CLAIM_ELEMENT
+  tests: []
+version: 2

@@ -1,0 +1,46 @@
+models:
+- columns:
+  - name: UNIQUE_ID_KEY
+    tests:
+    - unique:
+        severity: warn
+    - not_null:
+        severity: warn
+  - name: COMBINED_CLAIM_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+  - name: FIREFIGHTER_CANCER_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+        - U
+  - name: SB229_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+        - U
+  - name: EMPLOYER_PREMISES_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+        - U
+  name: DST_CLAIM_ELEMENT
+  tests: []
+version: 2

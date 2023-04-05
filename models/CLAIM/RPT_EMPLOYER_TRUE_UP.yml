@@ -1,0 +1,113 @@
+models:
+- columns:
+  - name: POLICY_NUMBER
+    tests:
+    - not_null:
+        severity: warn
+    - expression_is_true_ignore:
+        expression: length(PLCY_NO) = 8
+        ignore: ''
+        severity: warn
+  - name: POLICY_PERIOD_EFF_DATE
+    tests:
+    - not_null:
+        severity: warn
+  - name: ALL_YOU_NEED_TO_COMPLETE_ANSWER
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - 'YES'
+        - 'NO'
+  - name: CEASE_OPERATIONS_ANSWER
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - 'YES'
+        - 'NO'
+  - name: SELL_OPERATIONS_ANSWER
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - 'YES'
+        - 'NO'
+  - name: MERGE_BUSINESS_ANSWER
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - 'YES'
+        - 'NO'
+  - name: MULTIPLE_FEIN_ANSWER
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - 'YES'
+        - 'NO'
+  - name: USED_PAYROLL_SERVICE_VENDOR_ANSWER
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - 'YES'
+        - 'NO'
+  - name: TEMP_SERVICE_AGENCY_ANSWER
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - 'YES'
+        - 'NO'
+  - name: PEO_LEASE_AGREEMENT_ANSWER
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - 'YES'
+        - 'NO'
+  - name: SUBCONTRACT_LABOR_1099_FORMS_ANSWER
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - 'YES'
+        - 'NO'
+  - name: OPERATIONS_OUTSIDE_OHIO_ANSWER
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - 'YES'
+        - 'NO'
+  - name: COVERAGE_OUTSIDE_OHIO_ANSWER
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - 'YES'
+        - 'NO'
+  - name: CHANGE_IN_OPERATIONS_ANSWER
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - 'YES'
+        - 'NO'
+  name: RPT_EMPLOYER_TRUE_UP
+  tests: []
+version: 2

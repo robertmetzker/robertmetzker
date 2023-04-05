@@ -1,0 +1,77 @@
+models:
+- columns:
+  - name: PRVDR_BASE_NMBR
+    tests:
+    - not_null:
+        severity: warn
+  - name: PRVDR_SFX_NMBR
+    tests:
+    - not_null:
+        severity: warn
+  - name: ADRS_TYPE_CODE
+    tests:
+    - not_null:
+        severity: warn
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - CORRE
+        - HOME
+        - PRCBU
+        - RMBRS
+        - T1099
+  - name: ADRS_TYPE_LCT_NMBR
+    tests:
+    - not_null:
+        severity: warn
+  - name: CNEA_CRT_DTTM
+    tests:
+    - not_null:
+        severity: warn
+  - name: PRMRY_LCTN_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - N
+        - Y
+  - name: FRGN_ADRS_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - N
+        - Y
+  - name: FNLST_VLDTN_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - N
+        - Y
+        - 'NULL'
+  - name: FNLST_OVRD_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - N
+        - Y
+        - 'NULL'
+  name: STG_PROVIDER_ADDRESS
+  tests:
+  - dbt_utils.expression_is_true:
+      expression: length(PRVDR_BASE_NMBR) = 7
+      severity: warn
+  - dbt_utils.expression_is_true:
+      expression: length(PRVDR_SFX_NMBR) = 4
+      severity: warn
+  - dbt_utils.expression_is_true:
+      expression: length(STATE_CODE) = 2
+      severity: warn
+version: 2

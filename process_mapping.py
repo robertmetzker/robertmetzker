@@ -20,6 +20,7 @@ def process_args():
 
     args = parser.parse_args()
     args.schema = 'DEV_EDW'
+    
 
     return args
 
@@ -103,7 +104,7 @@ def write_scd_step2( args, tgt_table, scd_dict ):
 def process_std_map( args, xls ):
     src_file = xls.name.split('.')[0]
     table_name = src_file
-    schemas = {'STG':'STAGING', 'DST':'STAGING', 'DSV':'STAGING', 'DIM':'EDW_STAGING_DIM', 'FCT':'_MART' }
+    schemas = {'STG':'STAGING', 'DST':'STAGING', 'DSV':'STAGING', 'DIM':'EDW_STAGING_DIM', 'FCT':'EDW_STG_xxx_MART' }
 
     wb = openpyxl.load_workbook(xls)
     found_sheets = wb.sheetnames
@@ -111,26 +112,28 @@ def process_std_map( args, xls ):
     print(f'Sheets found: {found_sheets}\n\n')
 
     if 'Tables' in found_sheets:
-        print(f'\t\t-- Processing {tables_tab}  in: {xls.name}' )
+        print(f'\t\t-- Processing Tables  in: {xls.name}' )
         tables  = process_tables( args, wb, tables_tab='Tables' )
 
     if 'Columns' in found_sheets:
-        print(f'\t\t-- Processing {columns_tab} in: {xls.name}' )
+        print(f'\t\t-- Processing Columns in: {xls.name}' )
         columns = process_columns( args, wb, columns_tab='Columns' )
 
     if src_file.startswith( 'STG'):
         print(f'STG table: {table_name} ')  # Should be the XLS filename
-        build(args, args.modeldir, table_name, tables, columns)
+        build(args, args.modeldir, table_name, tables, columns, wb )
         
     elif src_file.startswith( 'DST' ):
         print(f'\nDST table: {table_name} ')  # Should be the XLS filename
-        build(args, args.modeldir, table_name, tables, columns)
+        build(args, args.modeldir, table_name, tables, columns, wb )
         
     elif src_file.startswith( 'DSV' ):
         print(f'\nDSV table: {table_name} ')  # Should be the XLS filename
-        build(args, args.modeldir, table_name, tables, columns)
-        
+        build(args, args.modeldir, table_name, tables, columns, wb )
+
+    # DIM and FACT (and FLF) should all be treated the same way    
     elif src_file.startswith( 'DIM' ):
+                schema = schemas[ 'DIM' ]
                 print(f'\nDIM table: {table_name} ')  # Should be the XLS filename
                 # Need to check for SCD1, SCD2 columns
                 # Need to process Alter tab for constraints
@@ -160,11 +163,13 @@ def process_std_map( args, xls ):
 
                 # print( config_sql )
                 # build(args, args.modeldir, table_name, tables, columns, alter_sql= alter_sql, dml_block= dml_block, config_sql = config_sql )
-                build(args, args.modeldir, table_name, tables, columns )
+                build(args, args.modeldir, table_name, tables, columns, wb )
                 
-    elif src_file.startswith( 'FCT' ):
-        print(f'\nFCT table: {table_name} ')  # Should be the XLS filename
-        build(args, args.modeldir, table_name, tables, columns)
+    elif src_file.startswith( 'FACT' ) or src_file.startswith( 'FLF' ):
+        schema = schemas[ 'FCT' ]
+        print(f'\nFACT table: {table_name} ')  # Should be the XLS filename
+                # Need to process Alter tab for constraints
+        build(args, args.modeldir, table_name, tables, columns, wb )
         
     else:
         print(f'\n\n==== Unknown mapping type for: {xls} ===')        
@@ -208,21 +213,21 @@ def process_unified( args, xls ):
         if this_layer == 'STG':
             if tables:
                 print(f'STG table: {table_name} ')  # Should be the XLS filename
-                build(args, args.modeldir, table_name, tables, columns)
+                build(args, args.modeldir, table_name, tables, columns, wb )
             else:
                 print(f'\t\t-- No STG tables found in: {xls.name}' )
 
         elif this_layer == 'DST':
             if tables:
                 print(f'\nDST table: {table_name} ')  # Should be the XLS filename
-                build(args, args.modeldir, table_name, tables, columns)
+                build(args, args.modeldir, table_name, tables, columns, wb )
             else:
                 print(f'\t\t-- No DST tables found in: {xls.name}' )
 
         elif this_layer == 'DSV':
             if tables:
                 print(f'\nDSV table: {table_name} ')  # Should be the XLS filename
-                build(args, args.modeldir, table_name, tables, columns)
+                build(args, args.modeldir, table_name, tables, columns, wb )
             else:
                 print(f'\t\t-- No DSV tables found in: {xls.name}' )
 
@@ -258,9 +263,14 @@ def process_unified( args, xls ):
 
                 # print( config_sql )
                 # build(args, args.modeldir, table_name, tables, columns, alter_sql= alter_sql, dml_block= dml_block, config_sql = config_sql )
-                build(args, args.modeldir, table_name, tables, columns )
+                build(args, args.modeldir, table_name, tables, columns, wb )
             else:
                 print(f'\t\t-- No DIM tables found in: {xls.name}' )
+        elif this_layer.startswith( 'FACT' ) or this_layer.startswith( 'FLF' ):
+            schema = schemas[ 'FCT' ]
+        print(f'\n{this_layer} table: {table_name} ')  # Should be the XLS filename
+                # Need t}o process Alter tab for constraints
+        build(args, args.modeldir, table_name, tables, columns, wb )
 
 
 def build_scd2( schema, table, cols, keycol ):
@@ -432,7 +442,9 @@ def sheet2list(sheet):
 def process_tables(args, wb, tables_tab):
     print(f'\t\t-- {tables_tab} Tables ...' )
     # read the tables tab and convert to a dictionary
-    expected_cols = ['Source Schema', 'Source Table', 'Alias', 'Filter Conditions', 'Parent Join Number', 'Parent Table Join', 'Child Table Join', 'Join Type']
+    # Filter Restriction rule should be added as a comment to the filter layer for the appropriate table, after the condition
+    # Final Layer filter should be added as a comment to the final layer (after the from clause)
+    expected_cols = ['Source Schema', 'Source Table', 'Alias', 'Filter Conditions', 'Filter Restriction Rule','Parent Join Number', 'Parent Table Join', 'Child Table Join','Final Layer filter', 'Join Type']
     missing_cols, extra_cols, found_cols = [], [], []
 
     ws = wb[tables_tab]
@@ -443,12 +455,14 @@ def process_tables(args, wb, tables_tab):
         found_cols.append(cell.value)
 
     # Check for extra columns
-    extra_cols = [col for col in found_cols if col not in expected_cols]
+    # extra_cols = [col for col in found_cols if col not in expected_cols]
+    extra_cols = list( set(found_cols) - set(expected_cols) )
     if extra_cols:
         print(f'\t\t\t-- Found Extra columns: {extra_cols}')
 
     # Check for missing columns
-    missing_cols = [col for col in expected_cols if col not in found_cols]
+    # missing_cols = [col for col in expected_cols if col not in found_cols]
+    missing_cols = list( set(expected_cols) - set(found_cols) )
     if missing_cols:
         print(f'\t\t\t-- Missing columns: {missing_cols}')
 
@@ -471,7 +485,7 @@ def process_columns(args, wb, columns_tab):
     print(f'\t\t-- {columns_tab} Columns ...')
     
     # read the tables tab and convert to a dictionary
-    expected_cols = ['Source Schema', 'Source Table', 'Source Column', 'Datatype', 'Automated Logic', 'Manual Logic' ,'Mapping Rule', 'Order#', 'Staging Layer Column Name', 'Staging Layer Datatype', 'CPI', 'Unique', 'Not Null', 'Remove Column', 'Test Expression', 'Accepted Values']
+    expected_cols = ['Source Schema', 'Source Table', 'Source Column', 'Datatype', 'Automated Logic', 'Manual Logic' ,'Mapping Rule', 'Order#', 'Staging Layer Column Name', 'Staging Layer Datatype', 'CPI', 'Unique','Set Default', 'Not Null', 'Remove Column', 'Test Expression', 'Accepted Values']
     dim_cols = ['Model Equality', 'Model Equal Rowcount', 'SCD']
     missing_cols, extra_cols, found_cols = [],[],[]
     cur_layer = columns_tab.split(' ')[0]
@@ -489,8 +503,10 @@ def process_columns(args, wb, columns_tab):
                 found_cols.append(cell)
 
     # Check for missing columns and convert to a list
-    missing_cols=[x for x in expected_cols if x not in found_cols]
-    extra_cols=[x for x in found_cols if x not in expected_cols]
+    # missing_cols=[x for x in expected_cols if x not in found_cols]
+    # extra_cols=[x for x in found_cols if x not in expected_cols]
+    missing_cols=list( set(expected_cols) - set(found_cols) )
+    extra_cols = list( set(found_cols) - set(expected_cols) ) 
 
     # Summarize the results
     if len(extra_cols) > 0:
@@ -510,21 +526,30 @@ def process_columns(args, wb, columns_tab):
        'Not Null', 'Test Expression', 'Model Equality', 'Model Equal Rowcount',
        'Accepted Values', 'SCD'],'''
     # column order# (7) is based on the order of columns in the found_cols list
+    # Generate a col_pos dictionary which lists the column_index based on the column_name
+    # col_pos = [( col, pos) for pos, col in enumerate( found_cols )]
+    
     col_lookup = {}
     for i, col in enumerate(found_cols):
         col_lookup[col] = i
 
-    for row in rows:
-        if row[7] is None:
+    #stop using the Order# and based the idx on the order they appear in the table.
+    # if row[7] is None:
+    for idx, row in enumerate( rows ):
+        if row[ col_lookup.get('Staging Layer Column Name','')] is None:
             continue
         
-        columns_dict[row[7]] = {}
+        columns_dict[idx] = {}
         for i in range(len(row)):
-            columns_dict[row[7]][headers[i]] = row[i]
+            columns_dict[idx][headers[i]] = row[i]
         
         # add the missing cols to the dictionary
         for col in missing_cols:
-            columns_dict[row[7]][col] = ''
+            if col == 'Remove Column' and col_lookup.get('Remove','') != '':
+                # Missing Remove column, but has Remove instead...
+                columns_dict[idx][col] = row[ col_lookup.get('Remove','')]
+            else:
+                columns_dict[idx][col] = ''
 
     # if the Staging Layer Column Name is blank, remove the row from the dictionary
     # Clean up extra rows created by the blank rows in the excel sheet
@@ -546,8 +571,9 @@ def process_alter( args, wb, alter_tab ):
 
     # read each row of the alter_tab and append to the alter_sql list if it's not blank
     for row in ws.iter_rows(min_row=0, values_only=True):
-        if row[0].strip() != '':
-            alter_sql.append(row[0])
+        if row[0]:
+            if row[0].strip() != '':
+                alter_sql.append(row[0])
     
     return alter_sql
 
@@ -579,6 +605,8 @@ def get_config( cur_layer, alter_sql='', dml_block='' ):
     config = {}
     compileif = ['view','tags','alter']
     cur_layer = str(cur_layer)
+    if '_' in cur_layer:
+        cur_layer = cur_layer.split("_")[0]
 
     if cur_layer.startswith('DSV'):
         config['view'] = f"materialized = 'view'"
@@ -590,8 +618,11 @@ def get_config( cur_layer, alter_sql='', dml_block='' ):
         if len(alter_sql) > 1:
             alter_sql = '\n'.join(alter_sql)
             # replace all of the carriage returns with spaces and then join into a single string
-            dml_block = [x.replace('\n',' ') for x in dml_block]
-            dml_block = ' '.join(dml_block)
+            if dml_block:
+                dml_block = [x.replace('\n',' ') for x in dml_block if x is not None]
+                dml_block = ' '.join(dml_block)
+            else:
+                dml_block = ''
             config['alter'] = f'post_hook = ("\n{alter_sql}\n{dml_block}\n") '
 
     compile_cnt = 0
@@ -630,6 +661,7 @@ def get_model_tests(row):
         if atest == 'Unique':
             if not row.get(atest).lower() == 'unique' :
                 test =   str(row[ atest ]).replace('COMPOSITE:','').strip()
+                test = test.replace("unique:","").replace("Unique:","").strip()
                 row[atest] = {
                     'dbt_utils.unique_combination_of_columns':
                     {
@@ -788,7 +820,15 @@ def get_column_tests(row, table_name):
             if ref_field == 'DATE_KEY':
                 ignore_in = " -1, -2, -3 "
             else: 
-                ignore_in = " '40c5dea533476acdd01f7ef0e84de22f', 'fcbcdcb8f6b1c597c5fdc7a54cd321ae' "
+                ignore_list = row.get('Set Default')
+                if ignore_list != None:
+                    ignore_vals = str(ignore_list).split(',')
+                    ignore_md5 = [f'MD5( {val} )' for val in ignore_vals ]
+                    ignore_in = ', '.join( ignore_md5 )
+                else:
+                    ignore_in = " '40c5dea533476acdd01f7ef0e84de22f', 'fcbcdcb8f6b1c597c5fdc7a54cd321ae' "
+                    
+                
 
             row[atest] = {
                 'dbt_utils.relationships_where':
@@ -884,7 +924,7 @@ def get_source_sql( target_table, cols, tables ):
     cols:
     1: {'Source Schema': 'STAGING', 'Source Table': None, 'Source Column': '(DERIVED)', 'Datatype': None, 'Automated Logic': None, 'Manual Logic': 'HASH: ADDRESS_LINE_1\n, ADDRESS_LINE_2\n, CITY_NAME\n, STATE_CODE\n, ZIP_CODE\n, COUNTY_NAME\n, ADMINISTRATION_ADDRESS_IND\n, SHIPPING_ADDRESS_IND\n, PRIMARY_ADDRESS_IND\n, EXAM_LOCATION_IND', 'Mapping Rule': 'EXTRACT THE DISTINCT VALUES OF KEY COLUMNS.\nTable Filter: ADDRESS_LINE_1 IS NOT NULL', 'Order#': 1, 'Staging Layer Column Name': 'UNIQUE_ID_KEY', 'Staging Layer Datatype': 'CHAR(32)', 'CPI': None, 'Unique': 'Unique', 'Not Null': 'not_null', 'Remove Column': None, 'Test Expression': None, 'Accepted Values': None}, 
     '''
-    current_layer = target_table.split('.')[0]
+    current_layer = target_table.split('_')[0]
     # make a copy of cols to update
     columns = cols.copy()
 
@@ -896,6 +936,7 @@ def get_source_sql( target_table, cols, tables ):
             src_col = row.get('Source Column','')
         src_sql = src_col
         if src_col:
+            src_col = src_col.upper()
             hasname = src_col.replace('(DERIVED)', '').strip()
         tgt_col = src_col
         final_col = src_col
@@ -913,7 +954,9 @@ def get_source_sql( target_table, cols, tables ):
             dtype = row.get('Datatype')
 
             if  dtype == None:
-                mlogic = row.get('Manual Logic').upper()
+                mlogic = row.get('Manual Logic', '')
+                if mlogic:  mlogic = mlogic.upper()
+                else: mlogic = ""
                 if 'HASH' in mlogic or 'COMPOSITE' in mlogic:
                     hashcol = ''
                     hashcol = mlogic.replace('HASH:', '').replace('COMPOSITE:', '').replace('\n','').replace(' ','').strip()
@@ -954,25 +997,35 @@ def get_source_sql( target_table, cols, tables ):
                     src_sql = f" {surrogate} "
 
         # If not DERIVED, then use the Source Column
-        # TEXT gets NULLIF and TRIM for STG layer
-        if row.get('Datatype') == 'TEXT':
+        # TEXT gets NULLIF and TRIM for STG layer--- Added a check for VARCHAR, if no logic defined.
+        if row.get('Datatype') == 'TEXT': # or 'VARCHAR' in row.get('Datatype'):
             if current_layer == 'STG':
                 src_sql = f"NULLIF( TRIM( {src_col} ),'' )"
 
         # Automated logic overlaps SRC_SQL
         logic = row.get('Automated Logic')
 
+
+        # If logic for handling of datatypes, over-ride that value if STG layer.
         if logic:
-            logic = logic.lower()
+            logic = str(logic).lower()
             indent = True
             if 'cast date' in logic:
                 src_sql = f'cast( {src_col} as DATE )'
+            elif 'cast time' in logic:
+                src_sql = f'cast( {src_col} as TIMESTAMP )'
             elif 'cast text' in logic:
                 src_sql = f'cast( {src_col} as TEXT )'
             elif 'upper' in logic and 'trim' in logic:
-                src_sql = f'upper( trim( {src_col} ))'
+                if current_layer == 'STG':
+                    src_sql = f"NULLIF( TRIM( {src_col} ),'' )"
+                else:
+                    src_sql = f'upper( trim( {src_col} ))'
             elif logic == 'upper':
-                src_sql = f'upper( {src_col} )'
+                if current_layer == 'STG':
+                    src_sql = f"NULLIF( TRIM( {src_col} ),'' )"
+                else:
+                    src_sql = f'upper( {src_col} )'
             else:
                 print(f'!! Unsupported Operation !! <{logic}>')
 
@@ -1014,7 +1067,7 @@ def get_source_sql( target_table, cols, tables ):
 
 
 
-def build( args, modeldir, tgt_table, tables, columns, alter_sql='', dml_block='', config_sql=''):
+def build( args, modeldir, tgt_table, tables, columns, wb, alter_sql='', dml_block='', config_sql=''):
     yml = make_yml( tgt_table, tables, columns )
     alias = {}
     all_sql = []
@@ -1047,6 +1100,10 @@ def build( args, modeldir, tgt_table, tables, columns, alter_sql='', dml_block='
     # Build each layer of the SQL
     ################################
     # SRC LAYER
+    if tgt_table.startswith('FACT') or tgt_table.startswith('FLF'):
+        alter_sql = process_alter( args, wb, 'Alter' )
+        dml_block = ''                          # No DML for FACT
+            
     config = get_config( tgt_table, alter_sql, dml_block )
     config_sql = config_sql if config_sql else config
     all_sql.append( config_sql )
@@ -1239,6 +1296,12 @@ def build_filter_layer(tables):
 
     filter_sql = []
     for row in tables.values():
+        # If Filter Restriction rule, then add it as a block comment after the filters_str.
+        filter_comment = row.get( 'Filter Restriction rule','')
+        if filter_comment != None and filter_comment !='':
+            filter_comment = filter_comment.replace("\n"," ")
+            filter_comment =f'\n {" "*40} /* {filter_comment} */\n'
+            
         if not row['Filter Conditions']:
             filters = []
         else:
@@ -1256,7 +1319,10 @@ def build_filter_layer(tables):
                 continue
         source_table = f'RENAME_{from_table}'
 
-        sql = f'FILTER_{from_table:<30} as ( SELECT * FROM    {source_table} {filters_str}  ),'
+        sql = f'FILTER_{from_table:<30} as ( SELECT * FROM    {source_table} {filters_str} {filter_comment}  )'
+
+
+
         filter_sql.append(sql)
 
     return ',\n'.join( filter_sql )
@@ -1302,7 +1368,9 @@ def build_join_layer(tables, columns):
     ########################################
     # Build the final select statement
     select_cols = []
-    for row in columns.values():
+
+    final_filter_str = ''
+    for row in columns.values():            
         if not row['Remove Column']:
             if row['Source Table'] == None:
                 select_cols.append( row.get('SQL') )
@@ -1329,6 +1397,16 @@ def build_join_layer(tables, columns):
 
     all_sql_str = ',\n'.join(all_sql)
 
+    final_filter_str = ''
+    for row in tables.values():
+        # If Filter Restriction rule, then add it as a block comment after the filters_str.
+        filter_comment = row.get( 'Final Layer filter','')
+        if filter_comment != None and filter_comment !='':
+            filter_comment = filter_comment.replace("\n"," ")
+            final_filter_str += f'\n {" "*10} /* {filter_comment} */\n'
+
+    all_sql_str += final_filter_str
+            
     # print( f'\n\n=== Build JOIN SQL\n{all_sql}')                   # DEBUG
     return all_sql_str
 

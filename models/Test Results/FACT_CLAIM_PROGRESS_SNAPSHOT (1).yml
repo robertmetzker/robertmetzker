@@ -1,0 +1,443 @@
+models:
+- columns:
+  - name: CLAIM_NUMBER
+    tests:
+    - unique:
+        severity: warn
+    - not_null:
+        severity: warn
+  - name: INITIAL_FILE_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+  - name: FILE_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'FILE_DATE_KEY not in (  -1, -2, -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: OCCURRENCE_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'OCCURRENCE_DATE_KEY not in (  -1, -2, -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: INJURED_WORKER_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: INJURED_WORKER_HKEY
+        from_condition: 'INJURED_WORKER_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_INJURED_WORKER' )
+  - name: PRIMARY_ICD_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: ICD_HKEY
+        from_condition: 'PRIMARY_ICD_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_ICD' )
+  - name: EMPLOYER_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: EMPLOYER_HKEY
+        from_condition: 'EMPLOYER_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_EMPLOYER' )
+  - name: MANUAL_CLASS_CODE_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: MANUAL_CLASS_CODE_HKEY
+        from_condition: 'MANUAL_CLASS_CODE_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_MANUAL_CLASSIFICATION' )
+  - name: MANUAL_CLASS_INDUSTRY_GROUP_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: INDUSTRY_GROUP_HKEY
+        from_condition: 'MANUAL_CLASS_INDUSTRY_GROUP_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_INDUSTRY_GROUP' )
+  - name: ENTRY_USER_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: USER_HKEY
+        from_condition: 'ENTRY_USER_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_USER' )
+  - name: SOURCE_SYTEM_CREATE_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'SOURCE_SYTEM_CREATE_DATE_KEY not in (  -1, -2, -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: CLAIM_RELEASE_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'CLAIM_RELEASE_DATE_KEY not in (  -1, -2, -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: FIRST_DETERMINATION_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'FIRST_DETERMINATION_DATE_KEY not in (  -1, -2, -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: ACP_START_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+  - name: ACP_END_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+  - name: PRIMARY_CSS_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: USER_HKEY
+        from_condition: 'PRIMARY_CSS_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_USER' )
+  - name: DETERMINATION_USER_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: USER_HKEY
+        from_condition: 'DETERMINATION_USER_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_USER' )
+  - name: ORGANIZATIONAL_UNIT_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: ORGANIZATIONAL_UNIT_HKEY
+        from_condition: 'ORGANIZATIONAL_UNIT_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_ORGANIZATIONAL_UNIT' )
+  - name: INVESTIGATION_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: CLAIM_INVESTIGATION_HKEY
+        from_condition: 'INVESTIGATION_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_CLAIM_INVESTIGATION' )
+  - name: FIRST_ASSIGNMENT_DATE_KEY
+    tests:
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'FIRST_ASSIGNMENT_DATE_KEY not in (  -1, -2, -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: LAST_ASSIGNMENT_DATE_KEY
+    tests:
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'LAST_ASSIGNMENT_DATE_KEY not in (  -1, -2, -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: FIRST_MEDICAL_PAYMENT_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'FIRST_MEDICAL_PAYMENT_DATE_KEY not in (  -1, -2, -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: LAST_MEDICAL_PAYMENT_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'LAST_MEDICAL_PAYMENT_DATE_KEY not in (  -1, -2, -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: PROVIDER_OF_RECORD_HKEY
+    tests:
+    - not_null:
+        severity: warn
+  - name: FIRST_POR_VISIT_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'FIRST_POR_VISIT_DATE_KEY not in (  -1, -2, -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: FIRST_MEDICAL_SERVICE_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'FIRST_MEDICAL_SERVICE_DATE_KEY not in (  -1, -2, -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: LAST_MEDICAL_SERVICE_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'LAST_MEDICAL_SERVICE_DATE_KEY not in (  -1, -2, -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: FIRST_INDEMNITY_PAYMENT_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'FIRST_INDEMNITY_PAYMENT_DATE_KEY not in (  -1, -2, -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: LAST_INDEMNITY_PAYMENT_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'LAST_INDEMNITY_PAYMENT_DATE_KEY not in (  -1, -2, -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: PAYMENT_AMOUNTS_AS_OF_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'PAYMENT_AMOUNTS_AS_OF_DATE_KEY not in (  -1, -2, -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: POLICY_STANDING_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: POLICY_STANDING_HKEY
+        from_condition: 'POLICY_STANDING_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_POLICY_STANDING' )
+  - name: MCO_ASSIGNED_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: NETWORK_HKEY
+        from_condition: 'MCO_ASSIGNED_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_NETWORK' )
+  - name: LAST_DAY_AT_WORK_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'LAST_DAY_AT_WORK_DATE_KEY not in (  -1, -2, -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: DISABILITY_TYPE_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DISABILITY_TYPE_HKEY
+        from_condition: 'DISABILITY_TYPE_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_DISABILITY_TYPE' )
+  - name: ESTIMATED_RETURN_TO_WORK_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'ESTIMATED_RETURN_TO_WORK_DATE_KEY not in (  -1, -2, -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: ACTUAL_RETURN_TO_WORK_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'ACTUAL_RETURN_TO_WORK_DATE_KEY not in (  -1, -2, -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: CLAIM_TYPE_STATUS_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: CLAIM_TYPE_STATUS_HKEY
+        from_condition: 'CLAIM_TYPE_STATUS_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_CLAIM_TYPE_STATUS' )
+  - name: CLAIM_DETAIL_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: CLAIM_DETAIL_HKEY
+        from_condition: 'CLAIM_DETAIL_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_CLAIM_DETAIL' )
+  - name: CLAIM_ACCIDENT_DESC_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: CLAIM_ACCIDENT_DESC_HKEY
+        from_condition: 'CLAIM_ACCIDENT_DESC_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_CLAIM_ACCIDENT_DESCRIPTION' )
+  - name: EMPLOYER_PAID_PROGRAM_EFFECTIVE_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'EMPLOYER_PAID_PROGRAM_EFFECTIVE_DATE_KEY not in (  -1, -2,
+          -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: EMPLOYER_PAID_PROGRAM_EXPIRATION_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'EMPLOYER_PAID_PROGRAM_EXPIRATION_DATE_KEY not in (  -1, -2,
+          -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: EMPLOYER_PAID_PROGRAM_EFFECTIVE_ENTRY_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'EMPLOYER_PAID_PROGRAM_EFFECTIVE_ENTRY_DATE_KEY not in (  -1,
+          -2, -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: INJURY_TYPE_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: INJURY_TYPE_HKEY
+        from_condition: 'INJURY_TYPE_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_INJURY_TYPE' )
+  - name: CATASTROPHIC_EFFECTIVE_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'CATASTROPHIC_EFFECTIVE_DATE_KEY not in (  -1, -2, -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: CATASTROPHIC_EXPIRATION_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'CATASTROPHIC_EXPIRATION_DATE_KEY not in (  -1, -2, -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: POLICY_ORIGINAL_EFFECTIVE_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: DATE_KEY
+        from_condition: 'POLICY_ORIGINAL_EFFECTIVE_DATE_KEY not in (  -1, -2, -3  ) '
+        to: ref( 'DIM_DATE' )
+  - name: ATTORNEY_OF_RECORD_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: REPRESENTATIVE_HKEY
+        from_condition: 'ATTORNEY_OF_RECORD_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_REPRESENTATIVE' )
+  - name: EMPLOYER_REPRESENTATIVE_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: REPRESENTATIVE_HKEY
+        from_condition: 'EMPLOYER_REPRESENTATIVE_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_REPRESENTATIVE' )
+  - name: INSURED_REPRESENTATIVE_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: REPRESENTATIVE_HKEY
+        from_condition: 'INSURED_REPRESENTATIVE_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_REPRESENTATIVE' )
+  - name: CLAIM_COVID_PROFILE_HKEY
+    tests:
+    - not_null:
+        severity: warn
+    - dbt_utils.relationships_where:
+        field: CLAIM_COVID_PROFILE_HKEY
+        from_condition: 'CLAIM_COVID_PROFILE_HKEY not in (  ''40c5dea533476acdd01f7ef0e84de22f'',
+          ''fcbcdcb8f6b1c597c5fdc7a54cd321ae''  ) '
+        to: ref( 'DIM_CLAIM_COVID_PROFILE' )
+  - name: SETTLE_MEDICAL_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+  - name: SETTLE_INDEMNITY_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+  - name: SETTLE_BOTH_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+  - name: CLOSE_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+  - name: REOPEN_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+  - name: RECLOSE_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+  - name: STATUE_OF_LIMITATION_DATE_KEY
+    tests:
+    - not_null:
+        severity: warn
+  - name: LOAD_DATETIME
+    tests:
+    - not_null:
+        severity: warn
+  - name: PRIMARY_SOURCE_SYSTEM
+    tests:
+    - not_null:
+        severity: warn
+  name: FACT_CLAIM_PROGRESS_SNAPSHOT (1)
+  tests: []
+version: 2

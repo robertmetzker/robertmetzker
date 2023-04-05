@@ -1,0 +1,20 @@
+models:
+- columns:
+  - name: PLCY_NMBR
+    tests:
+    - not_null:
+        severity: warn
+  - name: PRD_BGNG_DATE
+    tests:
+    - not_null:
+        severity: warn
+  - name: ANSWR_CRT_DTTM
+    tests:
+    - not_null:
+        severity: warn
+  name: STG_TRUE_UP_QUESTIONNAIRE
+  tests:
+  - dbt_utils.expression_is_true:
+      expression: length(PLCY_NMBR) = 8
+      severity: warn
+version: 2

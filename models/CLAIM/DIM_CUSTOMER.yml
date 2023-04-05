@@ -1,0 +1,25 @@
+models:
+- columns:
+  - name: CUSTOMER_HKEY
+    tests:
+    - unique:
+        severity: warn
+    - not_null:
+        severity: warn
+  - name: UNIQUE_ID_KEY
+    tests:
+    - unique:
+        severity: warn
+    - not_null:
+        severity: warn
+  - name: LOAD_DATETIME
+    tests:
+    - not_null:
+        severity: warn
+  - name: PRIMARY_SOURCE_SYSTEM
+    tests:
+    - not_null:
+        severity: warn
+  name: DIM_CUSTOMER
+  tests: []
+version: 2

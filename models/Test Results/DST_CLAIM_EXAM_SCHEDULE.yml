@@ -1,0 +1,24 @@
+models:
+- columns:
+  - name: CASE_NO
+    tests:
+    - unique:
+        severity: warn
+    - not_null:
+        severity: warn
+  - name: SCHEDULE_NUMBER
+    tests:
+    - not_null:
+        severity: warn
+  - name: CASE_ID
+    tests:
+    - not_null:
+        severity: warn
+  name: DST_CLAIM_EXAM_SCHEDULE
+  tests:
+  - dbt_utils.unique_combination_of_columns:
+      combination_of_columns:
+      - CASE_ID
+      - SCHEDULE_NUMBER
+      severity: warn
+version: 2

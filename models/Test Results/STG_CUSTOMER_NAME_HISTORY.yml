@@ -1,0 +1,11 @@
+models:
+- columns:
+  - name: HIST_ID
+    tests:
+    - unique:
+        severity: warn
+    - not_null:
+        severity: warn
+  name: STG_CUSTOMER_NAME_HISTORY
+  tests: []
+version: 2

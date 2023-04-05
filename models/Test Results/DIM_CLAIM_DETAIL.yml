@@ -1,0 +1,83 @@
+models:
+- columns:
+  - name: CLAIM_DETAIL_HKEY
+    tests:
+    - not_null:
+        severity: warn
+  - name: UNIQUE_ID_KEY
+    tests:
+    - not_null:
+        severity: warn
+  - name: FIREFIGHTER_CANCER_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+        - U
+  - name: COVID_EXPOSURE_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+        - U
+  - name: COVID_EMERGENCY_WORKER_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+        - U
+  - name: COVID_HEALTH_CARE_WORKER_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+        - U
+  - name: COMBINED_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+  - name: SB223_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+        - U
+  - name: EMPLOYER_PREMISES_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+        - U
+  - name: LOAD_DATETIME
+    tests:
+    - not_null:
+        severity: warn
+  - name: PRIMARY_SOURCE_SYSTEM
+    tests:
+    - not_null:
+        severity: warn
+  name: DIM_CLAIM_DETAIL
+  tests: []
+version: 2

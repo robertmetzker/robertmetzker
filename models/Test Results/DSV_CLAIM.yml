@@ -1,0 +1,108 @@
+models:
+- columns:
+  - name: CLAIM_NUMBER
+    tests:
+    - not_null:
+        severity: warn
+  - name: CURRENT_CORESUITE_CLAIM_TYPE_DESC
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - LOST TIME
+        - MEDICAL ONLY
+  - name: CLAIM_STATE_DESC
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - OPEN
+        - CLOSED
+        - INCOMPLETE
+  - name: FIREFIGHTER_CANCER_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+        - U
+  - name: COVID_EXPOSURE_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+        - U
+  - name: COVID_EMERGENCY_WORKER_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+        - U
+  - name: COVID_HEALTH_CARE_WORKER_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+        - U
+  - name: COMBINED_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+  - name: SB223_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+        - U
+  - name: EMPLOYER_PREMISES_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+        - U
+  - name: K_PROGRAM_ENROLLMENT_DESC
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+        - U
+  - name: CATASTROPHIC_IND
+    tests:
+    - accepted_valids:
+        ignore: ''
+        severity: warn
+        values:
+        - Y
+        - N
+  name: DSV_CLAIM
+  tests:
+  - dbt_utils.expression_is_true:
+      expression: length(CLAIM_NUMBER) <= 15
+      severity: warn
+version: 2
