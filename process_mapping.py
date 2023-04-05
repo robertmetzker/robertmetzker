@@ -119,6 +119,14 @@ def process_std_map( args, xls ):
         print(f'\t\t-- Processing Columns in: {xls.name}' )
         columns = process_columns( args, wb, columns_tab='Columns' )
 
+    if tables and columns:
+        print(f'\t\t-- Validating Table and Column aliases in: {xls.name}' )
+        is_valid = validate_tables_columns( xls, tables, columns )
+
+    if not is_valid:
+        print(f'\t## ERROR: Table and Column aliases are not valid in: {xls.name}\n\n' )
+        return 1
+
     if src_file.startswith( 'STG'):
         print(f'STG table: {table_name} ')  # Should be the XLS filename
         build(args, args.modeldir, table_name, tables, columns, wb )
@@ -172,7 +180,9 @@ def process_std_map( args, xls ):
         build(args, args.modeldir, table_name, tables, columns, wb )
         
     else:
-        print(f'\n\n==== Unknown mapping type for: {xls} ===')        
+        print(f'\n\n==== Unknown mapping type for: {xls} ===')
+
+    return 0       
 
     
 def process_unified( args, xls ):
@@ -208,6 +218,14 @@ def process_unified( args, xls ):
         if columns_tab in found_sheets:
             print(f'\t\t-- Processing {columns_tab} in: {xls.name}' )
             columns = process_columns( args, wb, columns_tab )
+
+        if tables and columns:
+            print(f'\t\t-- Validating Table and Column aliases in: {xls.name}' )
+            is_valid = validate_tables_columns( xls, tables, columns )
+
+        if not is_valid:
+            print(f'\t## ERROR: Table and Column aliases are not valid in: {xls.name}\n\n' )
+            return 1
 
         # BUILD EACH LAYER
         if this_layer == 'STG':
@@ -272,6 +290,7 @@ def process_unified( args, xls ):
                 # Need t}o process Alter tab for constraints
         build(args, args.modeldir, table_name, tables, columns, wb )
 
+    return 0
 
 def build_scd2( schema, table, cols, keycol ):
     schema = 'EDW_STAGING_SNAPSHOT'
@@ -563,6 +582,27 @@ def process_columns(args, wb, columns_tab):
     return columns_dict
 
 
+def validate_tables_columns( xls, tables, columns):
+    # Validate that all table aliases exist as column Source Tables, and vice versa
+    is_valid, missing_tables, missing_columns = True, [], []
+
+    table_aliases = set( tables.keys() )
+    col_values = columns.values()
+    column_aliases = set(  col['Source Table'] for col in col_values if col['Source Table'] != None)
+
+    missing_tables = list( table_aliases - column_aliases )
+    missing_columns = list( column_aliases - table_aliases )
+
+    if missing_tables:
+        print(f'\t\t\t-- Missing Table references on Columns Tab: {missing_tables}')
+        is_valid = False
+    if missing_columns:
+        print(f'\t\t\t-- Missing Columns alias in Tables tab: {missing_columns}')
+        is_valid = False
+
+    return is_valid
+
+
 def process_alter( args, wb, alter_tab ):
     print(f'\t\t-- Processing ALTER Statements ...' )
 
@@ -659,7 +699,7 @@ def get_model_tests(row):
             continue
 
         if atest == 'Unique':
-            if not row.get(atest).lower() == 'unique' :
+            if not str( row.get(atest,'')).lower() == 'unique' :
                 test =   str(row[ atest ]).replace('COMPOSITE:','').strip()
                 test = test.replace("unique:","").replace("Unique:","").strip()
                 row[atest] = {
@@ -1483,7 +1523,7 @@ def build_join_levels(tables):
 
 
 def main():
-    count = 0
+    count, err = 0, 0
     plural, scd6_sql, dml_block, dml_sql  = '', '', '',''
     print('\n' + '-'*30)
 
@@ -1504,17 +1544,21 @@ def main():
         # Determine if it is UNIFIED or not
         if 'UNIFIED' in xls.name.upper():
             print(f'\t-- UNIFIED MAPPING: {xls.name}')
-            process_unified( args, xls )
+            err = process_unified( args, xls )
         else:
             print(f'\t-- Standard MAPPING: {xls.name}')
-            process_std_map( args, xls )
+            err = process_std_map( args, xls )
             
         count += 1
+        err += err
 
     plural = 's.' if count > 1 else '.'
 
     print(f'Processed: {count} file{plural}')
     if count > 0 : print(f'Mapping docs (XLS) in: {args.mapdir} \nModels written to: {args.modeldir}')
+    if err > 0:
+        print(f'\n\t!!! Encountered {err} ERRORS... ')
+
     input('[ Press Enter to exit ] ')
 
 
