@@ -485,9 +485,13 @@ def process_tables(args, wb, tables_tab):
     if missing_cols:
         print(f'\t\t\t-- Missing columns: {missing_cols}')
 
+
+    key_tables = {}
     # Read the table rows and add to the dictionary
     for row in ws.iter_rows(min_row=2, values_only=True):
         # Use the Table Alias as the key
+        # If the Source Table is the first time, use the Source Table as the key, and the Alias as the value
+
         if row[2] != None:
             rown = row[2]
             tables_dict[rown] = {}
@@ -497,6 +501,13 @@ def process_tables(args, wb, tables_tab):
             # add the missing cols to the dictionary
             for col in missing_cols:
                 tables_dict[rown][col] = ''
+
+            # Add the key/values to the key_tables dictionary
+            if row[1] not in key_tables:
+                key_tables[row[1]] = row[2]
+                tables_dict[rown]['Driver'] = key_tables.get(row[1])
+            else:
+                tables_dict[rown]['Driver'] = key_tables[row[1]]
 
     return tables_dict
 
@@ -1208,13 +1219,26 @@ def build_src_layer(args, tables):
     print(f'==== Build SOURCE SQL .')
     all_sql = []
     act_table = ''
-
+    #TODO:  Createa a unique list of source tables, based on Driver column
     # print( '--- BUILDING SOURCE SQL' )
+
+    unique_tables = {}
+    for tbl in tables.values():
+        table = tbl.get('Driver')
+        if table != None:
+            act_table = tbl.get('Source Table')
+            if act_table not in unique_tables:
+                unique_tables[ act_table ] = tbl.get('Driver')
+
     for tbl in tables.values():
         table = tbl.get('Alias')
         if table != None:
             act_table = tbl.get('Source Table')
-        sql = f"SRC_{table:<14} as ( SELECT *     FROM     {{{{ ref( {act_table!r} ) }}}} ),\n"
+        # If not Driver table, then add as comment...
+        if table != tbl.get('Driver'):
+            sql = f"-- SRC_{table:<14} as ( SELECT *     FROM     {{{{ ref( {act_table!r} ) }}}} ),\n"
+        else:
+            sql = f"SRC_{table:<14} as ( SELECT *     FROM     {{{{ ref( {act_table!r} ) }}}} ),\n"
         all_sql.append(sql)
 
     # Add the SQL version as comments to run in SF
@@ -1225,7 +1249,10 @@ def build_src_layer(args, tables):
         schema = tbl.get('Source Schema')
         if table != None:
             act_table = tbl.get('Source Table')
-        sql = f"SRC_{table:<14} as ( SELECT *     FROM     {schema}.{act_table} ),\n"
+        if table != tbl.get('Driver'):
+            sql = f"-- SRC_{table:<14} as ( SELECT *     FROM     {{{{ ref( {act_table!r} ) }}}} ),\n"
+        else:
+            sql = f"SRC_{table:<14} as ( SELECT *     FROM     {schema}.{act_table} ),\n"
         all_sql.append(sql)
 
     all_sql.append('\n*/')
@@ -1238,6 +1265,16 @@ def build_logic_layer( columns, tables ):
     final_sql = []
     sql = ''
     print(f'==== Build LOGIC  SQL ..')          # DEBUG
+    # TODO: Replzce the alias with the driver column
+
+    driver_tables = {}
+    for tbl in tables.values():
+        alias = tbl.get('Alias')
+        driver_table = tbl.get('Driver')
+        if alias != None:
+            act_table = alias
+            if act_table not in driver_tables:
+                driver_tables[ alias ] = driver_table
 
     for row in tables.values():
         tbl = row.get('Alias')
@@ -1262,7 +1299,8 @@ def build_logic_layer( columns, tables ):
             table_cols[tbl]['cols'].append( row_sql )
     
     for tbl in alias_list:
-        src_tbl = table_cols[tbl]['src_tbl']
+        # src_tbl = table_cols[tbl]['src_tbl']
+        src_tbl = f'SRC_{driver_tables[tbl]}'
         tgt_tbl = table_cols[tbl]['tgt_tbl']
         sql += f"\n, {tgt_tbl} as ( \n\tSELECT " 
         for idx,col in enumerate(table_cols[tbl]['cols']):
