@@ -1219,7 +1219,6 @@ def build_src_layer(args, tables):
     print(f'==== Build SOURCE SQL .')
     all_sql = []
     act_table = ''
-    #TODO:  Createa a unique list of source tables, based on Driver column
     # print( '--- BUILDING SOURCE SQL' )
 
     unique_tables = {}
@@ -1265,7 +1264,6 @@ def build_logic_layer( columns, tables ):
     final_sql = []
     sql = ''
     print(f'==== Build LOGIC  SQL ..')          # DEBUG
-    # TODO: Replzce the alias with the driver column
 
     driver_tables = {}
     for tbl in tables.values():
@@ -1561,7 +1559,7 @@ def build_join_levels(tables):
 
 
 def main():
-    count, err = 0, 0
+    args.count, args.err = 0, 0
     plural, scd6_sql, dml_block, dml_sql  = '', '', '',''
     print('\n' + '-'*30)
 
@@ -1587,15 +1585,16 @@ def main():
             print(f'\t-- Standard MAPPING: {xls.name}')
             err = process_std_map( args, xls )
             
-        count += 1
-        err += err
+        args.count += 1
+        args.err += err
 
-    plural = 's.' if count > 1 else '.'
+    plural = 's.' if args.count > 1 else '.'
 
-    print(f'Processed: {count} file{plural}')
-    if count > 0 : print(f'Mapping docs (XLS) in: {args.mapdir} \nModels written to: {args.modeldir}')
-    if err > 0:
-        print(f'\n\t!!! Encountered {err} ERRORS... ')
+    print(f'Processed: {args.count} file{plural}')
+    if args.count > 0 : print(f'Mapping docs (XLS) in: {args.mapdir} \nModels written to: {args.modeldir}')
+    if args.err > 0:
+        plural =  'S.' if args.err > 1 else '.'
+        print(f'\n\t!!! Encountered {args.err} ERROR{plural}... ')
 
     input('[ Press Enter to exit ] ')
 
