@@ -1,40 +1,37 @@
 import csv, json
 from pathlib import Path
-from dataclasses import dataclass, field
 
-all_surveys = {"data": [
-    {"id": "300747984", "title": "Ohio Bureau of Workers' Compensation Employer Audit Survey", "nickname": "", "href": "https://api.surveymonkey.com/v3/surveys/300747984"}, 
-    {"id": "303452492", "title": "Ohio BWC Employer Survey", "nickname": "", "href": "https://api.surveymonkey.com/v3/surveys/303452492"}, 
-    {"id": "112758772", "title": "IW Pulse Survey - 30 Day", "nickname": "", "href": "https://api.surveymonkey.com/v3/surveys/112758772"}, 
-    {"id": "301195553", "title": "IW Pulse Survey - 90 Day", "nickname": "", "href": "https://api.surveymonkey.com/v3/surveys/301195553"}, 
-    {"id": "401765993", "title": "IW Pulse Survey - Medical Only", "nickname": "", "href": "https://api.surveymonkey.com/v3/surveys/401765993"}, 
-    {"id": "312123669", "title": "Ohio BWC First Report of Injury (FROI) Survey", "nickname": "", "href": "https://api.surveymonkey.com/v3/surveys/312123669"}, 
-    {"id": "318130682", "title": "Ohio BWC MCO Customer Satisfaction Survey", "nickname": "", "href": "https://api.surveymonkey.com/v3/surveys/318130682"}, 
-    {"id": "316723735", "title": "January 2022 Workshop Survey", "nickname": "", "href": "https://api.surveymonkey.com/v3/surveys/316723735"}, 
-    {"id": "313524368", "title": "Workshop Survey", "nickname": "", "href": "https://api.surveymonkey.com/v3/surveys/313524368"}, 
-    {"id": "314252541", "title": "Claim Topics for Targeted Messaging System", "nickname": "", "href": "https://api.surveymonkey.com/v3/surveys/314252541"}, 
-    {"id": "163761262", "title": "Ohio Bureau of Workers' Compensation Employer Audit Survey", "nickname": "", "href": "https://api.surveymonkey.com/v3/surveys/163761262"}, 
-    {"id": "128705841", "title": "Ohio BWC MCO Customer Satisfaction Survey", "nickname": "", "href": "https://api.surveymonkey.com/v3/surveys/128705841"}]
-, "per_page": 50, "page": 1, "total": 12, "links": {"self": "https://api.surveymonkey.com/v3/surveys?per_page=50&page=1"}
-}
+def set_libpath():
+    r'''
+    Set path import to be relative to the location of the dir the prog is run from
+    C:\Users\nielsenjf\bwcroot\bwcenv\bwcrun\run_createviews.py
+    becomes:  C:\Users\nielsenjf\bwcroot\
+    '''
+    import sys,os
+    from pathlib import Path
+    prog_path=Path(os.path.abspath(__file__))
+    root=prog_path.parent.parent.parent.parent      # Extra parent added due to SM Sub-dir
+    pyversion=f'{sys.version_info.major}{sys.version_info.minor}'
+    
+    pylibpath=root/f'Python/Python{pyversion}/site-packages'
+    pylibpath2=root/f'bwcsetup/Python/Python{pyversion}/site-packages'
+    sys.path.append(str(root))
+    sys.path.append(str(pylibpath))
+    sys.path.append(str(pylibpath2))
+    print('using path',root,pylibpath)
 
-response_data = [{"id": "12376448666", "recipient_id": "6070975071", "collection_mode": "default", "response_status": "completed", "custom_value": "Jordan, S", "first_name": "1599387", "last_name": "TGW-SYSTEMS INC", "email_address": "", "ip_address": "107.4.69.163", "logic_path": {}, "metadata": {"contact": {"email": {"type": "string", "value": "laura.butrick@tgw-group.com"}, "first_name": {"type": "string", "value": "1599387"}, "last_name": {"type": "string", "value": "TGW-SYSTEMS INC"}, "custom_value": {"type": "string", "value": "Jordan, S"}, "custom_value2": {"type": "string", "value": "1/29/2021"}, "custom_value3": {"type": "string", "value": "438765"}, "custom_value4": {"type": "string", "value": "1/29/2021"}}}, "page_path": [], "collector_id": "399901743", "survey_id": "300747984", "custom_variables": {}, "edit_url": "https://www.surveymonkey.com/r/?sm=WbOxayZCcCXe7Fjdxfn81xe2XgJs2w8FmFrRNBzX0F_2BhQpe4F6U3Svjg2HgHwbn5", "analyze_url": "https://www.surveymonkey.com/analyze/browse/xDwfKEeYKlwB67d7Bs_2FYnO8R1V931r1XjG0Ezz12s0g_3D?respondent_id=12376448666", "total_time": 88, "date_modified": "2021-02-02T19:34:16+00:00", "date_created": "2021-02-02T19:32:47+00:00", "href": "https://api.surveymonkey.com/v3/surveys/300747984/responses/12376448666", "pages": [{"id": "154390018", "questions": [{"id": "605148537", "answers": [{"choice_id": "3982038472"}]}, {"id": "605148539", "answers": [{"choice_id": "3982038484"}]}, {"id": "605148542", "answers": [{"choice_id": "3982038498"}]}, {"id": "605148543", "answers": [{"choice_id": "3982038503"}]}, {"id": "605148544", "answers": [{"choice_id": "3982038508"}]}, {"id": "605148545", "answers": [{"choice_id": "3982038511"}]}, {"id": "605148546", "answers": [{"choice_id": "3982038514"}]}, {"id": "605148547", "answers": [{"choice_id": "3982038520"}]}, {"id": "605148548", "answers": [{"choice_id": "3982038523"}]}, {"id": "605148549", "answers": [{"choice_id": "3982038528"}]}, {"id": "605148550", "answers": [{"choice_id": "3982038534"}]}]}]},]
 
-# create a dataclass to hold the survey data
-@dataclass
-class Survey:
-    id: str
-    title: str
-    nickname: str
-    href: str                                                       # Base URL for the survey
-    detail_url: str = field(init=False) 
-    responses_url: str = field(init=False) 
+set_libpath()
 
-    def __post_init__(self):
-        self.detail_url = self.href + '/details'                    # Details url containing the questions and answera available for the survey
-        self.responses_url = self.href + '/responses/bulk'          # Responses url containing the responses for the survey
-        # self.title = self.title.replace("'","''")
+from bwcenv.bwclib import dblib,inf
+from bwcsetup import dbsetup
 
+def get_dbcon():
+    env,db='dev','snow_me'  # change to DEV_ODS
+    tgtdb = dbsetup.Envs[env][db]
+    # con=dblib.DB(tgtdb,log=args.log,port=tgtdb.get('port',''))
+    con=dblib.DB(tgtdb,log='',port=tgtdb.get('port',''))
+    return con
 
 
 # pass filenames containing the survey details and responses
@@ -43,6 +40,68 @@ def read_json_from_file(filename):
     with open(filename) as f:
         json_info = json.load(f)
     return json_info
+
+
+def parse_survey(filepath,filename):
+    survey_info=read_json_from_file(f'{filepath}/{filename}')
+    surveys=survey_info['data']
+    survey_list,survey_dict=[],{}
+    for _idx,survey_info in enumerate(surveys):
+        survey_dict['id']=survey_info.get('id')
+        survey_dict['title']=survey_info.get('title').replace("\xa0","")
+        temp=survey_dict.copy()
+        survey_list.append(temp)
+    return survey_list
+
+
+def snow_list_stage(con,stage_dir):
+    '''
+        https://docs.snowflake.com/en/sql-reference/sql/list.html
+
+    list @~/DBTEST/DBT_PBALZER/ACTIVITY_NAME_TYPE/;
+    {'name': 'DEV_SOURCE/BASE/CARE824/CARE824.csv.gz', 'size': 61953552, 'md5': 'e59bcf86c48aad5c366bce6c4e6409d1', 'last_modified': 'Mon, 4 Oct 2021 19:56:44 GMT'}
+    '''
+    sql=f'list {stage_dir}; '
+
+    stage_files=[row for  row in con.fetchdict(sql) ]
+    return stage_files
+
+
+def snow_put(path):
+    '''
+        requires the full path
+    put file://I:\IT\ETL\nielsenjf\snowflake\extracts_active\ADR_TYP_INFSPLIT_2700000.gz @~/DBTEST/X10057301/ADR_TYP/ auto_compress=true;
+    copy into X10057301.ADR_TYP from @~/DBTEST/X10057301/ADR_TYP/ file_format =  (type = csv field_delimiter = '\t' skip_header = 1)  on_error='continue';
+    '''
+    stage_dir='@~/DEV_ODS/SURVEY_MONKEY/SURVEYS/'
+    stage_cmd=f'''put file://{path} {stage_dir} auto_compress=true;'''
+    print(stage_cmd)
+    con=get_dbcon()
+    result=con.exe(stage_cmd)
+    staged_files=snow_list_stage(con,stage_dir)
+    
+    if not staged_files:
+        raise Warning(f'Missing staged file: {path}')
+    print(f'Staged {staged_files}')
+
+    table=path.split('_')[-1].split('.')[0]
+    results=snow_copy_into(con,table,stage_dir)
+    print(results)
+    return staged_files
+
+
+def snow_copy_into(con,table,stage_dir):
+    #file_format=f"""file_format =  (type = csv field_delimiter = '{args.delim}' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"')  """
+    #file_format="""FILE_FORMAT = '"DBTEST"."10057301"."BASIC_TSV"'"""
+
+    if table == 'SURVEYS':
+        print('Truncating SURVEYS table')
+        con.exe('truncate table DEV_ODS.SURVEY_MONKEY.SURVEYS')
+    copy_cmd=f"""copy into DEV_ODS.SURVEY_MONKEY.{table} from {stage_dir} FILE_FORMAT='DEV_ODS.SURVEY_MONKEY.SURVEY_CSV' on_error='continue'; """
+    print(copy_cmd)
+    result=list(con.exe(copy_cmd))
+    print(str(result))
+    return result[0]
 
 
 def show_questions(detail_info):
@@ -106,7 +165,13 @@ def show_responses(response_data, parsed_questions):
     print('Recipent: ', response_data["recipient_id"]) 
     print('FName: ', response_data["first_name"]) 
     print('LName: ', response_data["last_name"]) 
-    print('Email: ', response_data["metadata"]["contact"]["email"]["value"]) 
+    if response_data["metadata"]["contact"].get("email",False):
+        print('Email: ', response_data["metadata"]["contact"]["email"]["value"]) 
+    else:
+        print("Email:  NOT SPECIFIED")
+    print('DATE_CREATED: ', response_data["date_created"]) 
+    print('DATE_MODIFIED: ', response_data["date_modified"]) 
+    print('TIME_TAKEN: ', response_data["total_time"]) 
 
     print('SurveyID: ', response_data["survey_id"]) 
     # print('Answers: ', response_data[0]["pages"][0]["questions"]) 
@@ -132,10 +197,16 @@ def add_response_to_dict(response_info: dict, response_data: dict):
     df["person"] = response_data["recipient_id"]
     df["fname"] = response_data["first_name"]
     df["lname"] = response_data["last_name"]
-    df["email"] = response_data["metadata"]["contact"]["email"]["value"]
+    if response_data["metadata"]["contact"].get("email",False):
+        df["email"] = response_data["metadata"]["contact"]["email"]["value"]
+    else:
+        df["email"] = "n/a"
     df["surveyid"] = response_data["survey_id"]
     df["surveydate"] = response_data["date_created"]
     df["totaltime"] = response_data["total_time"]
+    df["dtcreated"] = response_data["date_created"]
+    df["dtmodified"] = response_data["date_modified"]
+    
 
     response_dict = {}
     for answer in response_data["pages"][0]["questions"]:
@@ -152,6 +223,14 @@ def add_response_to_dict(response_info: dict, response_data: dict):
 
 
 def output_questions( detail_info ):
+    '''
+    {"id": "605148537", "position": 1, "visible": true, "family": "single_choice", "subtype": "vertical", "layout": {"bottom_spacing": 0, "col_width": null, "col_width_format": null, "left_spacing": 0, "num_chars": 50, "num_lines": 1, "position": "new_row", "right_spacing": 0, "top_spacing": 0, "width": null, "width_format": null}, "sorting": null, "required": null, "validation": null, "forced_ranking": false, "headings": [{"heading": "What is your relationship to the employer that went through the premium audit or rating inspection process?"}], "href": "https://api.surveymonkey.com/v3/surveys/300747984/pages/154390018/questions/605148537", "answers": {"other": {"position": 0, "visible": true, "text": "Other (please specify)", "id": "3982038475", "num_lines": 1, "num_chars": 50, "is_answer_choice": true, "apply_all_rows": false, "error_text": "Please enter a comment."}, "choices": [{"position": 1, "visible": true, "text": "Employee of company", "quiz_options": {"score": 0}, "id": "3982038472"}, {"position": 2, "visible": true, "text": "CPA/Accounting firm", "quiz_options": {"score": 0}, "id": "3982038473"}, {"position": 3, "visible": true, "text": "Third Party Administrator", "quiz_options": {"score": 0}, "id": "3982038474"}]}}, 
+
+    SURVEY_ID       text,
+    QUESTION_NO     number,
+    QUESTION_ID     text,
+    QUESTION_TXT    text
+    '''
     question_headers = "SURVEY_ID,QUESTION_NO,QUESTION_ID,QUESTION_TXT"
     questions_str = []
     surveyid = detail_info['id']
@@ -162,13 +241,21 @@ def output_questions( detail_info ):
         qtxt =  question["headings"][0]["heading"]
         # qtxt =  question["headings"][0]["heading"].replace("'","''") 
         # sql_tr =  f"insert into SURVEY_MONKEY.QUESTIONS values( {surveyid!r}, {qno},  {qid!r},'{qtxt}' );\n" 
-        str =  f'{surveyid!r},{qno},{qid!r},"{qtxt}"\n' 
+        str =  f'{surveyid},{qno},{qid},"{qtxt}"\n' 
         questions_str.append( str )
 
     return question_headers, questions_str
 
 
 def output_answers( detail_info ):
+    '''
+    {"other": {"position": 0, "visible": true, "text": "Other (please specify)", "id": "3982038475", "num_lines": 1, "num_chars": 50, "is_answer_choice": true, "apply_all_rows": false, "error_text": "Please enter a comment."}, "choices": [{"position": 1, "visible": true, "text": "Employee of company", "quiz_options": {"score": 0}, "id": "3982038472"}, {"position": 2, "visible": true, "text": "CPA/Accounting firm", "quiz_options": {"score": 0}, "id": "3982038473"}, {"position": 3, "visible": true, "text": "Third Party Administrator", "quiz_options": {"score": 0}, "id": "3982038474"}]}
+
+    SURVEY_ID       text,
+    QUESTION_ID     text,
+    ANSWER_ID       text,
+    ANSWER_TXT      text
+    '''
     answer_headers = "SURVEY_ID,QUESTION_ID,ANSWER_ID,ANSWER_TXT"
     answers_str = []
     surveyid = detail_info['id']
@@ -184,9 +271,10 @@ def output_answers( detail_info ):
                 aid = answer["id"]
                 atxt = answer["text"]
                 atxt = atxt.replace("\n"," ").replace("\r"," ")
+
                 # atxt = atxt.replace("'","''").replace("\n"," ").replace("\r"," ")
                 # sql_str =  f"insert into SURVEY_MONKEY.ANSWERS values(  {surveyid!r}, {qid!r},  {aid!r},{atxt!r} );\n"
-                str =  f'{surveyid!r},{qid!r},{aid!r},"{atxt}"\n'
+                str =  f'{surveyid},{qid},{aid},"{atxt}"\n'
                 answers_str.append( str )
         except:
             pass
@@ -200,7 +288,7 @@ def output_answers( detail_info ):
             atxt = atxt.replace("\n"," ").replace("\r"," ")
             # atxt = atxt.replace("'","''")
             # sql_str =  f"insert into SURVEY_MONKEY.ANSWERS values(  {surveyid!r}, {qid!r},  {aid!r},{atxt!r} );\n" 
-            str =  f'{surveyid!r},{qid!r},{aid!r},"{atxt}"\n'
+            str =  f'{surveyid},{qid},{aid},"{atxt}"\n'
             answers_str.append( str )
 
     return answer_headers, answers_str
@@ -209,19 +297,20 @@ def output_answers( detail_info ):
 def output_participants(all_responses):
     '''
     [{'recipent': '6070975071', 'fname': '1599387', 'lname': 'TGW-SYSTEMS INC', 'email': 'laura.butrick@tgw-group.com', 'surveyid': '300747984', 'surveydate': '2021-02-02T19:32:47+00:00', 'totaltime': 88, 'responses': {'605148537': '3982038472', '605148539': '3982038484', '605148542': '3982038498', '605148543': '3982038503', '605148544': '3982038508', '605148545': '3982038511', '605148546': '3982038514', '605148547': '3982038520', '605148548': '3982038523', '605148549': '3982038528', '605148550': '3982038534'}},
+
     PARTICIPANT_ID  text,
     FIRST_NAME      text,
     LAST_NAME       text,
     EMAIL           text
     '''
-    participant_headers = "PARTICIPANT_ID,FIRST_NAME,LAST_NAME,EMAIL"
+    participant_headers = "PARTICIPANT_ID,FIRST_NAME,LAST_NAME,EMAIL,DATE_CREATED,DATE_MODIFIED,TIME_TAKEN"
     stmt = 'insert into SURVEY_MONKEY.PARTICIPANTS values ('
     participant_str = []
     
     for person in all_responses:
         person_dict = dict( person )
         # sql_str = f"{stmt} {person_dict.get('person')!r}, {person_dict.get('fname')!r}, {person_dict.get('lname')!r}, {person_dict.get('email')!r} );\n"
-        str = f"{person_dict.get('person')!r},{person_dict.get('fname')!r},{person_dict.get('lname')!r},{person_dict.get('email')!r}\n"
+        str = f"{person_dict.get('person')},{person_dict.get('fname')},{person_dict.get('lname')},{person_dict.get('email')},{person_dict.get('dtcreated')},{person_dict.get('dtmodified')},{person_dict.get('totaltime')}\n"
         participant_str.append( str )
 
     return participant_headers, participant_str
@@ -229,6 +318,8 @@ def output_participants(all_responses):
 
 def output_responses(all_responses):
     '''
+    [{'person': '7565351911', 'fname': '244198', 'lname': 'ROMPS WATER PORT INC', 'email': 'office@romps.com', 'surveyid': '300747984', 'surveydate': '2023-02-08T20:27:09+00:00', 'totaltime': 75, 'responses': {'605148537': '3982038472', '605148539': '3982038483', '605148542': '3982038499', '605148543': '3982038504', '605148544': '3982038508', '605148545': '3982038511', '605148546': '3982038515', '605148547': '3982038519', '605148548': '3982038523', '605148549': '3982038529', '605148550': '3982038534'}}]
+
     SURVEY_ID       text,    --300747984
     PARTICIPANT_ID  text,
     QUESTION_ID     text,
@@ -238,8 +329,6 @@ def output_responses(all_responses):
     response_headers = "SURVEY_ID,PARTICIPANT_ID,QUESTION_ID,ANSWER_ID"
 
     for person in all_responses:
-        #{'person': '7565351911', 'fname': '244198', 'lname': 'ROMPS WATER PORT INC', 'email': 'office@romps.com', 'surveyid': '300747984', 'surveydate': '2023-02-08T20:27:09+00:00', 'totaltime': 75, 'responses': {'605148537': '3982038472', '605148539': '3982038483', '605148542': '3982038499', '605148543': '3982038504', '605148544': '3982038508', '605148545': '3982038511', '605148546': '3982038515', '605148547': '3982038519', '605148548': '3982038523', '605148549': '3982038529', '605148550': '3982038534'}}
-
         try:
             person_dict = dict( person )
             ans_list = person_dict.get('responses',"")
@@ -247,10 +336,13 @@ def output_responses(all_responses):
                 ans = a
                 if not a: ans= 'None'
                 #replace all single quotes with two single quotes
-                ans = ans.replace("\n"," ").replace("\r", " ")
+                ans = ans.replace("\n"," ").replace("\r", " ").replace('"',"'")
+
+                # Replace all non-printable ASCII with a space
+                ans = ''.join([i if ord(i) < 128 else ' ' for i in ans ])
                 # ans = ans.replace("'","''").replace("\n"," ").replace("\r", " ")
                 # sql_str = f"{stmt} {person_dict.get('surveyid')!r}, {person_dict.get('person')!r}, {q!r}, '{ans}' );\n"
-                str = f"{person_dict.get('surveyid')!r},{person_dict.get('person')!r},{q!r},\"{ans}\"\n"
+                str = f"{person_dict.get('surveyid')},{person_dict.get('person')},{q},\"{ans}\"\n"
                 response_str.append( str )
         except:
             print( f'##### ERROR:  {person}')
@@ -258,9 +350,9 @@ def output_responses(all_responses):
     return response_headers, response_str
 
 
-def writecsv( func, headers, results ):
+def writecsv( func, headers, filepath, results ):
     schema_name = 'SURVEY_MONKEY'
-    filename = f".\{schema_name}_{func}_OUTPUT.csv"
+    filename = f"{filepath}\output\{schema_name}_{func}.csv"
 
     # write_csv(fname,rows,raw=False,delim='\t',term='\n',prefix='',sortit=True,log=None,verify=False):
     with open( filename, 'w', newline = '') as file2write:
@@ -269,78 +361,93 @@ def writecsv( func, headers, results ):
             file2write.write( row )
             
     print( f' --- Wrote {func} CSV file to: {filename}\n')
+    snow_put(filename)
 
 
 def main():
     # create a list of Survey objects
-    filepath = Path( './' )
-    surveys = [ Survey(**survey) for survey in all_surveys['data'] ]
+    filepath = Path( 'I:/EDM/sm/2023_04_18PM/extracts' )
+    outputdir = filepath / 'output'
     #print survey titles
 
+    filelist=  list( filepath.glob( "*_details.json" ) )
+    # surveys = [ Survey(**survey) for survey in all_surveys['data'] ]
+    surveys = parse_survey(filepath,'surveys.json')
     survey_sql = []
     survey_headers = "SURVEY_ID,SURVEY_NAME"
     # survey_sql.append( f'--SURVEYS available: {len(surveys)} --\n')
 
     for survey in surveys:
         # sql_str =  f"insert into SURVEY_MONKEY.SURVEYS values ( {survey.id!r}, '{survey.title}' );\n"
-        str =  f'{survey.id!r},"{survey.title}"\n'
+        str =  f'''{survey['id']},"{survey['title']}"\n'''
         survey_sql.append( str )
 
-    detail1 = 'OHIO_BUREAU_OF_WORKERS_COMPENSATION_EMPLOYER_AUDIT_SURVEY_details.json'
-    response1 = 'OHIO_BUREAU_OF_WORKERS_COMPENSATION_EMPLOYER_AUDIT_SURVEY_responses.json'
-    print( f'--- Reading survey details from {detail1} ---' )
-    detail_info = read_json_from_file( filepath/detail1 )
+    for filename in filelist:
+        detail_file = filename.name
+        response_file = detail_file.replace("detail","response")
+        
+        # detail1 = 'OHIO_BUREAU_OF_WORKERS_COMPENSATION_EMPLOYER_AUDIT_SURVEY_details.json'
+        # response1 = 'OHIO_BUREAU_OF_WORKERS_COMPENSATION_EMPLOYER_AUDIT_SURVEY_responses.json'
+        print( f'--- Reading survey details from {detail_file} ---' )
+        detail_info = read_json_from_file( filepath/detail_file )
 
-    print( f'--- Reading response information from {response1} ---' )
-    response_info = read_json_from_file( filepath/response1 )
+        print( f'--- Reading response information from {response_file} ---' )
+        response_info = read_json_from_file( filepath/response_file )
 
-    survey_info = {}
+        survey_info = {}
 
-    survey_info['surveyid'] = detail_info['id']
-    survey_info[detail_info['id']] = detail_info['title']
-    survey_info['question_count'] = detail_info['question_count']
-    survey_info['date_created'] = detail_info['date_created']
+        survey_info['surveyid'] = detail_info['id']
+        survey_info[detail_info['id']] = detail_info['title']
+        survey_info['question_count'] = detail_info['question_count']
+        survey_info['date_created'] = detail_info['date_created']
 
-    # show_questions( detail_info )
-    question_headers, question_sql = output_questions( detail_info )
-    parsed_questions = add_question_answers_to_dict(survey_info, detail_info)
-    # print( parsed_questions )
+        # show_questions( detail_info )
+        question_headers, question_sql = output_questions( detail_info )
+        parsed_questions = add_question_answers_to_dict(survey_info, detail_info)
+        # print( parsed_questions )
 
-    answer_headers, answer_sql = output_answers( detail_info )
+        answer_headers, answer_sql = output_answers( detail_info )
 
-    print(f'\n\n//- Parsing example response data --')
-    # print( len( response_info));input("!!!!!")      # 40 pages
-    response_dict = {}
-    all_responses = []
+        print(f'\n\n//- Parsing example response data --')
+        # print( len( response_info));input("!!!!!")      # 40 pages
+        response_dict = {}
+        all_responses = []
 
-    # Loop through and process each page of responses
-    print('\n-- Converting response to dictionary')
+        try:
+            # Loop through and process each page of responses
+            print('\n-- Converting response to dictionary')
 
-    for response_set in response_info:
-        # all_response_data = response_info[0]['data']
-        all_response_data = response_set['data']
-        # Test a single response
-        # response_data = all_response_data[1]
+            for response_set in response_info:
+                # all_response_data = response_info[0]['data']
+                all_response_data = response_set['data']
+                # Test a single response
+                # response_data = all_response_data[1]
 
-        tot_responses = len(all_response_data)
-        for idx in range(tot_responses):
-            response_data = all_response_data[idx]
-            response_dict = add_response_to_dict(response_dict, response_data)
+                tot_responses = len(all_response_data)
+                for idx in range(tot_responses):
+                    response_data = all_response_data[idx]
+                    response_dict = add_response_to_dict(response_dict, response_data)
 
-        for response in  all_response_data:
-            response_dict = add_response_to_dict(response_dict, response)
-            all_responses.append(response_dict)
+                for response in  all_response_data:
+                    response_dict = add_response_to_dict(response_dict, response)
+                    all_responses.append(response_dict)
 
-    # print(all_responses)
-    participant_headers, participant_sql = output_participants(all_responses)
-    response_headers, response_sql = output_responses(all_responses)
+            # print(all_responses)
+            participant_headers, participant_sql = output_participants(all_responses)
+            response_headers, response_sql = output_responses(all_responses)
 
-    writecsv( 'SURVEYS', survey_headers, survey_sql )
-    writecsv( 'QUESTION', question_headers, question_sql )
-    writecsv( 'ANSWERS', answer_headers, answer_sql )
-    writecsv( 'PARTICIPANTS', participant_headers, participant_sql )
-    writecsv( 'RESPONSES', response_headers, response_sql )
-    
+            output_file = detail_file.rsplit("_",1)[0]
+
+            writecsv( f'{output_file}_QUESTIONS', question_headers,filepath, question_sql )
+            writecsv( f'{output_file}_ANSWERS', answer_headers,filepath, answer_sql )
+            writecsv( f'{output_file}_PARTICIPANTS', participant_headers,filepath, participant_sql )
+            writecsv( f'{output_file}_RESPONSES', response_headers,filepath, response_sql )
+        
+        except:
+            print( f'!!! ERR: Unable to process: {response_file}')
+            
+    writecsv( f'CURRENTLY_ACTIVE_SURVEYS', survey_headers,filepath,survey_sql )
+    snow_put(f'{outputdir}/SURVEY_MONKEY_CURRENTLY_ACTIVE_SURVEYS.csv')
 
 if __name__ == "__main__":
     main()
