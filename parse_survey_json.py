@@ -1,4 +1,5 @@
 import csv, json
+from datetime import datetime
 from pathlib import Path
 
 def set_libpath():
@@ -37,7 +38,7 @@ def get_dbcon():
 # pass filenames containing the survey details and responses
 
 def read_json_from_file(filename):
-    with open(filename) as f:
+    with open(filename, encoding='utf-8', errors='ignore') as f:
         json_info = json.load(f)
     return json_info
 
@@ -67,6 +68,22 @@ def snow_list_stage(con,stage_dir):
     return stage_files
 
 
+def snow_remove_stage():
+    '''
+    rm @~/DBTEST/DBT_PBALZER/ACTIVITY_NAME_TYPE/ACTIVITY_NAME_TYPE.csv.gz;
+    '''
+    con = get_dbcon()
+    stage_dir='@~/DEV_ODS/SURVEY_MONKEY/SURVEYS/'
+    cmd_list=[]
+    for row in snow_list_stage(con,stage_dir):
+        remove_cmd=f"""rm @~/{row['name']}; """
+        con.exe(remove_cmd)
+        cmd_list.append(remove_cmd)
+    print(f'---- Deleted {len(cmd_list)} files from {stage_dir} : {cmd_list}')
+    print('='*80,'\n\n')    
+    return cmd_list
+
+
 def snow_put(path):
     '''
         requires the full path
@@ -74,33 +91,46 @@ def snow_put(path):
     copy into X10057301.ADR_TYP from @~/DBTEST/X10057301/ADR_TYP/ file_format =  (type = csv field_delimiter = '\t' skip_header = 1)  on_error='continue';
     '''
     stage_dir='@~/DEV_ODS/SURVEY_MONKEY/SURVEYS/'
+    if '\\' in path:
+        fname = path.split('\\')[-1]
+    else:
+        fname = path.split('/')[-1]
+        
     stage_cmd=f'''put file://{path} {stage_dir} auto_compress=true;'''
-    print(stage_cmd)
+    print(f'\t{stage_cmd}')
     con=get_dbcon()
     result=con.exe(stage_cmd)
     staged_files=snow_list_stage(con,stage_dir)
     
     if not staged_files:
         raise Warning(f'Missing staged file: {path}')
-    print(f'Staged {staged_files}')
+    # print(f'Staged {staged_files}')
 
     table=path.split('_')[-1].split('.')[0]
-    results=snow_copy_into(con,table,stage_dir)
-    print(results)
+    results=snow_copy_into(con,table,stage_dir, fname)
+
+    if results.get('errors_seen',0) >0:
+        print('*'*80,' ERROR ','*'*80)
+        print(f'{results}\n','*'*167)
+    else:
+        print(f"\t\t:: LOADED: {results.get('rows_loaded',0) } rows\n\n" )
     return staged_files
 
 
-def snow_copy_into(con,table,stage_dir):
+def snow_copy_into(con,table,stage_dir, fname):
     #file_format=f"""file_format =  (type = csv field_delimiter = '{args.delim}' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"')  """
     #file_format="""FILE_FORMAT = '"DBTEST"."10057301"."BASIC_TSV"'"""
 
+    # fname = fname+'.gz'
     if table == 'SURVEYS':
         print('Truncating SURVEYS table')
         con.exe('truncate table DEV_ODS.SURVEY_MONKEY.SURVEYS')
-    copy_cmd=f"""copy into DEV_ODS.SURVEY_MONKEY.{table} from {stage_dir} FILE_FORMAT='DEV_ODS.SURVEY_MONKEY.SURVEY_CSV' on_error='continue'; """
-    print(copy_cmd)
+    copy_cmd=f"""copy into DEV_ODS.SURVEY_MONKEY.{table} from {stage_dir}{fname}.gz FILE_FORMAT='DEV_ODS.SURVEY_MONKEY.SURVEY_CSV' on_error='continue'; """
+    # copy_cmd=f"""copy into DEV_ODS.SURVEY_MONKEY.{table} from {stage_dir} FILES = '{fname}.gz' FILE_FORMAT='DEV_ODS.SURVEY_MONKEY.SURVEY_CSV' on_error='continue'; """
+    print(f'\t{copy_cmd}')
     result=list(con.exe(copy_cmd))
-    print(str(result))
+    print(f'\n\tCOPY INTO complete...')
+    # print(f'\n\tCOPY INTO RESULTS: {str(result)}\n\n')
     return result[0]
 
 
@@ -137,7 +167,9 @@ def add_question_answers_to_dict(df: dict, detail_info: dict):
 
             if "other" in question.get("answers","None"):
                 ans_id = question["answers"]["other"]["id"]
-                ans[ans_id] = question["answers"]["other"]["text"]
+                question_uni = question["answers"]["other"]["text"]
+                question_str = question_uni.replace('0xA0','').replace('0x92','')
+                ans[ans_id] = question_str
 
             if "choices" in question.get("answers","None"):
                 try:
@@ -147,7 +179,9 @@ def add_question_answers_to_dict(df: dict, detail_info: dict):
                         ans[answer["id"]] = 'NO ANSWERS AVAILABLE'
 
             if "tag_data" in  question.get("answers","None"):
-                ans[answer["id"]] = answer["answers"][0]["text"] 
+                answer_uni = answer["answers"][0]["text"] 
+                answer_str = answer_uni.replace('0xA0','').replace('0x92','')
+                ans[answer["id"]] = answer_str
 
         else:
             ans[answer["id"]] = 'Free Form Field'
@@ -168,8 +202,10 @@ def show_responses(response_data, parsed_questions):
     if response_data["metadata"]["contact"].get("email",False):
         print('Email: ', response_data["metadata"]["contact"]["email"]["value"]) 
     else:
-        print("Email:  NOT SPECIFIED")
+        print("Email:  N/A")
+
     print('DATE_CREATED: ', response_data["date_created"]) 
+
     print('DATE_MODIFIED: ', response_data["date_modified"]) 
     print('TIME_TAKEN: ', response_data["total_time"]) 
 
@@ -195,12 +231,23 @@ def add_response_to_dict(response_info: dict, response_data: dict):
     df = response_info.copy()
 
     df["person"] = response_data["recipient_id"]
-    df["fname"] = response_data["first_name"]
+    d=response_data["first_name"]
+    
+    fmt = ['%m/%d/%Y','%b %d, %Y']
+    for f in fmt:
+        try:
+            new = datetime.strptime(d, f).strftime('%Y-%m-%d')
+            break
+        except:
+            new = d
+
+    df["fname"] = new
+    # df["fname"] = response_data["first_name"]
     df["lname"] = response_data["last_name"]
     if response_data["metadata"]["contact"].get("email",False):
         df["email"] = response_data["metadata"]["contact"]["email"]["value"]
     else:
-        df["email"] = "n/a"
+        df["email"] = "N/A"
     df["surveyid"] = response_data["survey_id"]
     df["surveydate"] = response_data["date_created"]
     df["totaltime"] = response_data["total_time"]
@@ -213,7 +260,11 @@ def add_response_to_dict(response_info: dict, response_data: dict):
         qid = answer["id"]
         aid = answer["answers"][0].get("choice_id","None")
         if "tag_data" in answer["answers"][0]:
-            response_dict[qid] = answer["answers"][0]["text"]            
+            ans_str = answer["answers"][0]["text"]
+            # ans_str = ans_str.replace('0xA0',' ').replace('0x92',"'")
+            ans_str = ans_str.encode('ascii','ignore')
+            ans_str = ans_str.decode()
+            response_dict[qid] = ans_str       
         else:
             response_dict[qid] = aid
     
@@ -242,6 +293,9 @@ def output_questions( detail_info ):
         # qtxt =  question["headings"][0]["heading"].replace("'","''") 
         # sql_tr =  f"insert into SURVEY_MONKEY.QUESTIONS values( {surveyid!r}, {qno},  {qid!r},'{qtxt}' );\n" 
         str =  f'{surveyid},{qno},{qid},"{qtxt}"\n' 
+        # str = str.replace('0xA0',' ').replace('0x92',"'")
+        str = str.encode('ascii','ignore')
+        str = str.decode()
         questions_str.append( str )
 
     return question_headers, questions_str
@@ -275,6 +329,9 @@ def output_answers( detail_info ):
                 # atxt = atxt.replace("'","''").replace("\n"," ").replace("\r"," ")
                 # sql_str =  f"insert into SURVEY_MONKEY.ANSWERS values(  {surveyid!r}, {qid!r},  {aid!r},{atxt!r} );\n"
                 str =  f'{surveyid},{qid},{aid},"{atxt}"\n'
+                # str = str.replace('0xA0',' ').replace('0x92',"'")
+                str = str.encode('ascii','ignore')
+                str = str.decode()
                 answers_str.append( str )
         except:
             pass
@@ -289,6 +346,9 @@ def output_answers( detail_info ):
             # atxt = atxt.replace("'","''")
             # sql_str =  f"insert into SURVEY_MONKEY.ANSWERS values(  {surveyid!r}, {qid!r},  {aid!r},{atxt!r} );\n" 
             str =  f'{surveyid},{qid},{aid},"{atxt}"\n'
+            # str = str.replace('0xA0',' ').replace('0x92',"'")
+            str = str.encode('ascii','ignore')
+            str = str.decode()
             answers_str.append( str )
 
     return answer_headers, answers_str
@@ -364,7 +424,20 @@ def writecsv( func, headers, filepath, results ):
     snow_put(filename)
 
 
+def sm_schema_reset():
+    print('Truncating all Survery Monkey tables')
+    con=get_dbcon()
+    tables=['QUESTIONS','ANSWERS','PARTICIPANTS','RESPONSES','SURVEYS']
+    for t in tables:
+        sql=f'truncate table DEV_ODS.SURVEY_MONKEY.{t}'
+        con.exe(sql)
+        print(sql)
+    print('='*80)
+
+
 def main():
+    sm_schema_reset()
+
     # create a list of Survey objects
     filepath = Path( 'I:/EDM/sm/2023_04_18PM/extracts' )
     outputdir = filepath / 'output'
@@ -382,12 +455,12 @@ def main():
         str =  f'''{survey['id']},"{survey['title']}"\n'''
         survey_sql.append( str )
 
+    snow_remove_stage()
+
     for filename in filelist:
         detail_file = filename.name
         response_file = detail_file.replace("detail","response")
         
-        # detail1 = 'OHIO_BUREAU_OF_WORKERS_COMPENSATION_EMPLOYER_AUDIT_SURVEY_details.json'
-        # response1 = 'OHIO_BUREAU_OF_WORKERS_COMPENSATION_EMPLOYER_AUDIT_SURVEY_responses.json'
         print( f'--- Reading survey details from {detail_file} ---' )
         detail_info = read_json_from_file( filepath/detail_file )
 
@@ -399,8 +472,9 @@ def main():
         survey_info['surveyid'] = detail_info['id']
         survey_info[detail_info['id']] = detail_info['title']
         survey_info['question_count'] = detail_info['question_count']
-        survey_info['date_created'] = detail_info['date_created']
 
+        survey_info['date_created'] = detail_info['date_created']
+        
         # show_questions( detail_info )
         question_headers, question_sql = output_questions( detail_info )
         parsed_questions = add_question_answers_to_dict(survey_info, detail_info)
@@ -444,10 +518,10 @@ def main():
             writecsv( f'{output_file}_RESPONSES', response_headers,filepath, response_sql )
         
         except:
-            print( f'!!! ERR: Unable to process: {response_file}')
+            print( f'!!! ERR: Unable to process: {filename}')
             
     writecsv( f'CURRENTLY_ACTIVE_SURVEYS', survey_headers,filepath,survey_sql )
-    snow_put(f'{outputdir}/SURVEY_MONKEY_CURRENTLY_ACTIVE_SURVEYS.csv')
+
 
 if __name__ == "__main__":
     main()
