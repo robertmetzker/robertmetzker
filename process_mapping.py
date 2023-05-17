@@ -20,7 +20,9 @@ def process_args():
 
     args = parser.parse_args()
     args.schema = 'DEV_EDW'
-    
+
+    if args.rootdir:
+        args.rootdir = Path(args.rootdir)
 
     return args
 
@@ -1241,6 +1243,8 @@ def build_src_layer(args, tables):
         all_sql.append(sql)
 
     # Add the SQL version as comments to run in SF
+    # Remove the trailing comma as the logic layer has them in the front
+    all_sql[-1] = all_sql[-1].rstrip(',\n')
     all_sql.append('\n/*\n')
 
     for tbl in tables.values() :
@@ -1254,7 +1258,11 @@ def build_src_layer(args, tables):
             sql = f"SRC_{table:<14} as ( SELECT *     FROM     {schema}.{act_table} ),\n"
         all_sql.append(sql)
 
+    # Remove the trailing comma as the logic layer has them in the front
+    # Close the commented SQL version of the sources.
+    all_sql[-1] = all_sql[-1].rstrip(',\n')
     all_sql.append('\n*/')
+
     all_sql = ''.join(all_sql)
 
     return all_sql
@@ -1395,13 +1403,13 @@ def build_filter_layer(tables):
                 continue
         source_table = f'RENAME_{from_table}'
 
-        sql = f'FILTER_{from_table:<30} as ( SELECT * FROM    {source_table} {filters_str} {filter_comment}  )'
+        sql = f', FILTER_{from_table:<30} as ( SELECT * FROM    {source_table} {filters_str} {filter_comment}  )'
 
 
 
         filter_sql.append(sql)
 
-    return ',\n'.join( filter_sql )
+    return '\n'.join( filter_sql )
 
 def build_join_layer(tables, columns):
     '''Includes both Tables and Columns because it will generate the final select statement'''
@@ -1436,9 +1444,9 @@ def build_join_layer(tables, columns):
         
         if 'COALESCE(' in parent_table.upper():
             wascoalesce = parent_table.upper().replace('COALESCE(','').strip()
-            sql = f'{wascoalesce} as ( SELECT * \n\t\t\t\tFROM  FILTER_{wascoalesce}\n{join_sql_str} )'
+            sql = f', {wascoalesce} as ( SELECT * \n\t\t\t\tFROM  FILTER_{wascoalesce}\n{join_sql_str} )'
         else:
-            sql = f'{parent_table} as ( SELECT * \n\t\t\t\tFROM  FILTER_{parent_table}\n{join_sql_str} )'
+            sql = f', {parent_table} as ( SELECT * \n\t\t\t\tFROM  FILTER_{parent_table}\n{join_sql_str} )'
         all_sql.append(sql)
 
     ########################################
@@ -1471,7 +1479,9 @@ def build_join_layer(tables, columns):
     else:
         all_sql[-1] = all_sql[-1] + final_sql
 
-    all_sql_str = ',\n'.join(all_sql)
+    # Moved the commas to the front of the SQL generated in build_join_layer, instead of concatenating all lines.
+    # all_sql_str = ',\n'.join(all_sql)
+    all_sql_str = '\n'.join(all_sql)
 
     final_filter_str = ''
     for row in tables.values():
@@ -1485,6 +1495,17 @@ def build_join_layer(tables, columns):
             
     # print( f'\n\n=== Build JOIN SQL\n{all_sql}')                   # DEBUG
     return all_sql_str
+
+
+def test_dot( str_val ):
+    valid = False
+    pos_dot = str_val.find(".")
+    pos_ubar = str_val.find("_")
+
+    if pos_dot != -1:
+        if pos_dot < pos_ubar:
+            valid = True
+    return valid
 
 
 def do_join(made_cte, tables ):
@@ -1523,6 +1544,11 @@ def do_join(made_cte, tables ):
             parent_join = f'coalesce( FILTER_{tempparent}'
         else:
             parent_join = f'FILTER_{parent_join}'
+
+        # Check to see if the child table join is an alias or column reference
+        alias_child = test_dot( child_join)
+        if alias_child:
+            child_join = f'FILTER_{child_join}'
             
         if source_table in made_cte:
             sql = f'\t\t\t\t{join_type} {source_table} ON  {parent_join} = {child_join} '
@@ -1530,9 +1556,9 @@ def do_join(made_cte, tables ):
                 sql = f'\t\t\t\t{join_type} {source_table} {using_join} '
         else:
             if parent_table in parent_join_list and not join_type.lower().startswith('inner'):
-                sql = f'\t\t\t\t\t\t{join_type} FILTER_{source_table} ON  {parent_join} =  FILTER_{child_join} '
+                sql = f'\t\t\t\t\t\t{join_type} FILTER_{source_table} ON  {parent_join} =  {child_join} '
             else:
-                sql = f'\t\t\t\t{join_type} FILTER_{source_table} ON  {parent_join} =  FILTER_{child_join} '
+                sql = f'\t\t\t\t{join_type} FILTER_{source_table} ON  {parent_join} =  {child_join} '
                 if using_join:
                     sql = f'\t\t\t\t{join_type} {join_type}  FILTER_{source_table} {using_join} '
                 parent_join_list.append( parent_table )
