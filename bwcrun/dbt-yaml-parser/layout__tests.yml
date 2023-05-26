@@ -1,0 +1,32 @@
+{
+  "resource_type": "test", 
+  "depends_on": 
+    {
+      "macros": ["macro.edw.test_accepted_valids", "macro.dbt.get_where_subquery"], 
+      "nodes": ["model.edw.DIM_CLAIM"]
+    }, 
+  "config": 
+    {
+      "enabled": true, 
+      "alias": null, 
+      "schema": "dbt_test__audit", 
+      "database": null, 
+      "tags": [], 
+      "meta": {}, 
+      "materialized": "test", 
+      "severity": "warn", 
+      "store_failures": null, 
+      "where": null, 
+      "limit": null, 
+      "fail_calc": "count(*)", 
+      "warn_if": "!= 0", 
+      "error_if": "!= 0"
+    }, 
+  "unique_id": "test.edw.accepted_valids_DIM_CLAIM_COMBINED_IND__Y__N.3f8febe0bd", 
+  "package_name": "edw", 
+  "original_file_path": "models\\EDW_STAGING_DIM\\DIM_CLAIM.yml", 
+  "name": "accepted_valids_DIM_CLAIM_COMBINED_IND__Y__N", 
+  "alias": "accepted_valids_DIM_CLAIM_COMBINED_IND__Y__N", 
+  "tags": []
+}
+

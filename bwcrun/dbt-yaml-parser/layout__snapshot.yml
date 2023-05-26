@@ -1,0 +1,38 @@
+{
+  "resource_type": "snapshot", 
+  "depends_on": 
+    {"macros": ["macro.edw.ref"], 
+     "nodes": ["model.edw.DSV_AMBULATORY_PAYMENT_CLASSIFICATION"]
+    }, 
+  "config": 
+    {"enabled": true, 
+     "alias": null, 
+     "schema": null, 
+     "database": null, 
+     "tags": [], 
+     "meta": {}, 
+     "materialized": "snapshot", 
+     "persist_docs": {}, 
+     "quoting": {}, 
+     "column_types": {}, 
+     "full_refresh": null, 
+     "unique_key": "UNIQUE_ID_KEY", 
+     "on_schema_change": "ignore", 
+     "strategy": "check", 
+     "target_schema": "EDW_STAGING_SNAPSHOT", 
+     "target_database": null, 
+     "updated_at": null, 
+     "check_cols": 
+      ["APC_DESC", "APC_CODE_STATUS_CODE", "APC_CODE_STATUS_DESC", "APC_RELATIVE_WEIGHT_RATE", "APC_AMOUNT", "APC_EFFECTIVE_DATE", "APC_EXPIRATION_DATE"], 
+     "transient": false, 
+     "post-hook": [], 
+     "pre-hook": []
+    }, 
+  "unique_id": "snapshot.edw.DIM_AMBULATORY_PAYMENT_CLASSIFICATION_SNAPSHOT_STEP1", 
+  "package_name": "edw", 
+  "original_file_path": "snapshots\\DIM_AMBULATORY_PAYMENT_CLASSIFICATION_SNAPSHOT_STEP1.sql", 
+  "name": "DIM_AMBULATORY_PAYMENT_CLASSIFICATION_SNAPSHOT_STEP1", 
+  "alias": "DIM_AMBULATORY_PAYMENT_CLASSIFICATION_SNAPSHOT_STEP1", 
+  "tags": 
+    []
+}

@@ -1,0 +1,5 @@
+c:
+set HTTP_PROXY=http://europa:84
+set HTTPS_PROXY=http://europa:84
+chdir %USERPROFILE%\bwcroot\bwcenv\bwcrun
+cmd

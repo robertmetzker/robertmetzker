@@ -1,0 +1,33 @@
+{
+  "resource_type": "model", 
+  "depends_on": 
+    {
+      "macros": ["macro.edw.ref"], 
+      "nodes": ["model.edw.STG_MIRA_VALIDATION_EXTRACT", "model.edw.STG_MIRA_STOP_CONDITIONS"]
+    }, 
+  "config": 
+    {
+      "enabled": true, 
+      "alias": null, 
+      "schema": "ODS_ACTUARIAL", 
+      "database": null, 
+      "tags": ["weekly"], 
+      "meta": {}, 
+      "materialized": "table", 
+      "persist_docs": {}, 
+      "quoting": {}, 
+      "column_types": {}, 
+      "full_refresh": null, 
+      "unique_key": null, 
+      "on_schema_change": "ignore", 
+      "transient": false, 
+      "post-hook": [], 
+      "pre-hook": []
+    }, 
+  "unique_id": "model.edw.BWC_STG_MIRA_RESERVE_EXTRACT", 
+  "package_name": "edw", 
+  "original_file_path": "models\\ODS_ACTUARIAL\\BWC_STG_MIRA_RESERVE_EXTRACT.sql", 
+  "name": "BWC_STG_MIRA_RESERVE_EXTRACT", 
+  "alias": "BWC_STG_MIRA_RESERVE_EXTRACT", 
+  "tags": ["weekly"]
+}

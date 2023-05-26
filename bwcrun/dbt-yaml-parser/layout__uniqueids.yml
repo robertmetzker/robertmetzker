@@ -1,0 +1,13 @@
+{
+  "unique_id": "source.edw.MEDICAL.ACCOUNT_STATUS_TYPE", 
+  "package_name": "edw", 
+  "original_file_path": "models\\source.yml", 
+  "name": "ACCOUNT_STATUS_TYPE", 
+  "source_name": "MEDICAL", 
+  "resource_type": "source", 
+  "tags": [], 
+  "config": 
+    {
+      "enabled": true
+    }
+}
