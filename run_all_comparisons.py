@@ -40,7 +40,7 @@ from bwcenv.bwclib import inf,dblib
 
 def process_args():
     etldir =f"I:/Data_Lake/IT/ETL/{os.environ['USERNAME'].replace('_x','')}/EL/"
-    parser = argparse.ArgumentParser(description='command line args',epilog="Example:python run_compare_schema2.py --conn1 dev/snowflake_dev --sql c:/temp/test.sql",add_help=True)
+    parser = argparse.ArgumentParser(description='command line args',epilog="Example:python run_all_comparisons.py --conn1 dev/snowflake_dev --sql c:/temp/test.sql",add_help=True)
 
     #required
     parser.add_argument('--conn1', required=True, help='env/database (from dbsetup)')
@@ -51,6 +51,7 @@ def process_args():
     parser.add_argument('--conn2', required=False, help='env/database for comparison (from dbsetup)')
     parser.add_argument('--output', required=False, help='Output directory/file for query results.  Defaults to sql directory')
     parser.add_argument('--eldir', required=False, default=etldir,help='default directory for all extracts')
+    parser.add_argument('--reset', required=False, default=False, action='store_true', help='include if you want to re-process and clear previously stored results')
     parser.add_argument('--silent', required=False, default=False, action='store_true', help='include if you want to silence validation query log file generation')
     parser.add_argument('-l','--limit', required=False, default=False,  help='include if you want to limit the number of queries as a test')
     parser.add_argument('-p','--parallel', required=False, default=1, help='number of instances to spool up.')
@@ -177,9 +178,9 @@ def generate_queries(args, inc_cols):
         runsql = f"select {run_dt_str!r} as RUN_DT, '{row['TABLE_CATALOG']}' as DB_NAME, '{row['TABLE_SCHEMA']}' as TBL_SCHEMA, '{row['TABLE_NAME']}' as TBL_NAME,  '{row['COLUMN_NAME']}' as COL_NAME "
         for each, _col in agg_types.items():
             if each == 'avg':
-                runsql += f",  trunc( {each}( {row['COLUMN_NAME']} ), 2) as {each.upper()}"
+                runsql += f",  trunc( {each}( {row['COLUMN_NAME']} ), 2) as COL_{each.upper()}"
             else:
-                runsql += f", {each}( {row['COLUMN_NAME']} ) as {each.upper()}"
+                runsql += f", {each}( {row['COLUMN_NAME']} ) as COL_{each.upper()}"
         if  db1_conn.dbtype.lower() =='snowflake' :
             conn1_db = args.conn1_db if args.conn1_db else row['TABLE_CATALOG']       
             conn_from = f"    from {conn1_db}.{row['TABLE_SCHEMA']}.{row['TABLE_NAME']}  "
@@ -190,12 +191,13 @@ def generate_queries(args, inc_cols):
         row['DB1_SQL'] = runsql + conn_from
 
         if args.conn2:
-            runsql = f"select {run_dt_str!r} as RUN_DT, '{row['TABLE_CATALOG']}' as DB_NAME, '{row['TABLE_SCHEMA']}' as TBL_SCHEMA, '{row['TABLE_NAME']}' as TBL_NAME,  '{row['COLUMN_NAME']}' as COL_NAME "
+            conn2_db = args.conn2_db if args.conn2_db else db2_conn.dbname
+            runsql = f"select {run_dt_str!r} as RUN_DT, '{conn2_db.upper()}' as DB_NAME, '{row['TABLE_SCHEMA']}' as TBL_SCHEMA, '{row['TABLE_NAME']}' as TBL_NAME,  '{row['COLUMN_NAME']}' as COL_NAME "
             for each, _col in agg_types.items():
                 if each == 'avg':
-                    runsql += f",  trunc( {each}( {row['COLUMN_NAME']} ), 2) as {each.upper()}"
+                    runsql += f",  trunc( {each}( {row['COLUMN_NAME']} ), 2) as COL_{each.upper()}"
                 else:
-                    runsql += f", {each}( {row['COLUMN_NAME']} ) as {each.upper()}"
+                    runsql += f", {each}( {row['COLUMN_NAME']} ) as COL_{each.upper()}"
             if  db2_conn.dbtype.lower() =='snowflake' :
                 conn2_db = args.conn2_db if args.conn2_db else db2_conn.dbname
                 # conn2_db = db2_conn.dbname
@@ -237,10 +239,12 @@ def run_sql(all_args):
         
         # Oracle fetch does not return column dict inforation (headers)
         for each, col in agg_types.items():
+            col_each = f'COL_{each.upper() }'
             if db1_conn.dbtype.lower() == 'oracle':
-                row[f'C1_{each}'] =  result[col] 
+                # row[f'C1_{each}'] =  result[col] 
+                row[f'C1_{each}'] =  result.get(col_each,"~") 
             else:
-                row[f'C1_{each}'] =  result.get(each.upper() ) 
+                row[f'C1_{each}'] =  result.get(col_each,"~") 
 
         row['C1'] =  args.conn1_env +'_'+ db1_conn.dbtype.lower()
         if not args.silent: args.log.info(f"{row['C1']} RESULTS: {result}")
@@ -251,16 +255,19 @@ def run_sql(all_args):
             row['CONN2_ERR'] = ''
             #for i in tqdm (range(1), desc=f"Executing {args.conn2_env} - {db2_conn.dbtype.lower()}  SQL ({idx})..." ):
             try:
-                result = db2_conn.fetchone( row['DB2_SQL']  )
+                result = list(db2_conn.fetchdict( row['DB2_SQL'] ))[0]
+                # result = db2_conn.fetchone( row['DB2_SQL']  )
                 # result = db2_conn.fetchdict( runsql + conn_from  )
                 if result == None:
                     result = '~'
                 # I believe oracleDB connector makes this redundant
                 for each, col in agg_types.items():
+                    col_each = f'COL_{each.upper() }'
                     if db2_conn.dbtype.lower() == 'oracle':
-                        row[f'C2_{each}'] =  result[col] 
+                        row[f'C2_{each}'] =  result.get(col_each,"~" )
+                        # row[f'C2_{each}'] =  result[col] 
                     else:
-                        row[f'C2_{each}'] =  result.get(each.upper() )                             
+                        row[f'C2_{each}'] =  result.get(col_each,"~" )                             
             except:
                 err = geterr()    #     if not args.silent: args.log.error(f'RESULTS: {e}')
                 if "ProgrammingError" in err:
@@ -303,18 +310,20 @@ def geterr(note = '', clean = True):
 
 def snow_put(args,  comparison_file, stagedir='', path=''):
     '''
+        create or replace stage bwc_audit.public.schema_compare;
+
         requires the full path
-    put file://C:\temp\PCMP--uat_snowflake_vs_uat_oracle_comparison_20220819.csv @~/DEV_EDW/PUBLIC/SCHEMA_COMPARE/ auto_compress=true;
+    put file://C:\temp\PCMP--uat_snowflake_vs_uat_oracle_comparison_20220819.csv @~/BWC_AUDIT/PUBLIC/SCHEMA_COMPARE/ auto_compress=true;
     copy into X10057301.ADR_TYP from @~/DBTEST/X10057301/ADR_TYP/ file_format =  (type = csv field_delimiter = '\t' skip_header = 1)  on_error='continue';
 
     '''
     db1_conn = get_dbcon(args, args.conn1_env, args.conn1 )
     path = f'{args.etldir}/{comparison_file}'
     
-    stagedir = 'DEV_EDW/PUBLIC/SCHEMA_COMPARE/'
+    stagedir = 'BWC_AUDIT/PUBLIC/SCHEMA_COMPARE/'
 
     # Clean out staging before uploading new results
-    remove_sql = 'rm @~/DEV_EDW/PUBLIC/SCHEMA_COMPARE/'
+    remove_sql = 'rm @~/BWC_AUDIT/PUBLIC/SCHEMA_COMPARE/'
     print(remove_sql)
     rm_result = db1_conn.exe(remove_sql)
     if rm_result:
@@ -336,8 +345,8 @@ def snow_list_stage(args, db1_conn, stagedir=''):
     '''
         https://docs.snowflake.com/en/sql-reference/sql/list.html
 
-    list @~/DEV_EDW/PUBLIC/SCHEMA_COMPARE/;
-    [{'name': 'DEV_EDW/PUBLIC/SCHEMA_COMPARE/PCMP--uat_snowflake_vs_uat_oracle_comparison_20220819.csv.gz', 'size': 688, 'md5': 'f500ff108c48d4339ffab8a8f070fb9e', 'last_modified': 'Fri, 19 Aug 2022 18:01:57 GMT'}]   
+    list @~/BWC_AUDIT/PUBLIC/SCHEMA_COMPARE/;
+    [{'name': 'BWC_AUDIT/PUBLIC/SCHEMA_COMPARE/PCMP--uat_snowflake_vs_uat_oracle_comparison_20220819.csv.gz', 'size': 688, 'md5': 'f500ff108c48d4339ffab8a8f070fb9e', 'last_modified': 'Fri, 19 Aug 2022 18:01:57 GMT'}]   
     '''
     sql=f'list {args.snow_prefix}/{stagedir}; '
 
@@ -362,7 +371,7 @@ def snow_copy_into(args, stagedir, comparison_file ):
     selectstmt = str( ', '.join(stmt))
 
     # copy_cmd=f"""copy into {dbname}.{schema}.{table} from {args.snow_prefix}/{stagedir} {file_format} on_error='continue'; """
-    copy_cmd = f"""copy into DEV_EDW.PUBLIC.SCHEMA_COMPARISON ( {fields} ) from (select {selectstmt} from {args.snow_prefix}{stagedir}{comparison_file} s) {file_format} TRUNCATECOLUMNS= TRUE on_error='continue'; """
+    copy_cmd = f"""copy into BWC_AUDIT.PUBLIC.SCHEMA_COMPARISON ( {fields} ) from (select {selectstmt} from {args.snow_prefix}{stagedir}{comparison_file} s) {file_format} TRUNCATECOLUMNS= TRUE on_error='continue'; """
     # args.log.info(copy_cmd)
     print(f' --COPYING via {copy_cmd}' )
     result=list( db1_conn.exe(copy_cmd))
@@ -380,7 +389,7 @@ def insert_into_sf(args, results):
         sql += f'( {fields} ) '
 
         values = ', '.join( ["'{}'".format(str(item).replace("'", "''" )) for  item in rw.values() ])
-        values = values.replace("'None'", "Null")
+        values = values.replace("~", "Null")
 
         sql += f' values ({values}) '
 
@@ -394,12 +403,12 @@ def insert_into_sf(args, results):
     
 
 def saveresults( args, results ):
-    drctry = Path( args.output ) if args.output else Path( args.etldir )
+    from openpyxl import Workbook
+    datestring = datetime.now().strftime("%Y%m%d")
+
+    drctry = Path( args.output )/datestring if args.output else Path( args.etldir )
     drctry.mkdir( parents=True, exist_ok = True )
     
-    now = datetime.now()
-    datestring = now.strftime("%Y%m%d")
-
     result_file = args.schema.upper()
     fields_avail = results[0][0]
     
@@ -447,8 +456,7 @@ def writecsv( args, results ):
     for rw in results[0]:
         csv_list.append( rw )
 
-    now = datetime.now()
-    datestring = now.strftime("%Y%m%d")
+    datestring = datetime.now().strftime("%Y%m%d")
 
     schema_name = args.schema.upper()
     fields_avail = csv_list[0]
@@ -491,6 +499,9 @@ def main():
     # Create Queries for count, sum, min, max values for each schema/table/column combination.    
     # query_list = generate_queries(args)
     columns =  generate_columns(args)
+    if not columns:
+        print( f'## No tables found in the Connection specified'); exit()
+
     queries =  generate_queries(args, columns)
 
     queries_to_run = []
@@ -522,10 +533,16 @@ def main():
 
     comparison_file = writecsv( args, results )
 
-    print(f'### LOADING REUSLTS TO SNOWFLAKE ###')
+    print(f'### LOADING RESULTS TO SNOWFLAKE ###')
 
-    stagedir = '/DEV_EDW/PUBLIC/SCHEMA_COMPARE/'
+    stagedir = '/BWC_AUDIT/PUBLIC/SCHEMA_COMPARE/'
     snow_put(args, comparison_file, stagedir, path=args.etldir )
+
+    if args.reset:
+        db1_conn = get_dbcon(args, args.conn1_env, args.conn1 )
+        reset_sql = f"delete from BWC_AUDIT.PUBLIC.SCHEMA_COUNTS where run_dt = current_date and table_schema = {args.schema!r} "
+        result = db1_conn.fetchone( reset_sql )
+        print( result )
     snow_copy_into( args, stagedir, comparison_file )
             
     # insert_into_sf( args, results )
@@ -540,20 +557,5 @@ if __name__ == '__main__':
 
 
 
-# cd bwcroot\bwcenv\bwcrun
-# python run_compare_schema2.py --conn1 prd/vertica_testprd --conn2 prd/snowflake_prd  --limit 20 --sql C:/Temp/BWC_ETL_VALIDATIONS.csv  --parallel 3
-# python run_compare_schema2.py --conn1 prd/vertica_testprd --conn2 prd/snowflake_prd  --limit 20 --sql C:/Temp/BWC_ETL_VALIDATIONS.csv  --parallel 3 --silent --output c:/Temp/TestOutput
-# python run_compare_schema2.py --conn1 prd/snowflake_prd  --limit 20 --sql C:/Temp/BWC_ETL_VALIDATIONS.csv  --parallel 3 --silent --output c:/Temp/TestOutput
-
-# python run_compare_schema2.py --conn1 prd/snowflake_prd --conn2 /dev/snowflake_dev  --limit 20 --sql C:/Temp/BWC_ETL_VALIDATIONS.csv  --parallel 3 --silent --output c:/Temp/TestOutput
-# python run_compare_schema2.py --conn1 dev/snowflake_dev --schema DW_REPORT  --limit 10 --parallel 10 --silent 
-# python run_compare_schema2.py --conn2 uat/oracle_etl --conn1 uat/snowflake_uat  --schema PCMP  --parallel 1 --limit 200 --silent --output c:/Temp
-# python run_compare_schema2.py --conn2 uat/oracle_etl --conn1 uat/snowflake_uat --schema PCMP --silent --parallel 1 --limit 20 --output C:/temp
-# python run_compare_schema2.py --conn2 uat/oracle_etl --conn1 uat/snowflake_uat --schema PCMP --silent --parallel 10 --limit 100 --output C:/temp
-# python run_compare_schema2.py --conn2 uat/oracle_etl --conn1 uat/snowflake_uat --schema PCMP --silent --parallel 20 --output C:/temp
-# python run_compare_schema2.py --conn1 prd/snowflake_prd --conn2 uat/snowflake_uat  --schema PCMP --parallel 15 --silent --output c:/Temp/Schema2Output 
-
-# python run_compare_schema2.py --conn1 prd/snowflake_prd/PRD_SOURCE --conn2 uat/snowflake_uat/UAT_SOURCE  --schema PCMP --p 15 --silent --l 15 --o c:/Temp/Schema2Output 
-# python run_compare_schema2.py --conn1 prd/snow_etl/RPD1 --conn2 prd/vertica_etl/RPD1  --schema DW_REPORT --p 20 --silent --o e:/Temp/Schema2Output 
-# python run_compare_schema2.py --conn1 prd/etl_validation/RPD1 --conn2 prd/vertica_prd/RPD1  --schema DW_REPORT --p 15  --o c:/Temp/Schema2Output 
-# python run_compare_schema2.py --conn1 prd/etl_validation/PRD_VIEWS --conn2 prd/vertica_prd/RPD1  --schema PCMP --p 15 --o c:/Temp/Schema2Output
+# python run_all_comparisons.py --conn1 prd/snowflake_prd/PRD_SOURCE --conn2 dev/snowflake_dev/DEV_SOURCE  --schema PCMP --p 15  --reset --o c:/Temp/Schema2Output 
+# python run_all_comparisons.py --conn1 prd/snowflake_prd/RPD1  --conn2 uat/oracle_etl --schema PCMP  --parallel 10  --reset  --o c:/Temp/Comparisons
