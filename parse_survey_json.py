@@ -1,4 +1,4 @@
-import csv, json
+import csv, json, argparse
 from datetime import datetime
 from pathlib import Path
 
@@ -11,8 +11,8 @@ def set_libpath():
     import sys,os
     from pathlib import Path
     prog_path=Path(os.path.abspath(__file__))
-    root=prog_path.parent.parent.parent.parent      # Extra parent added due to SM Sub-dir
-    pyversion=f'{sys.version_info.major}{sys.version_info.minor}'
+    root= prog_path.parent.parent.parent
+    pyversion= f'{sys.version_info.major}{sys.version_info.minor}'
     
     pylibpath=root/f'Python/Python{pyversion}/site-packages'
     pylibpath2=root/f'bwcsetup/Python/Python{pyversion}/site-packages'
@@ -20,7 +20,6 @@ def set_libpath():
     sys.path.append(str(pylibpath))
     sys.path.append(str(pylibpath2))
     print('using path',root,pylibpath)
-
 
 set_libpath()
 
@@ -41,6 +40,42 @@ def read_json_from_file(filename):
     with open(filename, encoding='utf-8', errors='ignore') as f:
         json_info = json.load(f)
     return json_info
+
+
+def process_args():
+    # etldir =f"I:/Data_Lake/IT/ETL/{os.environ['USERNAME'].replace('_x','')}/EL/"
+    defaultdir= f"I:/EDM/sm/2023_04_18PM/extracts"
+    parser= argparse.ArgumentParser(description='command line args', epilog="Example:python parse_survey_json.py --ods DEV --filepath I:/EDM/sm/2023_04_18PM/extracts", add_help=True)
+
+    #required
+    parser.add_argument('--ods', required=True, help='xxx_ODS (PRD, DEV, UAT) environment to write to in SnowFlake')
+    #optional
+    parser.add_argument('--filepath', required=False, default= defaultdir,help='default directory for all extracts')
+    
+    args= parser.parse_args()
+
+    # Added to simplify copying into Snowflake
+    args.snow_prefix= '@~'
+    args.fields= []
+    args.ods = args.ods.strip().upper()
+    
+    #Check to obtain latest subdir
+    args.load_key= sorted(adir for adir in Path(args.filepath).iterdir() if adir.name.startswith('2'))[-1].stem
+    args.load_key= f'{args.load_key}/extracts'
+    # args.etldir = Path( args.eldir )
+    args.etldir= Path( args.filepath.strip() ) if args.filepath else Path( defaultdir.strip() )
+    args.datadir= args.etldir/args.load_key if args.load_key else args.etldir
+
+    # Use the same directory for the Output as the Source SQL file, if possible.
+    # args.output= Path( args.output.strip() ) if args.output else Path( args.etldir.strip() )
+    
+    args.logdir= args.etldir/'logs'
+    args.log= inf.setup_log(args.logdir, app = 'parent')
+    args.log.info( f'processing in {args.etldir}' )
+    print( f'\t=== Using datadir: {args.datadir}' )
+    print( f'--Processing in: {args.etldir}' )
+
+    return args
 
 
 def parse_survey(filepath,filename):
@@ -68,12 +103,13 @@ def snow_list_stage(con,stage_dir):
     return stage_files
 
 
-def snow_remove_stage():
+def snow_remove_stage(args):
     '''
     rm @~/DBTEST/DBT_PBALZER/ACTIVITY_NAME_TYPE/ACTIVITY_NAME_TYPE.csv.gz;
     '''
+    print("="*40, " Remving previous Staged Files ", "="*40 )
     con = get_dbcon()
-    stage_dir='@~/DEV_ODS/SURVEY_MONKEY/SURVEYS/'
+    stage_dir=f'@~/{args.ods}_ODS/SURVEY_MONKEY/SURVEYS/'
     cmd_list=[]
     for row in snow_list_stage(con,stage_dir):
         remove_cmd=f"""rm @~/{row['name']}; """
@@ -84,13 +120,13 @@ def snow_remove_stage():
     return cmd_list
 
 
-def snow_put(path):
+def snow_put(args,path):
     '''
         requires the full path
     put file://I:\IT\ETL\nielsenjf\snowflake\extracts_active\ADR_TYP_INFSPLIT_2700000.gz @~/DBTEST/X10057301/ADR_TYP/ auto_compress=true;
     copy into X10057301.ADR_TYP from @~/DBTEST/X10057301/ADR_TYP/ file_format =  (type = csv field_delimiter = '\t' skip_header = 1)  on_error='continue';
     '''
-    stage_dir='@~/DEV_ODS/SURVEY_MONKEY/SURVEYS/'
+    stage_dir= f'@~/{args.ods}_ODS/SURVEY_MONKEY/SURVEYS/'
     if '\\' in path:
         fname = path.split('\\')[-1]
     else:
@@ -107,7 +143,7 @@ def snow_put(path):
     # print(f'Staged {staged_files}')
 
     table=path.split('_')[-1].split('.')[0]
-    results=snow_copy_into(con,table,stage_dir, fname)
+    results=snow_copy_into(args,con,table,stage_dir, fname)
 
     if results.get('errors_seen',0) >0:
         print('*'*80,' ERROR ','*'*80)
@@ -117,15 +153,15 @@ def snow_put(path):
     return staged_files
 
 
-def snow_copy_into(con,table,stage_dir, fname):
+def snow_copy_into(args,con,table,stage_dir, fname):
     #file_format=f"""file_format =  (type = csv field_delimiter = '{args.delim}' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"')  """
     #file_format="""FILE_FORMAT = '"DBTEST"."10057301"."BASIC_TSV"'"""
 
     # fname = fname+'.gz'
     if table == 'SURVEYS':
         print('Truncating SURVEYS table')
-        con.exe('truncate table DEV_ODS.SURVEY_MONKEY.SURVEYS')
-    copy_cmd=f"""copy into DEV_ODS.SURVEY_MONKEY.{table} from {stage_dir}{fname}.gz FILE_FORMAT='DEV_ODS.SURVEY_MONKEY.SURVEY_CSV' on_error='continue'; """
+        con.exe(f'truncate table {args.ods}_ODS.SURVEY_MONKEY.SURVEYS')
+    copy_cmd=f"""copy into {args.ods}_ODS.SURVEY_MONKEY.{table} from {stage_dir}{fname}.gz FILE_FORMAT='{args.ods}_ODS.SURVEY_MONKEY.SURVEY_CSV' on_error='continue'; """
     # copy_cmd=f"""copy into DEV_ODS.SURVEY_MONKEY.{table} from {stage_dir} FILES = '{fname}.gz' FILE_FORMAT='DEV_ODS.SURVEY_MONKEY.SURVEY_CSV' on_error='continue'; """
     print(f'\t{copy_cmd}')
     result=list(con.exe(copy_cmd))
@@ -163,6 +199,7 @@ def add_question_answers_to_dict(df: dict, detail_info: dict):
         # add an empty dictionary for each question to hold the answers based on anaswer id and answer text as key/value pairs
         # df[question["id"]]["answers"] = [{} for i in range(len(question["answers"]["choices"]))]
 
+        #TODO: If "family": "matrix", subtype": "rating"  then it needs to be an array of question/answers
         if question["subtype"] != "essay":
 
             if "other" in question.get("answers","None"):
@@ -196,7 +233,8 @@ def add_question_answers_to_dict(df: dict, detail_info: dict):
 
 def show_responses(response_data, parsed_questions):
     # print( response_data )
-    print('Recipent: ', response_data["recipient_id"]) 
+    print('Recipent: ', response_data["recipient_id"])
+    print('Custom_Value: ', response_data["custom_value"]) 
     print('FName: ', response_data["first_name"]) 
     print('LName: ', response_data["last_name"]) 
     if response_data["metadata"]["contact"].get("email",False):
@@ -214,6 +252,8 @@ def show_responses(response_data, parsed_questions):
 
     for answer in response_data["pages"][0]["questions"]:
         qid = answer["id"]
+        #TODO: Don't just look at Answers[0], but instead loop through answers list.
+        #For matrix, should have: "choice_id": "1658450538",  "row_id": "1658425569"  information to align questions (rowid) to choice_id 
         aid = answer["answers"][0].get("choice_id",'Free Form Field')
         print( f'QUESTION: {qid} >  {parsed_questions[qid]}' )
         if "tag_data" in answer["answers"][0]:
@@ -230,9 +270,15 @@ def add_response_to_dict(response_info: dict, response_data: dict):
     # { 'recipent':'6070975071' ,'fname':'1599387', 'lname':'TGW-SYSTEMS INC', 'email':'laura.butrick@tgw-group.com', 'surveyid':'300747984', 'responses': {'605148537':'3982038472', '605148539':'3982038484', '605148542':'3982038498', '605148543':'3982038503', '605148544':'3982038508', '605148545':'3982038511', '605148546':'3982038514', '605148547':'3982038520', '605148548':'3982038523', '605148549':'3982038528', '605148550':'3982038534'} }
     df = response_info.copy()
 
-    df["person"] = response_data["recipient_id"]
-    d=response_data["first_name"]
-    
+    if response_data["recipient_id"] == "":
+        df["person"] = response_data["id"]
+    else:
+        df["person"] = response_data["recipient_id"]
+
+    cv=response_data.get("custom_value",'')
+    df["custom_value"] = f'"{cv}"'
+
+    d=response_data["first_name"]    
     fmt = ['%m/%d/%Y','%b %d, %Y']
     for f in fmt:
         try:
@@ -240,8 +286,8 @@ def add_response_to_dict(response_info: dict, response_data: dict):
             break
         except:
             new = d
-
     df["fname"] = new
+
     # df["fname"] = response_data["first_name"]
     df["lname"] = response_data["last_name"]
     if response_data["metadata"]["contact"].get("email",False):
@@ -254,13 +300,20 @@ def add_response_to_dict(response_info: dict, response_data: dict):
     df["dtcreated"] = response_data["date_created"]
     df["dtmodified"] = response_data["date_modified"]
     
-
     response_dict = {}
-    for answer in response_data["pages"][0]["questions"]:
-        qid = answer["id"]
-        aid = answer["answers"][0].get("choice_id","None")
-        if "tag_data" in answer["answers"][0]:
-            ans_str = answer["answers"][0]["text"]
+    for response in response_data["pages"][0]["questions"]:
+        num_answers = len(response.get("answers"))
+        if num_answers > 1:
+            for answer in response.get("answers"):
+                qid = answer.get("row_id")
+                aid = answer.get("choice_id","None")
+                response_dict[qid] = aid
+        else:    
+            qid = response["id"]
+            aid = response["answers"][0].get("choice_id","None")
+
+        if "tag_data" in response["answers"]:
+            ans_str = response["answers"]["text"]
             # ans_str = ans_str.replace('0xA0',' ').replace('0x92',"'")
             ans_str = ans_str.encode('ascii','ignore')
             ans_str = ans_str.decode()
@@ -289,14 +342,26 @@ def output_questions( detail_info ):
     for question in detail_info['pages'][0]['questions']:
         qid = question["id"]
         qno = question["position"]
-        qtxt =  question["headings"][0]["heading"]
-        # qtxt =  question["headings"][0]["heading"].replace("'","''") 
-        # sql_tr =  f"insert into SURVEY_MONKEY.QUESTIONS values( {surveyid!r}, {qno},  {qid!r},'{qtxt}' );\n" 
-        str =  f'{surveyid},{qno},{qid},"{qtxt}"\n' 
-        # str = str.replace('0xA0',' ').replace('0x92',"'")
-        str = str.encode('ascii','ignore')
-        str = str.decode()
-        questions_str.append( str )
+        if question.get("family") == "matrix":
+            questions = question["answers"]
+            for row in questions["rows"]:
+                qid= row["id"]
+                qtxt= row["text"] 
+                qsubno= row["position"]
+                qno= f'{question["position"]}.{qsubno}'
+                str =  f'{surveyid},{qno},{qid},"{qtxt}"\n' 
+                str = str.encode('ascii','ignore')
+                str = str.decode()
+                questions_str.append( str )
+        else:
+            qtxt =  question["headings"][0]["heading"]
+            # qtxt =  question["headings"][0]["heading"].replace("'","''") 
+            # sql_tr =  f"insert into SURVEY_MONKEY.QUESTIONS values( {surveyid!r}, {qno},  {qid!r},'{qtxt}' );\n" 
+            str =  f'{surveyid},{qno},{qid},"{qtxt}"\n' 
+            # str = str.replace('0xA0',' ').replace('0x92',"'")
+            str = str.encode('ascii','ignore')
+            str = str.decode()
+            questions_str.append( str )
 
     return question_headers, questions_str
 
@@ -316,6 +381,19 @@ def output_answers( detail_info ):
 
     for question in detail_info['pages'][0]['questions']:
         qid = question["id"]
+
+        # If this is a matrix, then loop through answers and swap out qid
+        if question.get("family") == "matrix":
+            for answer in question["answers"]["rows"]:
+                qid = answer["id"]
+                for choice in question["answers"]["choices"]:
+                    aid = choice["id"]
+                    atxt = choice["text"]
+                    str =  f'{surveyid},{qid},{aid},"{atxt}"\n'
+                    str = str.encode('ascii','ignore')
+                    str = str.decode()
+                    answers_str.append( str )
+
         if "other" in question.get("answers","None"):
             aid = question["answers"]["other"]["id"]
             atxt = question["answers"]["other"]["text"]
@@ -359,18 +437,19 @@ def output_participants(all_responses):
     [{'recipent': '6070975071', 'fname': '1599387', 'lname': 'TGW-SYSTEMS INC', 'email': 'laura.butrick@tgw-group.com', 'surveyid': '300747984', 'surveydate': '2021-02-02T19:32:47+00:00', 'totaltime': 88, 'responses': {'605148537': '3982038472', '605148539': '3982038484', '605148542': '3982038498', '605148543': '3982038503', '605148544': '3982038508', '605148545': '3982038511', '605148546': '3982038514', '605148547': '3982038520', '605148548': '3982038523', '605148549': '3982038528', '605148550': '3982038534'}},
 
     PARTICIPANT_ID  text,
+    CUSTOM_VALUE    text,
     FIRST_NAME      text,
     LAST_NAME       text,
     EMAIL           text
     '''
-    participant_headers = "PARTICIPANT_ID,FIRST_NAME,LAST_NAME,EMAIL,DATE_CREATED,DATE_MODIFIED,TIME_TAKEN"
+    participant_headers = "PARTICIPANT_ID,CUSTOM_VALUE,FIRST_NAME,LAST_NAME,EMAIL,DATE_CREATED,DATE_MODIFIED,TIME_TAKEN"
     stmt = 'insert into SURVEY_MONKEY.PARTICIPANTS values ('
     participant_str = []
     
     for person in all_responses:
         person_dict = dict( person )
         # sql_str = f"{stmt} {person_dict.get('person')!r}, {person_dict.get('fname')!r}, {person_dict.get('lname')!r}, {person_dict.get('email')!r} );\n"
-        str = f"{person_dict.get('person')},{person_dict.get('fname')},{person_dict.get('lname')},{person_dict.get('email')},{person_dict.get('dtcreated')},{person_dict.get('dtmodified')},{person_dict.get('totaltime')}\n"
+        str = f"{person_dict.get('person')},{person_dict.get('custom_value')},{person_dict.get('fname')},{person_dict.get('lname')},{person_dict.get('email')},{person_dict.get('dtcreated')},{person_dict.get('dtmodified')},{person_dict.get('totaltime')}\n"
         participant_str.append( str )
 
     return participant_headers, participant_str
@@ -410,9 +489,9 @@ def output_responses(all_responses):
     return response_headers, response_str
 
 
-def writecsv( func, headers, filepath, results ):
+def writecsv( args, func, headers, filepath, results ):
     schema_name = 'SURVEY_MONKEY'
-    filename = f"{filepath}\output\{schema_name}_{func}.csv"
+    filename = f"{filepath}\{schema_name}_{func}.csv"
 
     # write_csv(fname,rows,raw=False,delim='\t',term='\n',prefix='',sortit=True,log=None,verify=False):
     with open( filename, 'w', newline = '') as file2write:
@@ -421,7 +500,7 @@ def writecsv( func, headers, filepath, results ):
             file2write.write( row )
             
     print( f' --- Wrote {func} CSV file to: {filename}\n')
-    snow_put(filename)
+    snow_put(args,filename)
 
 
 def sm_schema_reset():
@@ -436,14 +515,17 @@ def sm_schema_reset():
 
 
 def main():
+    args = process_args()
     sm_schema_reset()
 
     # create a list of Survey objects
-    filepath = Path( 'I:/EDM/sm/2023_04_18PM/extracts' )
+    # filepath = Path( 'I:/EDM/sm/2023_04_18PM/extracts' )
+    filepath = args.datadir
     outputdir = filepath / 'output'
+    outputdir.mkdir(parents=True, exist_ok=True)
     #print survey titles
 
-    filelist=  list( filepath.glob( "*_details.json" ) )
+    filelist=  list( filepath.glob( "*_responses.json" ) )
     # surveys = [ Survey(**survey) for survey in all_surveys['data'] ]
     surveys = parse_survey(filepath,'surveys.json')
     survey_sql = []
@@ -455,17 +537,18 @@ def main():
         str =  f'''{survey['id']},"{survey['title']}"\n'''
         survey_sql.append( str )
 
-    snow_remove_stage()
+    snow_remove_stage(args)
 
     for filename in filelist:
-        detail_file = filename.name
-        response_file = detail_file.replace("detail","response")
+        response_file = filename.name
+        detail_file = response_file.replace("response","detail")
         
         print( f'--- Reading survey details from {detail_file} ---' )
         detail_info = read_json_from_file( filepath/detail_file )
 
         print( f'--- Reading response information from {response_file} ---' )
-        response_info = read_json_from_file( filepath/response_file )
+        if Path( filepath/response_file ).exists():
+            response_info = read_json_from_file( filepath/response_file )
 
         survey_info = {}
 
@@ -512,17 +595,19 @@ def main():
 
             output_file = detail_file.rsplit("_",1)[0]
 
-            writecsv( f'{output_file}_QUESTIONS', question_headers,filepath, question_sql )
-            writecsv( f'{output_file}_ANSWERS', answer_headers,filepath, answer_sql )
-            writecsv( f'{output_file}_PARTICIPANTS', participant_headers,filepath, participant_sql )
-            writecsv( f'{output_file}_RESPONSES', response_headers,filepath, response_sql )
+            writecsv( args, f'{output_file}_QUESTIONS', question_headers,outputdir, question_sql )
+            writecsv( args, f'{output_file}_ANSWERS', answer_headers,outputdir, answer_sql )
+            writecsv( args, f'{output_file}_PARTICIPANTS', participant_headers,outputdir, participant_sql )
+            writecsv( args, f'{output_file}_RESPONSES', response_headers,outputdir, response_sql )
         
         except:
             print( f'!!! ERR: Unable to process: {filename}')
             
-    writecsv( f'CURRENTLY_ACTIVE_SURVEYS', survey_headers,filepath,survey_sql )
+    writecsv( args, f'CURRENTLY_ACTIVE_SURVEYS', survey_headers,outputdir,survey_sql )
 
+    print(f"\n*** DONE Processing {len(filelist)} files...")
 
 if __name__ == "__main__":
     main()
     
+# python parse_survey_json.py --ods DEV --filepath I:/EDM/sm
