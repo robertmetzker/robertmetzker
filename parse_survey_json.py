@@ -51,7 +51,8 @@ def process_args():
     parser.add_argument('--ods', required=True, help='xxx_ODS (PRD, DEV, UAT) environment to write to in SnowFlake')
     #optional
     parser.add_argument('--filepath', required=False, default= defaultdir,help='default directory for all extracts')
-    
+    parser.add_argument('--showonly', default=False, action='store_true', help='use during testing to display but not write to Snowflake')
+
     args= parser.parse_args()
 
     # Added to simplify copying into Snowflake
@@ -346,7 +347,10 @@ def output_questions( detail_info ):
             questions = question["answers"]
             for row in questions["rows"]:
                 qid= row["id"]
-                qtxt= row["text"] 
+                if row["text"].strip() == "":
+                    qtxt= question["headings"][0]["heading"]
+                else:
+                    qtxt= row["text"] 
                 qsubno= row["position"]
                 qno= f'{question["position"]}.{qsubno}'
                 str =  f'{surveyid},{qno},{qid},"{qtxt}"\n' 
@@ -500,7 +504,9 @@ def writecsv( args, func, headers, filepath, results ):
             file2write.write( row )
             
     print( f' --- Wrote {func} CSV file to: {filename}\n')
-    snow_put(args,filename)
+
+    if not args.showonly:
+        Ssnow_put(args,filename)
 
 
 def sm_schema_reset():
@@ -516,7 +522,8 @@ def sm_schema_reset():
 
 def main():
     args = process_args()
-    sm_schema_reset()
+    if not args.showonly:
+        sm_schema_reset()
 
     # create a list of Survey objects
     # filepath = Path( 'I:/EDM/sm/2023_04_18PM/extracts' )
@@ -537,7 +544,8 @@ def main():
         str =  f'''{survey['id']},"{survey['title']}"\n'''
         survey_sql.append( str )
 
-    snow_remove_stage(args)
+    if not args.showonly:
+        snow_remove_stage(args)
 
     for filename in filelist:
         response_file = filename.name
@@ -595,15 +603,19 @@ def main():
 
             output_file = detail_file.rsplit("_",1)[0]
 
-            writecsv( args, f'{output_file}_QUESTIONS', question_headers,outputdir, question_sql )
-            writecsv( args, f'{output_file}_ANSWERS', answer_headers,outputdir, answer_sql )
-            writecsv( args, f'{output_file}_PARTICIPANTS', participant_headers,outputdir, participant_sql )
-            writecsv( args, f'{output_file}_RESPONSES', response_headers,outputdir, response_sql )
+            if args.showonly:
+                show_questions(detail_info)
+            else:
+                writecsv( args, f'{output_file}_QUESTIONS', question_headers,outputdir, question_sql )
+                writecsv( args, f'{output_file}_ANSWERS', answer_headers,outputdir, answer_sql )
+                writecsv( args, f'{output_file}_PARTICIPANTS', participant_headers,outputdir, participant_sql )
+                writecsv( args, f'{output_file}_RESPONSES', response_headers,outputdir, response_sql )
         
         except:
             print( f'!!! ERR: Unable to process: {filename}')
-            
-    writecsv( args, f'CURRENTLY_ACTIVE_SURVEYS', survey_headers,outputdir,survey_sql )
+
+    if not args.showonly:
+        writecsv( args, f'CURRENTLY_ACTIVE_SURVEYS', survey_headers,outputdir,survey_sql )
 
     print(f"\n*** DONE Processing {len(filelist)} files...")
 
@@ -611,3 +623,4 @@ if __name__ == "__main__":
     main()
     
 # python parse_survey_json.py --ods DEV --filepath I:/EDM/sm
+# python parse_survey_json.py --ods DEV --filepath c:/temp/sm --showonly
