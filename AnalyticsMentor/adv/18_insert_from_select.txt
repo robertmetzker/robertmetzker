@@ -1,0 +1,64 @@
+/*
+	in my previous course, we talked about
+	being able to insert records into a database table
+	but we were loading data from a csv file and
+	we also used individual insert statements.
+
+	but what we we already have data in a table 
+	and we want to create a new table with the same
+	or modified data?
+
+	let's say that we want to create a table that only has 
+	all of the PS5 or ps4 products.
+
+	we might want to do this because other people seem to
+	always use these filters in their code but that can be a problem.
+
+	it's a problem because we aren't being DRY across all of our code. 
+	if every time someone needs to know if it's a ps4 or ps5 item, 
+	they have to write these 4 lines of code. human errors could occur
+	and someone could accidentally create a bug. what would be 
+	better is if we could find a way to give peple the data that
+	they want without having to write a lot of code. 
+
+	there's multiple ways to do this and different reasons for why
+	you might choose one over the other. but in this example, we're
+	just going to create a new table with only these products in it.
+*/
+
+select
+	*
+from
+	products p
+where
+	   p.description like '%PlayStation 5%'
+	or p.description like '%PS5%'
+	or p.description like '%PS4%'
+	or p.description like '%PlayStation 4%'
+
+
+/*
+	with this data, all we have to do is create a insert
+	from select statement
+*/
+create table tmp_ps_4_5_products as (
+	select
+		*
+	from
+		products p
+	where
+		   p.description like '%PlayStation 5%'
+		or p.description like '%PS5%'
+		or p.description like '%PS4%'
+		or p.description like '%PlayStation 4%'
+)
+;
+
+/*
+	now that we have our table created, we can query it
+	just like any other table and only have our ps4 or ps5 products
+*/
+select
+	*
+from
+	ps_4_5_products

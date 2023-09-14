@@ -1,0 +1,23 @@
+﻿food_id,item_name,storage_type,package_size,package_size_uom,brand_name, package_price ,price_last_updated_ts
+1,sugar,dry,5,pounds,H-E-B (private label),2.00,2022-01-01 08:00:00
+2,ice cream,freezer,1,pint,Ben and Jerry's,4.00,2023-02-02 16:00:00
+3,brown sugar,dry,2,pounds,H-E-B (private label),2.00,2023-02-02 16:00:00
+4,bread flour,dry,5,pounds,Gold Medal,4.00,2023-02-02 16:00:00
+5,all purpose flour,dry,5,pounds,H-E-B (private label),5.00,2023-02-02 16:00:00
+6,baking soda,dry,8,ounces,H-E-B (private label),1.15,2023-02-02 16:00:00
+7,baking powder,dry,8,ounces,H-E-B (private label),2.23,2023-02-02 16:00:00
+8,corn starch,dry,10,ounces,H-E-B (private label),0.89,2023-02-02 16:00:00
+9,peanut butter,dry,32,ounces,Jiff,6.00,2022-01-01 08:00:00
+10,canned black beans,dry,16,ounces,Bush's,1.15,2023-02-02 16:00:00
+11,canned corn,dry,16,ounces,Green Giant,1.25,2023-02-02 16:00:00
+12,chicken stock,dry,32,ounces,Kitchen Basics,4.00,2022-01-01 08:00:00
+13,white rice,,16,ounces,Mahatma,2.00,2023-02-02 16:00:00
+14,brown rice,,16,ounces,Mahatma,2.00,2023-02-02 16:00:00
+15,tomato sauce - canned,dry,16,ounces,Hunts,1.50,2023-02-02 16:00:00
+16,tomato paste - canned,dry,16,ounces,Hunts,1.00,2023-02-02 16:00:00
+17,potatoe,dry,1,item,H-E-B (private label),0.98,2023-02-02 16:00:00
+18,white mushroom,,8,ounces,H-E-B (private label),3.50,2023-02-02 16:00:00
+19,tomato,dry,1,item,H-E-B (Private label),1.53,2023-02-02 16:00:00
+20,parsley,refrigerator,1,bunch,H-E-B (private label),0.53,2023-02-02 16:00:00
+21,carrots,refrigerator,1,item,H-E-B (private label),0.36,2023-02-02 16:00:00
+22,Cherrios,dry,16,ounces,Cherrios,5.00,2023-02-02 16:00:00

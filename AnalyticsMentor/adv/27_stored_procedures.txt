@@ -1,0 +1,74 @@
+/*
+	stored procedures are another special database
+	code that you can use to do some extra work and heavy
+	lifting. they don't return any results but they can be
+	a powerful way of handling multiple or complex tasks.
+
+	however, as a data analyst, again, you'll probably not
+	have permissions to create these in your corporate environment
+	so when it comes to creating etl jobs, you'll generally just
+	write your sql scripts and run those with some pipeline tool
+	rather than create these procedures in your database.
+
+	but since we're here, i'll at least introduce you to them.
+
+	let's say that we have an application that allows you to
+	update a bunch of things when a new family member is born.
+
+	we'll want to add a record for this new child into the 
+	family_members table. but we'll also want to create a bank account
+	for them, so we'll have to create a record in the bank_accounts
+	table.
+
+	instead of having to do these as two different tasks, we can wrap
+	them as one single task with the help of a procedure.
+	
+*/
+
+create table tmp_family_members (
+		member_id bigserial primary key
+	, member_name varchar(255)
+)
+;
+
+create table tmp_bank_accounts(
+		member_id bigserial primary key
+	, member_name varchar(255)
+)
+;
+
+
+
+create procedure add_new_family_member(name varchar(255))
+	LANGUAGE SQL
+	as $$
+
+				insert into tmp_family_members(member_name) values(name);
+				insert into tmp_bank_accounts(member_name) values(name);
+		 $$
+;
+
+/*
+	to use this procedure, we issue the call command, followed by
+	the procedure name and any required parameters
+*/
+call add_new_family_member('baby yoda');
+
+
+/*
+	we can double check the results by running our select
+	statements on those tables
+*/
+select
+	*
+from
+	tmp_family_members
+;
+
+
+select
+	*
+from
+	tmp_bank_accounts
+;
+

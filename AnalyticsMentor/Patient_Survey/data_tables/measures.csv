@@ -1,0 +1,11 @@
+Measure ID,Measure,Type
+H_COMP_1,Communication with Nurses,Composite Measure
+H_COMP_2,Communication with Doctors,Composite Measure
+H_COMP_3,Responsiveness of Hospital Staff,Composite Measure
+H_COMP_5,Communication about Medicines,Composite Measure
+H_COMP_6,Discharge Information,Composite Measure
+H_COMP_7,Care Transition,Composite Measure
+H_CLEAN_HSP,Cleanliness of Hospital Environment,Individual Item
+H_QUIET_HSP,Quietness of Hospital Environment,Individual Item
+H_HSP_RATING,Overall Hospital Rating,Global Item
+H_RECMND,Willingness to Recommend the Hospital,Global Item

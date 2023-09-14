@@ -1,0 +1,68 @@
+/*
+	sometimes you'll have dirty data that has white space
+	characters in it that you need to trim out. this tends
+	to happen a lot when dealing with data out of excel that
+	ends up getting imported into a database table.
+
+	if you don't remove the white space chacters, you'll run 
+	into problems down the road when trying to do a search.
+
+	for example, let's create a table that has something like this.
+
+
+*/
+
+drop table if exists whitespace_test;
+
+create temp table whitespace_test as (
+	select
+	'   brandon southern   ' as person_name
+)
+;
+
+
+/*
+	everything looks fine and it doesn't look like we have any whitespace characters
+*/
+select
+	w.person_name
+from
+	whitespace_test w
+;
+
+
+/*
+	however, if we try to use a where clause on this, we can see that we 
+	don't get a match. this is because of those characters.
+*/
+select
+	w.person_name
+from
+	whitespace_test w
+where
+	w.person_name = 'brandon southern'
+
+
+/*
+	one way that you can see this is if we get the length
+	of charcters using the length function.
+
+	this returns 22 characters when there should only be 16 characters
+*/
+select
+		w.person_name
+	, length(w.person_name) as string_len
+from
+	whitespace_test w
+
+
+/*
+	so to fix our data, we would want to be able to trim it
+*/
+select
+		w.person_name
+	, length(w.person_name) as string_len
+	, trim(w.person_name) as trimmed_person_name
+	, length(trim(w.person_name)) as trimmed_string_len
+from
+	whitespace_test w

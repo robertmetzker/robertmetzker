@@ -1,0 +1,20 @@
+Question Num,Measure ID,Question,Bottom-box Answer,Middle-box Answer,Top-box Answer
+1,H_COMP_1,"During this hospital stay, how often did nurses treat you with courtesy and respect? ",Usually,Sometimes or never,Always
+2,H_COMP_1,"During this hospital stay, how often did nurses listen carefully to you? ",Usually,Sometimes or never,Always
+3,H_COMP_1,"During this hospital stay, how often did nurses explain things in a way you could understand? ",Usually,Sometimes or never,Always
+4,H_COMP_3,"During this hospital stay, after you pressed the call button, how often did you get help as soon as you wanted it? ",Usually,Sometimes or never,Always
+5,H_COMP_2,"During this hospital stay, how often did doctors treat you with courtesy and respect? ",Usually,Sometimes or never,Always
+6,H_COMP_2,"During this hospital stay, how often did doctors listen carefully to you? ",Usually,Sometimes or never,Always
+7,H_COMP_2,"During this hospital stay, how often did doctors explain things in a way you could understand? ",Usually,Sometimes or never,Always
+8,H_CLEAN_HSP,"During this hospital stay, how often were your room and bathroom kept clean? ",Usually,Sometimes or never,Always
+9,H_QUIET_HSP,"During this hospital stay, how often was the area around your room quiet at night? ",Usually,Sometimes or never,Always
+11,H_COMP_3,How often did you get help in getting to the bathroom or in using a bedpan as soon as you wanted? ,Usually,Sometimes or never,Always
+13,H_COMP_5,"Before giving you any new medicine, how often did hospital staff tell you what the medicine was for? ",Usually,Sometimes or never,Always
+14,H_COMP_5,"Before giving you any new medicine, how often did hospital staff describe possible side effects in a way you could understand? ",Usually,Sometimes or never,Always
+16,H_COMP_6,"During this hospital stay, did doctors, nurses or other hospital staff talk with you about whether you would have the help you needed when you left the hospital? ",No,,Yes
+17,H_COMP_6,"During this hospital stay, did you get information in writing about what symptoms or health problems to look out for after you left the hospital? ",No,,Yes
+18,H_HSP_RATING,"Using any number from 0 to 10, where 0 is the worst hospital possible and 10 is the best hospital possible, what number would you use to rate this hospital during your stay? ",0 to 6,7 or 8,9 or 10
+19,H_RECMND,Would you recommend this hospital to your friends and family?,Probably no or definitely no,Probably yes,Definitely yes
+20,H_COMP_7,"During this hospital stay, staff took my preferences and those of my family or caregiver into account in deciding what my health care needs would be when I left. ",Disagree or strongly disagree,Agree,Strongly Agree
+21,H_COMP_7,"When I left the hospital, I had a good understanding of the things I was responsible for in managing my health. ",Disagree or strongly disagree,Agree,Strongly Agree
+22,H_COMP_7,"When I left the hospital, I clearly understood the purpose for taking each of my medications. ",Disagree or strongly disagree,Agree,Strongly Agree

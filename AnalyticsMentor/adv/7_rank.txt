@@ -1,0 +1,40 @@
+select
+	t.*
+from
+	transactions t
+;
+
+/*
+	instead of counting and telling you which row your data belongs to,
+	you can rank your results. while this sounds similar to row number,
+	there is a difference. with row number, it counts things in a consecutive order.
+	but what if you wanted to give out prized based on how someone finished a contest
+	like in the olympics? 
+	
+	you could potentially use a row number and just sort by the best finishers. but what if 
+	there was a tie and eveyone that tied for first place should be considered to be in
+	first place?
+	
+	this is where the rank function can help. 
+	
+	i'm going to select data from a specific date to make it easier to see what happens.
+	in this example, let's say that we want to give out prizes for transactions that had the
+	most items. we can use the rank() window function, and order by the items_in_trans desc.
+	
+	now we have evreyone that had 20 items, which is the most in any of our transactions, and those
+	transactions are ranked as 1st place.
+	
+	but look at what happens after that. there is no second place. because we had 7 first place
+	winners, the next place jump to 8th, not 2nd.
+	
+*/
+select
+	t.*
+  , rank() over( order by t.items_in_trans desc) as rank_val
+from
+	transactions t
+where
+	  1=1
+  and t.trans_dt = '2022-01-12'
+;
+

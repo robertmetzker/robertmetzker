@@ -1,0 +1,70 @@
+/*
+	since we're talking about performance, it's time to talk 
+	about indexes.
+
+
+	an index in a database is like an index in a book. 
+	if you wanted to find all the places that a specific word was used
+	you could go to the back of the book, look at the index, and
+	then index would tell you the exact page number or location to find
+	the word.
+
+	this makes locating information really fast. because without the index
+	you'd have to go page by page, word by word, searching for the specific
+	thing.
+
+	this means that ever time you want to run that search, you have to 
+	do the same exact scan. to save time and query cost, we can just scan
+	the book or data one time, save the key information to an index,
+	and then search across the index.
+
+	the same thing can be applied to our database
+*/
+
+
+
+select
+*
+from
+transaction_items
+where
+	product_id = 1744
+/*
+	now after creating this index, the query runs faster.
+	unfortunately my database is a little small so it's
+	hard to notice the difference here but in a large environment
+	the perormance difference can be quite substantial
+*/
+
+create index transaction_items_product_id_idx
+	on transaction_items (product_id);
+
+/*
+	however, you do have to pay attention to using this in production.
+	indexes are usually faster, but it's not always the case. the query
+	optimizer should pick the best thing to use but it's something else
+	to watch out for.
+
+	also, the index requies the scanning of the data to build the index. 
+	but if  you change the data by adding, updating, or deleting records
+	then you're going to need to re-index the data otherwise your index
+	is not going to be accurate.
+
+	this can mean that you could be putting a lot of load on teh database
+	by indexing quite frequently. so even though your query might run faster,
+	it doesn't mean it's best for the ecosystem.
+
+	for example, if it takes 10 minutes to rebuild the index and you insert
+	data every day, you're going to spend 70min per week scanning the table
+	to build the index. but if you only query that table once per week and
+	having the index saves 5min or even 20 min off your query, it might not
+	be the best thing for your environment.
+
+	this is why we don't blindly put indexes on everything. you have to have a
+	well thought out reason for creating and refreshing your indexes.
+
+	so if you decide that the index is a bad idea, you can just drop it similar
+	to how you drop a table by using:
+*/
+
+drop index transaction_items_product_id_idx;

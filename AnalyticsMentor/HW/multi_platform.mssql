@@ -1,0 +1,19 @@
+with MULTI as (
+select description
+	, count( distinct console_platform ) as VER
+from 
+	products
+group by
+	description
+having
+	count( distinct console_platform ) > 1
+)
+select distinct 
+		a.description
+	,  a.console_platform
+from 
+	products a
+inner join
+	MULTI b
+		on (a.description = b.description)
+order by 1,2

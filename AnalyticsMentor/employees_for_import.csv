@@ -1,0 +1,7 @@
+employee_id,first_name,manager_id,address,city,state_abv,zip_code,phone_number
+1,bart,4,742 Evergreen Terrace,Springfield,MO,11111,417-555-1111
+2,maggie,5,742 Evergreen Terrace,Springfield,MO,11111,417-555-1111
+3,lisa,5,742 Evergreen Terrace,Springfield,MO,11111,417-555-1111
+4,homer,6,742 Evergreen Terrace,Springfield,MO,11111,417-555-1111
+5,marge,,742 Evergreen Terrace,Springfield,MO,11111,417-555-1111
+6,mr. burns,,,,,,

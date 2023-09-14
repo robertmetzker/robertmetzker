@@ -1,0 +1,61 @@
+/*
+	next is constraints. these are rules that
+	you have on your database tables to prevent certain things
+	from occuring.
+
+	let's say that you only wanted certain values to be inserted
+	into a database table. you could put a rule in place that
+	would only allow those values. this protects your database
+	from having bad data being inserted. however, it comes at a cost,
+	which is why i don't actually see them being used that much.
+
+	let's create a new table, but this time with a constraint on it.
+
+
+*/
+
+
+create table tmp_bobs_family (
+		customer_id bigserial primary key
+	, first_name varchar(255)
+	, last_name varchar(255) check(last_name = 'belcher')
+)
+;
+
+insert into tmp_bobs_family(first_name, last_name) values('bob', 'belcher');
+insert into tmp_bobs_family(first_name, last_name) values('louise', 'belcher');
+insert into tmp_bobs_family(first_name, last_name) values('tina', 'belcher');
+
+select
+	*
+from
+	tmp_bobs_family
+
+/*
+	let's try inserting a value that shouldn't be put in the table.
+*/
+insert into tmp_bobs_family(first_name, last_name) values('phillip', 'frond');
+
+/*
+	when i try to run this, i get an error.
+	this value that i'm trying to insert for the last name violates our rule.
+
+	this is good from a protection standpoint. we are protecting the integrity of the
+	table, which avoids a lot of down-stream bugs.
+
+	the problem is that
+	1. it's really hard to think of all the conditions that you want to protect,
+		so even if you do this, you might still end up with bad data
+	2. there's a cost. with every record being inserted, not only does the db
+		have to run the standard insert, but now it has to run a comparison of the
+		value against the rule. this can really slow down your database and
+		start costing your company a lot of money and make everyone's queries run slower.
+
+		this is why we don't see these being put on the database. it's better to 
+		write these rules on your import code, but that's another story for another day
+		in the data engineering world. it's not something that even advanced data analyst
+		really deal with.
+
+		that being said, there are situation where it's too risky to not have perfect data
+		so you might want to use constraints, even if there is an extra cost.
+*/

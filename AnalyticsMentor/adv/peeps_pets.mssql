@@ -1,0 +1,27 @@
+create table peeps (
+id integer,
+name text);
+
+create table pets (
+ownerid integer,
+petname text
+);
+
+insert into peeps values( 1,'Tim');
+insert into peeps values( 2,'Jenn');
+insert into peeps values( 3,'Alden');
+
+insert into pets values(1,'Sunshine');
+insert into pets values(2,'Sadie');
+
+
+select * from peeps;
+
+select * from pets;
+
+select a.id, a.name,
+	count(b.petname)
+from peeps a
+  left join pets b
+    on (a.id = b.ownerid)
+group by a.id, a.name;

@@ -1,0 +1,97 @@
+
+with transaction_totals as (
+	select
+		  ti.transaction_id
+		, sum(p.price) as total_sales
+	from
+		transaction_items ti
+
+			join products p
+			   on p.product_id = ti.product_id
+	group by
+		ti.transaction_id
+)
+
+, trans_sales as (
+	select
+			t.trans_dt
+	  , t.transaction_id
+	  , ti.total_sales
+	  , ntile(4) over(order by ti.total_sales asc) as quartile
+	from
+		transactions t
+
+			join transaction_totals ti
+				on t.transaction_id = ti.transaction_id
+) 
+
+/*
+	now that we've figured out our median and quartiles, we might want to get
+	the rest of our statistical summary
+*/
+, quartile_summary as (
+	select
+			s.quartile
+	  , min(s.total_sales) as total_sales
+	from
+		trans_sales s
+	group by
+		s.quartile
+	order by
+		s.quartile
+)
+
+/*
+test it
+*/
+select
+*
+from
+quartile_summary
+
+
+
+/*
+	create a summary cte of our avg, min, and max.
+		we want to do this here because were doing to do a cross
+		join next to get a nice output and we need a very efficient 
+		cross-join
+*/
+, total_sales_summary as (
+	select
+	  	avg(s.total_sales) as avg_total_sales
+    , max(s.total_sales) as max_total_sales
+	  , min(s.total_sales) as min_total_sales
+	from
+		trans_sales s
+)
+
+/*
+	test it
+*/
+select
+*
+from
+total_sales_summary
+
+
+
+/*
+	roll-up all of our output to a single line
+*/
+select
+		s.avg_total_sales
+  , s.max_total_sales
+  , s.min_total_sales
+  , max(case when q.quartile = 1 then q.total_sales else 0 end) as quartile_1_total_sales
+  , max(case when q.quartile = 2 then q.total_sales else 0 end) as median_total_sales
+  , max(case when q.quartile = 3 then q.total_sales else 0 end) as quartile_3_total_sales
+  
+from
+		total_sales_summary s
+  , quartile_summary q
+group by
+		s.avg_total_sales
+  , s.max_total_sales
+  , s.min_total_sales
+

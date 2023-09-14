@@ -1,0 +1,91 @@
+select
+	  t.*
+  , rank() over( order by t.items_in_trans desc) as rank_val
+from
+	transactions t
+where
+	    1=1
+  and t.trans_dt = '2022-01-12'
+;
+
+
+/*
+	now, when you havea a lot of records, maybe you don't want to see
+	all of the percent ranks because it's hard to read and hard to draw
+	specific boundries. for example, if you wanted to see where 75% of
+	the distribution resides, you don't want to have to scroll to find 0.75
+	
+	instead, you can use the ntile() function. this function is segmenting the
+	data and giving you an integer value instead of a decimal value.
+	
+	in our case, i want to split the data into 4 equal parts. this is also know
+	as quartiles or a quarter of the results. 
+*/
+select
+	  t.*
+  , ntile(4) over(order by t.items_in_trans asc) as quartile
+from
+	transactions t
+where
+	    1=1
+  and t.trans_dt = '2022-01-12'
+;
+
+/*
+	now if we scroll through our data to find that 2 for the 2nd quartile, 
+	here's what we see and how we interpret these results.
+	
+	the boundry line between the 1st and 2nd quartile is 2 items_in_trans. this
+	means that 25% of the transactions have less than 2 units and 25% have more.
+	but that's a little tricky because we're dealing with small numbers of 1 and 2 items.
+	so the boundry here isn't all that clear and doesn't necessary make total sense.
+	
+	so you might wish to do something slightly different in this situation.
+	
+	instead of doing quartiles, you could have percentiles and chunk the data into 100 slices
+	
+	then we could scroll to where we see 2 items_in_trans and it looks like that is in the 13th percentile
+	it's a little more helpful, but maybe not the most hepful in this context. when yo have bigger numbers
+	it can become more meaningful. but if we find that 25% pecentile, we can see the value of
+	2 for items_in_trans. meaning, 25% of our transactions have up to 2 items in their transaction
+	and 75% of transactions have more than 2 items being sold.
+*/
+select
+	  t.*
+  , ntile(100) over(order by t.items_in_trans asc) as percentile
+from
+	transactions t
+where
+	    1=1
+  and t.trans_dt = '2022-01-12'
+;
+
+/*
+	we can add a bit more to this statement to make it easer to see these things.
+	we can use our CTE to get the quartile results, then we can run another
+	query to output the quartile values and the number of items in the transactions
+	for the quartile.
+	
+	this shows us that 50% of the transactions have 2 items or less and 50% have more
+	than two items.
+*/
+with trans_items_quartiles as (
+	select
+		  t.items_in_trans
+	  , ntile(4) over(order by t.items_in_trans asc) as quartile
+	from
+		transactions t
+	where
+		    1=1
+	  and t.trans_dt = '2022-01-12'
+) 
+
+select
+	  t.quartile
+  , min(t.items_in_trans) as min_items_in_trans
+from
+	trans_items_quartiles t
+group by
+	t.quartile
+
+

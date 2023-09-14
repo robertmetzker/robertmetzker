@@ -1,0 +1,41 @@
+create table sample1 (
+	 ID		integer
+	,VAL	integer 
+	,DT    date
+					  );
+					  
+insert into sample1
+select generate_series (1,5) as ID, (case when trunc( random()*10) > 5 then 100 else 99999 end ) as VAL, '2022-07-01'::date as DT;
+
+insert into sample1
+select generate_series (1,7) as ID, (case when trunc( random()*10) > 5 then 100 else 99999 end ) as VAL, '2022-07-30'::date as DT;
+
+commit;
+
+with no_change as (
+	select id, val from sample1 where dt = '2022-07-30'
+	INTERSECT
+	select id, val from sample1 where dt = '2022-07-01'
+)
+select * from no_change;
+
+with changes as (
+	select id, val from sample1 where dt = '2022-07-30'
+	EXCEPT --minus
+	select id, val from sample1 where dt = '2022-07-01'
+)
+select * from changes;
+
+with old as (
+	select id, val from sample1 where dt = '2022-07-01')
+, new as (
+	select id, val from sample1 where dt = '2022-07-30')
+SELECT
+	new.id
+	, new.val as NEW_VAL
+	, old.val as OLD_VAL
+	, case when new.val != old.val then 'X' end as DIFF
+from new
+	left join old
+		on (new.id = old.id)
+--		and coalesce(new.val,0) != coalesce(old.val,0) ;

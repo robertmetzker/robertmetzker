@@ -1,0 +1,63 @@
+/*
+	another thing that you can do is use the lead and lag functions
+	to get a future or prior value.
+	
+	sometimes i find this a little confusing to remember, but the
+	lead is going to the the future record, the next row but 
+	a lot of time we think of the next row as the one at the top, 
+	but that's not how to think about this. you want to think about
+	this as each rows is written out one after another. so the greatest row
+	number is the leading row.
+*/
+select
+	t.*
+  , lead(t.transaction_id) over(order by t.trans_dt) as prior_trans_id
+from
+	transactions t
+
+select
+	t.*
+  , lead(t.transaction_id) over(order by t.trans_dt) as prior_trans_id
+from
+	transactions t
+where
+	t.trans_dt = '2021-01-01'
+
+	
+/*
+	here's what lag looks like
+*/
+select
+	t.*
+  , lag(t.transaction_id) over(order by t.trans_dt) as prior_trans_id
+from
+	transactions t
+
+/*
+	where might you use this?
+	well, let's say that you're asked to get the value of the next row.
+	there's a few ways that you could solve this problem
+	
+	you could do a self join to accomplish the lag function like this.
+	
+	however, it does take longer for the query to complete. so the
+	window function is faster and less code.
+*/
+with numbered_records as (
+	select
+		t.*
+	  , row_number() over(order by t.trans_dt, t.transaction_id) as row_num
+	from
+		transactions t
+)
+
+select
+	t.*
+  , p.transaction_id as prior_transaction_id
+from
+	numbered_records t
+		left join numbered_records p --preceding record
+		  on (t.row_num - 1) = p.row_num
+order by 
+	t.row_num
+

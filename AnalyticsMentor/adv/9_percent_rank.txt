@@ -1,0 +1,53 @@
+select
+	t.*
+  , rank() over( order by t.items_in_trans desc) as rank_val
+from
+	transactions t
+where
+	  1=1
+  and t.trans_dt = '2022-01-12'
+;
+
+
+/*
+	but what if we didn't want to have raw numbers of place of finish?
+	
+	in the business world, we don't always want to know the 1st, 2nd, or 3rd place
+	for something. We might want to know what percentile the value falls within.
+	
+	now if you're unfamiliar with percentiles, they are just a slicing of the data 
+	based on the number of records. you probably remember some of this from when
+	you were in school where they would say that you scored in the 75% percentile.
+	
+	this means that you scored better than 75% percent of the other observations. or 
+	a different way of saying this is that 25% of the other observerations were 
+	higher than yours.
+	
+	we can do the same thing in SQL with percent_rank() and it gives us a lot of context.
+	
+	for example, knowing the 2nd highest number of items in transaction doesn't give 
+	us a clear picture of how this compares to all other quantities of items in transactions.
+	it only tells us that it's the second highest. to add more value, we want to have something
+	to compare to.
+
+	to use this function, we'll use percent_rank() with the same window function parameters
+	that you've been using. 
+	
+	if i scroll to the bottom of my results, we can see that the 99.166% percentile has
+	19 units. this means that 99.16% of the transactions have less than 19 units and only
+	100-99.16 or 0.84% of the transaction have 19 or more units in a transaction.
+	
+	this can be really helpful because if we were trying to calculate how big of a shopping bag
+	or how many shopping bags are needed, we want to know that we probably don't want to make a 
+	calculation assumption that 19 items are going to be sold frequently. 
+*/
+select
+	t.*
+  , percent_rank() over(order by t.items_in_trans asc) as perc_rank
+from
+	transactions t
+where
+	  1=1
+  and t.trans_dt = '2022-01-12'
+;
+

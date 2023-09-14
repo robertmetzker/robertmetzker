@@ -1,0 +1,181 @@
+/*
+	partions are segements of a database table.
+
+	sort of like how we were working with window functions and you
+	could carve up the data into different chunks to do an analyis over.
+
+	however, this is a little different because where changing the
+	way that the data is stored in the database as opposed to
+	partitioning data to run additional calculations when your
+	query is running.
+
+	a database table partion is a way to divide your data into different 
+	and smaller sets of data. for example, if you have billions or rows
+	of data in a transactions table, this might be really costly to perfrom
+	a search across all of the data because the database might end up
+	looking at every single record in the database.
+
+	we could use an index as we mentioned earlier, but indexes do take
+	up more data in the database and you have to always update your index.
+
+	so a different way to solve this problem is through the use of a partition.
+
+	the way that this can work is that on our transactions data, we might
+	choose to divde up our transactions into partitions based on the year of 
+	the transaction date. this way when we run our query, we always provide a
+	transaction date in our where clause, allowing the database to use the correct
+	partition or partitions to search across. 
+
+	this can make your queries run a lot faster. now, we don't always use partitions
+	because it does take more work to set-up and isn't always necessary when
+	you're working with small datasets.
+
+	so let's create a partition and try querying the data.
+*/
+
+create table partitioned_transactions (
+    customer_id bigint
+  , trans_dt date
+  , transaction_id bigint
+  , items_in_trans integer
+  , store_id bigint
+) partition by range(trans_dt)
+;
+
+/*
+	then we need to create the partitioned tables. they will inhert
+	the fields and data types from the primary table.
+
+	when it comes to specifying the range, the upper bound is exclusive,
+	which is why you see an overlap of the upper bound in one partition
+	with the lower bound in the next.  at lest this is how it works in
+	postgres, but you should always check with your specific database
+	documentation
+*/
+create table transactions_2020 partition of partitioned_transactions 
+	for values from ('2020-01-01') to ('2021-01-01')
+;
+
+create table transactions_2021 partition of partitioned_transactions 
+	for values from ('2021-01-01') to ('2022-01-01')
+;
+
+create table transactions_2022 partition of partitioned_transactions 
+	for values from ('2022-01-01') to ('2023-01-01')
+;
+
+create table transactions_2023 partition of partitioned_transactions 
+	for values from ('2023-01-01') to ('2024-01-01')
+;
+
+/*
+	now when we look at the datbase we can seee that we have a new table
+	with this P by it, denoting it as a partitioned table.
+
+	if we drill down, we can see that there are 4 partitions that we created
+
+	next we can test the usage by inserting and selecting our data.
+
+	let's insert a record that is on the bounds of one of the partitions.
+	this should get inserted into the transactions_2021 partition
+*/
+
+
+insert into partitioned_transactions values(1, '2021-01-01', null,null,null);
+
+/*
+	first, let's select from the partitioned_transactions table. this returns
+	all records. we're not needing to call the specific partition. just the
+	primary table name.
+*/
+select
+	*
+from
+	partitioned_transactions
+;
+
+
+/*
+	but we can call our partitions directly.
+
+	here we see that the data is indeed in the correct partition
+*/
+select
+	*
+from
+	transactions_2021
+;
+
+
+/*
+	but let's double check to see if it also exists in the 2020.
+	it doesn't, because of how we configured our bounds on our 
+	partitioned tables.
+*/
+select
+	*
+from
+	transactions_2020
+;
+
+
+
+/*
+	next, let's test this out. lets insert our transactions data 
+	into our new partitioned table, then we'll run a query to see
+	if there's a speed difference.
+
+	first, let's delete our one record out of the parititoned transactions
+	table.
+*/
+
+delete from partitioned_transactions;
+
+
+/*
+	next, let's run our insert from select
+*/
+insert into partitioned_transactions
+	select
+		*
+	from
+		transactions
+;
+
+
+/*
+	next, let's check the speed on getting
+	specific data from the transactions table
+*/
+select
+	*
+from
+	transactions
+where
+	trans_dt = '2021-02-01'
+
+
+/*
+	next, let's check the speed on getting
+	specific data from the partitioned table.
+*/
+select
+	*
+from
+	partitioned_transactions
+where
+	trans_dt = '2021-02-01'
+
+/*
+	it's slightly faster. now this is a small dataset and
+	simple query, so the difference isn't all that dramatic,
+	but in a production envrionment with hundreds of millions or billions or
+	records, this performance difference can be quite significant.
+*/
+
+
+
+
+
+
+

@@ -1,0 +1,96 @@
+/*
+	the ability to alter dates or compare to date is very important and powerful
+	so for this section we'll focus on the common date manipuations that
+	you'll want to know about
+	
+	to make sure you're familar with adjusting dates, let's warm up with the interval
+	function
+	
+*/
+select
+	t.*
+  , t.trans_dt + interval '1 day'
+  , t.trans_dt + interval '1 month'
+from
+	transactions t
+	
+/*
+	now depending on your database, you'll have different fuctions that you can use
+	
+	in postgres, we can get the next day by using the date_part function to
+	return the day number from our date. this could be useful if you were
+	developing a report on the number of things that happen on the first
+	day of the month and so-forth
+*/
+
+select
+	t.*
+  , date_part('day', t.trans_dt) as day_of_month
+from
+	transactions t
+
+/*
+	you can do the same for month and year
+*/
+select
+	t.*
+  , date_part('day', t.trans_dt) as day_of_month
+  , date_part('month', t.trans_dt) as month_number
+  , date_part('year', t.trans_dt) as year_number
+from
+	transactions t
+	
+
+/*
+	another useful thing that you can do with dates is to 
+	roll all of your dates to the first date of the month.
+	this is common to do if you wanted to have a report
+	for all sales for the month. right now with everything by
+	day, it's a little hard to do that without the use of an excel
+	pivot table or a dashboard.  but we can easily do this in sql
+*/
+
+select
+	t.*
+  , date_trunc('month', trans_dt) as first_day_of_current_month
+from
+	transactions t
+
+	
+select
+	t.*
+  , cast(date_trunc('month', t.trans_dt) as date) as first_day_of_current_month
+from
+	transactions t
+
+/*
+	it's also common to have to have a value that is set for the last day of the month.
+	this one is little tricky
+	
+	to get the last day of the month, we need to truncate to the first day of the month.
+	but we want the first day of next month. then we just back it up one day.
+*/
+select
+	t.*
+  ,  cast(
+			  date_trunc('month', t.trans_dt) -- truncate to first day of this month
+			+ interval '1 month' -- bump forward to the first day of next month
+			- interval '1 day' -- subtract a day, giving us the last day of the current month
+	     as date) as last_day_of_current_month
+from
+	transactions t
+
+
+/*
+	last day of last month
+*/
+select
+	t.*
+  ,  cast(
+			  date_trunc('month', t.trans_dt) -- truncate to first day of this month
+			- interval '1 day' -- subtract a day, giving us the last day of the current month
+	     as date) as last_day_of_last_month
+from
+	transactions t
+
+	

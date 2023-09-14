@@ -1,0 +1,121 @@
+
+/*
+	let's talk a bit about bad performance and bad query structure.
+	
+	in this query below, we want to get the total sales price for all products
+	that were part of a transaction. but we have to go through multiple tables to
+	do so.
+	
+	so in this query, we have 3 tables being joined plus an aggregation function.
+	however, this is not a good query because
+	1. there's 3 tables being joined and i like to keep it to 2 tables as much as possible
+		because it's easier to qa
+	2. it's a performance problem because were doing more joins before we aggregate,
+		which makes the query slower
+	3. it's not using any cte's or temp tables to make debugging faster and make
+		the code more readable
+*/
+select
+	t.trans_dt
+  , t.transaction_id
+  , sum(p.price)
+from
+  	transactions t
+	
+		join transaction_items ti
+			on t.transaction_id = ti.transaction_id
+
+		join products p
+			on p.product_id = ti.product_id
+group by
+	t.trans_dt
+  , t.transaction_id
+  
+ 
+/*
+	here we have the code refacored to make it more performant by 
+	doing our aggregation before the join. we increased our speed
+	but we nested our sql statements, making it harder to qa and read the code
+	which exposes us to more bugs. we also waste more time debugging
+*/
+select
+	t.trans_dt
+  , t.transaction_id
+  , ti.price
+from
+  	transactions t
+	
+		join (
+				select
+					  ti.transaction_id
+  					, sum(p.price) as price
+				from
+					transaction_items ti
+						
+						join products p
+						   on p.product_id = ti.product_id
+				group by
+					ti.transaction_id
+			  ) ti
+				  on t.transaction_id = ti.transaction_id
+
+
+
+
+/*
+	in this version we're using a CTE to make it easier to read.
+	basically the same speed, but easier to deal with
+*/
+with transaction_totals as (
+	select
+		  ti.transaction_id
+		, sum(p.price) as price
+	from
+		transaction_items ti
+
+			join products p
+			   on p.product_id = ti.product_id
+	group by
+		ti.transaction_id
+)
+
+select
+	t.trans_dt
+  , t.transaction_id
+  , ti.price
+from
+  	transactions t
+	
+		join transaction_totals ti
+			on t.transaction_id = ti.transaction_id
+
+/*
+	we could also create a temp table instead of a cte
+	performance is slightly slower, but easier to access the data
+	if we have a really intensive query and we need to debug something
+	downstream from the transaction_totals table
+*/
+create temp table transaction_totals as (
+	select
+		  ti.transaction_id
+		, sum(p.price) as price
+	from
+		transaction_items ti
+
+			join products p
+			   on p.product_id = ti.product_id
+	group by
+		ti.transaction_id
+)
+;
+
+select
+	t.trans_dt
+  , t.transaction_id
+  , ti.price
+from
+  	transactions t
+	
+		join transaction_totals ti
+			on t.transaction_id = ti.transaction_id
+

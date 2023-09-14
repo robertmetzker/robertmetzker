@@ -1,0 +1,118 @@
+/*
+
+1. CTEs
+	
+	in past lessons we used subqueries, but these arent easy to
+	read and they can make teh code messy very quickly
+*/
+
+
+/*
+	create a table that has all of the transaction details along with
+		the minimum date of the transaction for the customer, that way
+		we can later look up other trnasactions against the first date
+		to see if the account is new, dormant, or active based on specific
+		date parameters that we have set.
+*/
+with trans_w_attributes as (
+	select
+		t.customer_id
+	  , t.transaction_id
+	  , t.trans_dt
+	  , min(t.trans_dt) over(partition by t.customer_id) as min_cust_trans_dt
+
+	  -- trans in last 90d
+	  , case when t.trans_dt >= (
+																select
+																	max(trans_dt) today_date
+																from
+																	transactions t
+															 ) - interval '90 days'
+					then 1 
+					else 0 
+			  end as has_trans_in_last_90d
+
+		-- trans in last 60d
+	  , case when t.trans_dt >= (
+																select
+																	max(trans_dt) today_date
+																from
+																	transactions t
+															 ) - interval '60 days'
+					then 1 
+					else 0 
+			  end as has_trans_in_last_60d
+
+		-- trans in last 30d
+	  , case when t.trans_dt >= (
+																select
+																	max(trans_dt) today_date
+																from
+																	transactions t
+															 ) - interval '30 days'
+					then 1 
+					else 0 
+			  end as has_trans_in_last_30d
+	from
+		transactions t
+)
+
+
+/*
+	only give me the customers and their transactions
+	where the transaction is in the last 90 days. if they havent
+	been active in the last 90, then they will have been churned,
+	but came back, so now they are reactivated, which we arent
+	looking at right now
+*/
+select
+	t.customer_id
+  , t.transaction_id
+  , t.trans_dt
+  , t.min_cust_trans_dt
+  , t.has_trans_in_last_90d
+  , t.has_trans_in_last_60d
+  , t.has_trans_in_last_30d
+  
+  -- customer_status label
+  , case
+  		-- if first purchase within last 30 days
+  		when t.min_cust_trans_dt >= (
+																		select
+																			max(trans_dt) today_date
+																		from
+																			transactions t
+																	 ) - interval '30 days'
+				then 'new'
+			
+			-- first trans more than 30 days ago
+			when   t.has_trans_in_last_60d = 1
+				 and t.has_trans_in_last_30d = 0
+				then 'dormant' 
+			
+			-- no puchase in the last 60d, consider churned from our site
+			when
+					   t.has_trans_in_last_60d = 0
+				 and t.has_trans_in_last_30d = 0
+				then 'churned'
+			
+			-- otherwise they are active
+			else
+				'active'
+		end as customer_status
+			
+from
+	trans_w_attributes t
+
+where
+	  	1=1
+	and has_trans_in_last_90d = 1
+
+
+
+
+
+
+
+
+

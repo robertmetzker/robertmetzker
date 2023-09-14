@@ -1,0 +1,52 @@
+/*
+	now, there's a very powerful function but 
+	which also happens to be really annoying, frustrating, and
+	prone to bugs and headaches.
+
+	it's the regular expression. i want to call this out
+	so that you know it exists but i'm not going to go into
+	a ton of detail because we could spend about a month talking
+	about it.
+
+	regular expressions are these super powerful search filters
+	that kind of split and match on whatever you like. and you
+	can make them do almost anything that you want, but just 
+	because you can, doesn't mean you should.
+
+	here's an example of one. if we look at the products table,
+	we see a lot of things listed for playstaion 5 and some PS5.
+
+	what if we wanted to find where the description contained
+	PS5 or PlayStation 5?
+
+	one way to do this is with our where clause but another way
+	is with a regex
+*/
+select
+	*
+from
+	products p
+where
+		 p.description like '%PlayStation 5%'
+	or p.description like '%PS5%'
+	
+
+/*
+	what you could do is look for a match like this.
+	now it doesn't let you use it in a where clause, but it
+	will filter the results for this. 
+*/
+select
+	  p.description
+	, REGEXP_MATCHES(p.description, 'PS5 | PlayStation 5')
+from
+	products p
+
+		 
+/*
+	at any rate, this is a simply or statemen with the pipe in it
+	but these can get really complex.
+
+	the joke is, i had one problem and i use a regex to solve it, 
+	now i have two problems.
+*/

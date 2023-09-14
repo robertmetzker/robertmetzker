@@ -1,0 +1,111 @@
+select
+	  t.*
+from
+	transactions t
+;
+
+-- row number base on how the db outputs the data
+select
+	  t.*
+  , row_number() over() as row_num
+from
+	transactions t
+;
+
+-- row number based on the transaction date
+select
+	  t.*
+  , row_number() over(order by t.trans_dt) as row_num
+from
+	transactions t
+;
+
+/*
+	because we have an order by clause, you can add another column
+	to sort by
+*/
+select
+	  t.*
+  , row_number() over(order by t.customer_id, t.trans_dt) as row_num
+from
+	transactions t
+;
+
+/*
+	but what if you wanted to have the transaction number by date, but have a row
+	number per customer? that means that each customer is going to have a row_number of 1
+	to make it less confusing, let's call it the trans_hist_number
+*/
+select
+	  t.*
+  , row_number() over(order by t.customer_id, t.trans_dt) as trans_hist_number
+from
+	transactions t
+;
+
+/*
+	now to fix this code to give us the right results, we need to tell the
+	database to segment and group the data by the customer. we've done something 
+	similar before, but this time we need to use a different word because remember,
+	that group by clause comes at the end of our sql statement, and it applies to all
+	results, not just a specific set of results.
+	
+	we use the word partition. we're going to partion our data by the customer_id.
+	behind the scense, this will basically create mini result sets, and THEN the database
+	will perform this row_number function over each of those mini result sets
+	
+	we do this by writing partition by, then the field or fields that we want to partion on.
+	then we have our order by because that is what dictates the row number that's assigned.
+	
+	there's no need to order by the customer_id because it's the same as the partiton
+*/
+select
+	  t.*
+  , row_number() over(partition by t.customer_id order by t.trans_dt) as trans_hist_number
+from
+	transactions t
+;
+
+/*
+	however, we can still order our final result set if we wanted to
+*/
+select
+	  t.*
+  , row_number() over(partition by t.customer_id order by t.trans_dt) as trans_hist_number
+from
+	transactions t
+order by
+	  t.customer_id desc
+  , trans_hist_number asc
+;
+
+/*
+	now, you can add more columns to partion by if you'd like to. let's say that you want
+	to partition by the customer_id as well as the trans_dt. this would tell give us the
+	number of transactions that happened on a specfic day
+*/
+select
+	  t.*
+  , row_number() over(partition by t.customer_id, t.trans_dt order by t.trans_dt) as trans_hist_number
+from
+	transactions t
+order by
+	  t.customer_id desc
+  , trans_hist_number asc
+;
+
+
+
+
+select
+	t.*
+  , row_number() over(order by t.trans_dt) as trans_hist_number
+from
+	transactions t
+
+
+select
+	t.*
+  , row_number() over(order by t.trans_dt) as trans_hist_number
+from
+	transactions t

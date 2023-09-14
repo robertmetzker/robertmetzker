@@ -1,0 +1,75 @@
+/*
+	in my previou sql course, i talked about putting
+	a primary key on our table, but to keep things simple
+	back in that course, i didn't show you how to automatically
+	create that key value. here we're going to auto create that value
+
+	the way that we do this is by specifying an additional condition
+	on a table that we are creating.
+
+
+*/
+
+
+create table tmp_customers (
+		customer_id bigserial primary key
+	, first_name varchar(255)
+	, last_name varchar(255)
+)
+;
+
+insert into tmp_customers(first_name, last_name) values('bob', 'belcher');
+insert into tmp_customers(first_name, last_name) values('louise', 'belcher');
+insert into tmp_customers(first_name, last_name) values('tina', 'belcher');
+
+
+/*
+	now we can run our select and you can see that we have this key that was
+	automatically created.
+
+	what's happening is behind the scenese there's a sequence function that 
+	is running that know what the next value should be. 
+*/
+
+select
+	*
+from
+	tmp_customers
+;
+
+/*
+	now we can run our select and you can see that we have this key that was
+	automatically created.
+
+	what's happening is behind the scenese there's a sequence function that 
+	is running that know what the next value should be. this sqeuence is
+	stored so even if we delete records you'll see that the sequence number
+	will keep incrementing
+*/
+delete
+from
+	tmp_customers
+
+
+select
+	*
+from
+	tmp_customers
+;
+
+
+insert into tmp_customers(first_name, last_name) values('bob', 'belcher');
+insert into tmp_customers(first_name, last_name) values('louise', 'belcher');
+insert into tmp_customers(first_name, last_name) values('tina', 'belcher');
+
+select
+	*
+from
+	tmp_customers
+;
+
+/*
+	and that's what we see here. there's only 3 records, but since we deleted prior 
+	and the sequence stopped at 3, the next will be 4. and that's what our records 
+	were given.
+*/

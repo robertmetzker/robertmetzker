@@ -1,0 +1,35 @@
+Table,Field,Description
+Reports,Release Period (PK),"Unique identifier for each HCAHPS report and the date (month_year) in which the data was released (these reports are publicly reported four times each year, based on four consecutive quarters of patient surveys)"
+Reports,Start Date,"Survey results from patients discharged between the ""Start Date"" and ""End Date"" are included in each report that's released."
+Reports,End Date,"Survey results from patients discharged between the ""Start Date"" and ""End Date"" are included in each report that's released."
+States,State (PK),State abbreviation for the 50 US States (plus DC - District of Columbia)
+States,State Name,Full state name
+States,Region,Groups of states as defined by the United States Census Bureau
+Measures,Measure ID (PK),Unique identifier for each HCAHPS measure (measures are created from specific questions on the HCAHPS survey)
+Measures,Measure,The measure description
+Measures,Type,"""Composite measures"" are made up of more than 1 survey question, while ""Individual Items"" and ""Global Items"" are tied to a single question"
+Questions,Question Num,Question number as it appears on the HCAHPS patient survey
+Questions,Measure ID (FK),The measure each question relates to
+Questions,Question,The question as it appears on the survey
+Questions,Bottom-box Answer,The answer(s) to the question considered least positive
+Questions,Middle-box Answer,The answer(s) to the question considered intermediate
+Questions,Top-box Answer,The answer(s) to the question considered most positive
+National Results,Release Period (FK),The HCAHPS report each row relates to
+National Results,Measure ID (FK),The measure each row relates to
+National Results,Bottom-box Percentage,"The percentage of respondents at a national level who gave a bottom-box response to the measure in the given report (bottom-box, middle-box, and top-box percentages add up to 100 for each row)"
+National Results,Middle-box Percentage,"The percentage of respondents at a national level who gave a middle-box response to the measure in the given report (bottom-box, middle-box, and top-box percentages add up to 100 for each row)"
+National Results,Top-box Percentage,"The percentage of respondents at a national level who gave a top-box response to the measure in the given report (bottom-box, middle-box, and top-box percentages add up to 100 for each row)"
+State Results,Release Period (FK),The HCAHPS report each row relates to
+State Results,State (FK),The state each row relates to
+State Results,Measure ID (FK),The measure each row relates to
+State Results,Bottom-box Percentage,"The percentage of respondents at the state level who gave a bottom-box response to the measure in the given report (bottom-box, middle-box, and top-box percentages add up to 100 for each row)"
+State Results,Middle-box Percentage,"The percentage of respondents at the state level who gave a middle-box response to the measure in the given report (bottom-box, middle-box, and top-box percentages add up to 100 for each row)"
+State Results,Top-box Percentage,"The percentage of respondents at the state level who gave a top-box response to the measure in the given report (bottom-box, middle-box, and top-box percentages add up to 100 for each row)"
+Responses,Release Period (FK),The HCAHPS report each row relates to
+Responses,State (FK),The state each row relates to
+Responses,Facility ID,Unique identifier for each hospital that participated in the HCAHPS patient survey
+Responses,Completed Surveys,Completed surveys from patients discharges from the facility in the given report
+Responses,Response Rate (%),Response rate from surveys submitted to patients (as a percentage - 26 = 26%)
+,,
+,(PK) = Primary Key,
+,(FK) = Foreign Key,

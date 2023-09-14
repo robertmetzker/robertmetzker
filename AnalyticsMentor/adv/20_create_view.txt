@@ -1,0 +1,84 @@
+/*
+	one thing that you may have noticed is the 
+	really big potential problem taht i started to call out
+	when we create our temp table tmp_ps_4_5_products
+
+	if the price changes in the main table, it isn't 
+	automatcially reflected in this table. this means that things
+	can get out of sync quickly and cause some really bad bugs.
+
+	so what do we do if we want to have a new table that 
+	is based on another table so we can avoid excess code?
+
+	we could create some complex pipelines and update scripts
+	but that might be a lot of extra work for not a good reason.
+
+	instead, we can create a view. a view is like a shortcut.
+	it's not storing any actual data in the database. it's
+	just storing the instructions of how to get what data you want
+	and putting it in the database so you can tell it to do something later.
+
+	think about this like directions to drive someplace. 
+
+	you would first create a set of directions or instructions, then 
+	you'd call this "how to get to my house from school". these
+	instructions are now saved. so any time your friend at school wants
+	to get to your house, you just tell them to say "how to get to my house from
+	schoool", much like you're talking to siri, alexa, google, or some other
+	assisiant.
+
+	well, it's kind of the same thing here.  we are going to write the 
+	sql, which are the instructions to get the data. and then we're going
+	to save the instructions, which is the creating of a view.
+*/
+
+
+/*
+	instead of doing this...
+*/
+create table tmp_ps_4_5_products as (
+	select
+		*
+	from
+		products p
+	where
+		   p.description like '%PlayStation 5%'
+		or p.description like '%PS5%'
+		or p.description like '%PS4%'
+		or p.description like '%PlayStation 4%'
+)
+;
+
+/*
+	we are going to do this.
+*/
+create view tmp_ps_4_5_products_vw as (
+	select
+		*
+	from
+		products p
+	where
+		   p.description like '%PlayStation 5%'
+		or p.description like '%PS5%'
+		or p.description like '%PS4%'
+		or p.description like '%PlayStation 4%'
+)
+
+select
+	*
+from
+	tmp_ps_4_5_products_vw
+
+/*
+	there's no data being stored in our view, so if something
+	changes in the products table, the view doesn't care. it just
+	queries that table and returns what's in it.
+
+	now we won't be duplicating data, taking up extra space in the database
+	or causing potential headaches with data not getting updated.
+*/
+
+
+
+
+

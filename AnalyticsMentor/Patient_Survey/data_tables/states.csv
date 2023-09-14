@@ -1,0 +1,52 @@
+State,State Name,Region
+AK,Alaska,Pacific
+AL,Alabama,East South Central
+AR,Arkansas,West South Central
+AZ,Arizona,Mountain
+CA,California,Pacific
+CO,Colorado,Mountain
+CT,Connecticut,New England
+DC,District of Columbia,South Atlantic
+DE,Delaware,South Atlantic
+FL,Florida,South Atlantic
+GA,Georgia,South Atlantic
+HI,Hawaii,Pacific
+IA,Iowa,West North Central
+ID,Idaho,Mountain
+IL,Illinois,East North Central
+IN,Indiana,East North Central
+KS,Kansas,West North Central
+KY,Kentucky,East South Central
+LA,Louisiana,West South Central
+MA,Massachusetts,New England
+MD,Maryland,South Atlantic
+ME,Maine,New England
+MI,Michigan,East North Central
+MN,Minnesota,West North Central
+MO,Missouri,West North Central
+MS,Mississippi,East South Central
+MT,Montana,Mountain
+NC,North Carolina,South Atlantic
+ND,North Dakota,West North Central
+NE,Nebraska,West North Central
+NH,New Hampshire,New England
+NJ,New Jersey,Mid-Atlantic
+NM,New Mexico,Mountain
+NV,Nevada,Mountain
+NY,New York,Mid-Atlantic
+OH,Ohio,East North Central
+OK,Oklahoma,West South Central
+OR,Oregon,Pacific
+PA,Pennsylvania,Mid-Atlantic
+RI,Rhode Island,New England
+SC,South Carolina,South Atlantic
+SD,South Dakota,West North Central
+TN,Tennessee,East South Central
+TX,Texas,West South Central
+UT,Utah,Mountain
+VA,Virginia,South Atlantic
+VT,Vermont,New England
+WA,Washington,Pacific
+WI,Wisconsin,East North Central
+WV,West Virginia,South Atlantic
+WY,Wyoming,Mountain

@@ -1,0 +1,45 @@
+select
+	t.*
+  , rank() over( order by t.items_in_trans desc) as rank_val
+from
+	transactions t
+where
+	  1=1
+  and t.trans_dt = '2022-01-12'
+;
+
+
+/*
+	if we wanted to still have a tie for first place, but then have
+	a second place, we need to use a different window function called
+	dense_rank().
+	
+	with this function, we're not going to see any gaps between rank values
+	but we can still have multiple records that receive 1st and 2nd place and
+	soforth.
+	
+*/
+select
+	t.*
+  , dense_rank() over( order by t.items_in_trans desc) as dense_rank_val
+from
+	transactions t
+where
+	  1=1
+  and t.trans_dt = '2022-01-12'
+;
+
+/*
+	let's take a look at rank, row, and dense rank side by side.
+*/
+select
+	t.*
+  , row_number() over( order by t.items_in_trans desc) as row_num
+  , rank() over( order by t.items_in_trans desc) as rank_val
+  , dense_rank() over( order by t.items_in_trans desc) as dense_rank_val
+from
+	transactions t
+where
+	  1=1
+  and t.trans_dt = '2022-01-12'
+;

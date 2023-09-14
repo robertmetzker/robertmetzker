@@ -1,0 +1,72 @@
+/*
+	up to this point we've mostly been working with fucntions.
+	sum, avg, select are all functions. they return a value.
+
+	those functions are part of the database, but we can create
+	our own functions, assuming you have proper permissions.
+
+	on your demo database you'll have permissions but in a lot
+	of companies, you will not have pemissions to do this.
+
+	but, i'm going to show you how.
+
+	remember when i showed you how to return the last day of
+	the month and we had to write special code?
+
+	we'll if we are going to use that a fair amount, it might 
+	be good to just create a function to simplify our lives.
+*/
+
+select
+	t.*
+  ,  cast(
+			  date_trunc('month', t.trans_dt) -- truncate to first day of this month
+			+ interval '1 month' -- bump forward to the first day of next month
+			- interval '1 day' -- subtract a day, giving us the last day of the current month
+	     as date) as last_day_of_current_month
+from
+	transactions t
+
+
+/*
+	to create the function we just need to use a new command
+*/
+
+create function last_day_of_current_month(in date, out f1 date)
+	as $$
+
+			select
+				cast(
+								  date_trunc('month', $1) -- truncate to first day of this month
+								+ interval '1 month' -- bump forward to the first day of next month
+								- interval '1 day' -- subtract a day, giving us the last day of the current month
+					    as date
+					  )
+		 $$
+	
+	LANGUAGE SQL;
+		
+
+/*
+	we can test this
+*/
+select
+	last_day_of_current_month(cast('2023-05-06' as date))
+;
+
+
+/*
+	we can now use this in our table.
+
+	we see that we get the same results, but this time we get it from a function
+*/
+select
+	t.*
+  ,  cast(
+			  date_trunc('month', t.trans_dt) -- truncate to first day of this month
+			+ interval '1 month' -- bump forward to the first day of next month
+			- interval '1 day' -- subtract a day, giving us the last day of the current month
+	     as date) as last_day_of_current_month
+  , last_day_of_current_month(t.trans_dt) as fn_last_day_of_current_month
+from
+	transactions t

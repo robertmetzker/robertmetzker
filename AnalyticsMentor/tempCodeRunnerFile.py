@@ -1,0 +1,1 @@
+python load_file.py -f adv/products.csv -d -r -v -l

@@ -1,0 +1,350 @@
+store_number,description,address,address_2,city,state_abv,zip_code
+1,"320 West 5th Avenue, Suite 219, Anchorage, AK 99501 in Anchorage 5th Avenue Mall",320 West 5th Avenue, Suite 219, Anchorage,AK,99501
+2,"333 Apache Mall, Rochester, MN in Apache Mall",333 Apache Mall,, Rochester,MN,
+3,"6700 Douglas Blvd, Douglasville, GA in Arbor Place",6700 Douglas Blvd,, Douglasville,GA,
+4,"10000 Research Boulevard, Austin, TX 78759 in Arboretum at Great Hills",10000 Research Boulevard,, Austin,TX,78759
+5,"1689 Arden Way, Sacramento, CA in Arden Fair",1689 Arden Way,, Sacramento,CA,
+6,"5000 S. Arizona Mills Circle, Tempe, AZ 85282 in Arizona Mills",5000 S. Arizona Mills Circle,, Tempe,AZ,85282
+7,"7700 W. Arrowhead Towne Center, Glendale, AZ in Arrowhead Towne Center",7700 W. Arrowhead Towne Center,, Glendale,AZ,
+8,"485 Arsenal Street, Watertown, MA 02472 in Arsenal Mall",485 Arsenal Street,, Watertown,MA,2472
+9,"7000 Arundel Mills Circle, Hanover, MD 21076 in Arundel Mills",7000 Arundel Mills Circle,, Hanover,MD,21076
+10,"3 SOUTH TUNNEL ROAD, Asheville, NC in Asheville Mall",3 SOUTH TUNNEL ROAD,, Asheville,NC,
+11,"385 Southbridge Street, Auburn, MA 01501 in Auburn Mall",385 Southbridge Street,, Auburn,MA,1501
+12,"663 Stillwater Ave., Bangor, ME 04401 in Bangor Mall",663 Stillwater Ave.,, Bangor,ME,4401
+13,"2825 S. Glenstone Ave, Springfield, MO 65804 in Battlefield Mall",2825 S. Glenstone Ave,, Springfield,MO,65804
+14,"4101 East Wilder Rd., Bay City, MI in Bay City Mall",4101 East Wilder Rd.,, Bay City,MI,
+15,"303 Bay Park Square, Green Bay, WI 54304 in Bay Park Square",303 Bay Park Square,, Green Bay,WI,54304
+16,"500 Baybrook Mall, Friendswood, TX in Baybrook Mall",500 Baybrook Mall,, Friendswood,TX,
+17,"3300 Broadway, Eureka, CA in Bayshore Mall",3300 Broadway,, Eureka,CA,
+18,"W Army Trail Rd and Schmale Rd, Bloomingdale, IL 60108 in Bloomingdale Court",W Army Trail Rd and Schmale Rd,, Bloomingdale,IL,60108
+19,"1065 Brea Mall, Brea, CA 92821 in Brea Mall",1065 Brea Mall,, Brea,CA,92821
+20,"100 Briarwood Circle, Ann Arbor, MI 48108 in Briarwood Mall",100 Briarwood Circle,, Ann Arbor,MI,48108
+21,"400 Commons Way, Suite 100, Bridgewater, NJ in Bridgewater Commons",400 Commons Way, Suite 100, Bridgewater,NJ,
+22,"4601 S Broadway Ave, Tyler, TX 75703 in Broadway Square",4601 S Broadway Ave,, Tyler,TX,75703
+23,"95 N. Moorland Rd, Brookfield, WI in Brookfield Square",95 N. Moorland Rd,, Brookfield,WI,
+24,"755 State Route 18, East Brunswick, NJ 08816 in Brunswick Square",755 State Route 18,, East Brunswick,NJ,8816
+25,"75 Middlesex Turnpike, Burlington, MA 01803 in Burlington Mall",75 Middlesex Turnpike,, Burlington,MA,1803
+26,"3506 Capital City Mall Drive, Camp Hill, PA in Capital City Mall",3506 Capital City Mall Drive,, Camp Hill,PA,
+27,"1855 41st Avenue, Capitola, CA in Capitola Mall",1855 41st Avenue,, Capitola,CA,
+28,"1105 Walnut St, Cary, NC in Cary Towne Center",1105 Walnut St,, Cary,NC,
+29,"201 Cascade Mall Drive, Burlington, WA in Cascade Mall",201 Cascade Mall Drive,, Burlington,WA,
+30,"5111 Rogers Ave., Fort Smith, AR in Central Mall Fort Smith",5111 Rogers Ave.,, Fort Smith,AR,
+31,"49 West Maryland Street, Indianapolis, IN 46204 in Circle Centre",49 West Maryland Street,, Indianapolis,IN,46204
+32,"14390 Clay Terrace Blvd, Carmel, IN 46032 in Clay Terrace",14390 Clay Terrace Blvd,, Carmel,IN,46032
+33,"2000 Coastal Grand Circle, Myrtle Beach, SC in Coastal Grand",2000 Coastal Grand Circle,, Myrtle Beach,SC,
+34,"23106 Fashion Drive, Suite 107, Estero, FL 33928 in Coconut Point",23106 Fashion Drive, Suite 107, Estero,FL,33928
+35,"733 Coddingtown Ctr, Santa Rosa, CA 95401 in Coddingtown Mall",733 Coddingtown Ctr,, Santa Rosa,CA,95401
+36,"2550 E. Morris Blvd, Morristown, TN in College Square",2550 E. Morris Blvd,, Morristown,TN,
+37,"1321 N. Columbia Center Blvd., Suite 335, Kennewick, WA 99336 in Columbia Center",1321 N. Columbia Center Blvd., Suite 335, Kennewick,WA,99336
+38,"2300 Bernadette Dr., Columbia, MO in Columbia Mall",2300 Bernadette Dr.,, Columbia,MO,
+39,"100 Columbiana Circle, Columbia, SC in Columbiana Centre",100 Columbiana Circle,, Columbia,SC,
+40,"1800 Galleria Blvd, Franklin, TN in CoolSprings Galleria",1800 Galleria Blvd,, Franklin,TN,
+41,"1451 Coral Ridge Ave., Coralville, IA in Coral Ridge Mall",1451 Coral Ridge Ave.,, Coralville,IA,
+42,"9469 West Atlantic Boulevard, Coral Springs, FL 33071 in Coral Square",9469 West Atlantic Boulevard,, Coral Springs,FL,33071
+43,"5100 N 9th Ave, Pensacola, FL 32504 in Cordova Mall",5100 N 9th Ave,, Pensacola,FL,32504
+44,"6600 Menaul NE, Albuquerque, NM in Coronado Center",6600 Menaul NE,, Albuquerque,NM,
+45,"10000 Coors Blvd Byp NW, Albuquerque, NM 87114 in Cottonwood Mall",10000 Coors Blvd Byp NW,, Albuquerque,NM,87114
+46,"6K Mall Walk, Yonkers, NY in Cross County Shopping Center",6K Mall Walk,, Yonkers,NY,
+47,"Rte 14 and Liberty Street, Crystal Lake (Chicago), IL 60014 in Crystal Court",Rte 14 and Liberty Street,, Crystal Lake (Chicago),IL,60014
+48,"850 Hartford Turnpike, Waterford, CT 06385 in Crystal Mall",850 Hartford Turnpike,, Waterford,CT,6385
+49,"Routes 47 and 55, Vineland, NJ in Cumberland Mall",Routes 47 and 55,, Vineland,NJ,
+50,"1000 Cumberland Mall, Atlanta, GA in Cumberland Mall",1000 Cumberland Mall,, Atlanta,GA,
+51,"7 Backus Avenue, Danbury, CT in Danbury Fair",7 Backus Avenue,, Danbury,CT,
+52,"2700 Miamisburg-Centerville Rd., Dayton, OH in Dayton Mall",2700 Miamisburg-Centerville Rd.,, Dayton,OH,
+53,"20131 Hwy. 59 N, Humble, TX in Deerbrook Mall",20131 Hwy. 59 N,, Humble,TX,
+54,"1750 Deptford Center Road, Deptford, NJ in Deptford Mall",1750 Deptford Center Road,, Deptford,NJ,
+55,"5900 Sugarloaf Parkway, Lawrenceville, GA in Discover Mills",5900 Sugarloaf Parkway,, Lawrenceville,GA,
+56,"5900 Sugarloaf Parkway, Lawrenceville, GA 30043 in Discover Mills",5900 Sugarloaf Parkway,, Lawrenceville,GA,30043
+57,"1365 North DuPont Highway, Ste. 5061, Dover, DE 19901 in Dover Mall",1365 North DuPont Highway,, Ste. 5061,DE,19901
+58,"89 East Towne Mall, Madison, WI in East Towne Mall",89 East Towne Mall,, Madison,WI,
+59,"1615 EAST EMPIRE STREET, Bloomington, IL in Eastland Mall",1615 EAST EMPIRE STREET,, Bloomington,IL,
+60,"601 SE Wyoming Blvd., Casper, WY in Eastridge Mall",601 SE Wyoming Blvd.,, Casper,WY,
+61,"4125 Cleveland Avenue, Suite 154, Fort Myers, FL 33901 in Edison Mall",4125 Cleveland Avenue, Suite 154, Fort Myers,FL,33901
+62,"999 South Washington Street, North Attleboro, MA 02760 in Emerald Square",999 South Washington Street,, North Attleboro,MA,2760
+63,"1402 SE Everett Mall Way, Everett, WA in Everett Mall",1402 SE Everett Mall Way,, Everett,WA,
+64,"11750 Fair Oaks Mall, Fairfax, VA in Fair Oaks Mall",11750 Fair Oaks Mall,, Fairfax,VA,
+65,"1100 South Hayes Street, Arlington, VA 22202 in Fashion Centre at Pentagon City",1100 South Hayes Street,, Arlington,VA,22202
+66,"6191 S. State Street, Murray, UT in Fashion Place",6191 S. State Street,, Murray,UT,
+67,"4787 FASHION SQUARE MALL, Saginaw, MI in Fashion Square",4787 FASHION SQUARE MALL,, Saginaw,MI,
+68,"1445 W Southern Ave, Mesa, AZ in Fiesta Mall",1445 W Southern Ave,, Mesa,AZ,
+69,"245 Cedar Sage Dr., Suite 200, Garland, TX 75040 in Firewheel Town Center",245 Cedar Sage Dr., Suite 200, Garland,TX,75040
+70,"16535 Southwest Freeway, Sugar Land, TX in First Colony Mall",16535 Southwest Freeway,, Sugar Land,TX,
+71,"4650 N Highway 89, Flagstaff, AZ in Flagstaff Mall",4650 N Highway 89,, Flagstaff,AZ,
+72,"One West FlatIron Crossing Drive, Broomfield, CO in FlatIron Crossing",One West FlatIron Crossing Drive,, Broomfield,CO,
+73,"2028 Florence Mall, Florence, KY in Florence Mall",2028 Florence Mall,, Florence,KY,
+74,"7401 N LaCholla Blvd, Tucson, AZ in Foothills Mall",7401 N LaCholla Blvd,, Tucson,AZ,
+75,"197 Foothills Mall, Maryville, TN in Foothills Mall",197 Foothills Mall,, Maryville,TN,
+76,"State St. and Mulford Road, Rockford, IL 61108 in Forest Plaza",State St. and Mulford Road,, Rockford,IL,61108
+77,"410 Four Seasons Town Centre, Greensboro, NC in Four Seasons Town Centre",410 Four Seasons Town Centre,, Greensboro,NC,
+78,"50 Fox Run Road, Suite 128, Newington, NH 03801 in Fox Run Mall",50 Fox Run Road, Suite 128, Newington,NH,3801
+79,"50 Fox Run Road, Newington, NH in Fox Run Mall",50 Fox Run Road,, Newington,NH,
+80,"5500 Buckeystown Pike, Frederick, MD in Francis Scott Key Mall",5500 Buckeystown Pike,, Frederick,MD,
+81,"3710 Route 9, Freehold, NJ in Freehold Raceway Mall",3710 Route 9,, Freehold,NJ,
+82,"600 Green Valley Road, Greensboro, NC in Friendly Center",600 Green Valley Road,, Greensboro,NC,
+83,"1400 Dell Range Blvd, Cheyenne, WY in Frontier Mall",1400 Dell Range Blvd,, Cheyenne,WY,
+84,"1299 Galleria at Tyler, Riverside, CA in Galleria at Tyler",1299 Galleria at Tyler,, Riverside,CA,
+85,"3341 S. Linden Rd, Flint, MI in Genesee Valley Center",3341 S. Linden Rd,, Flint,MI,
+86,"3700 Atlanta Hw, Athens, GA in Georgia Square",3700 Atlanta Hw,, Athens,GA,
+87,"100 Grand Central Ave, Vienna, WV in Grand Central Mall",100 Grand Central Ave,, Vienna,WV,
+88,"3200 South Airport Road West, Traverse City, MI in Grand Traverse Mall",3200 South Airport Road West,, Traverse City,MI,
+89,"3000 Grapevine Mills Parkway, Grapevine, TX in Grapevine Mills",3000 Grapevine Mills Parkway,, Grapevine,TX,
+90,"3000 Grapevine Mills Parkway, Grapevine, TX 76051 in Grapevine Mills",3000 Grapevine Mills Parkway,, Grapevine,TX,76051
+91,"7850 Mentor Avenue, Mentor, OH 44060 in Great Lakes Mall",7850 Mentor Avenue,, Mentor,OH,44060
+92,"7900 Plaza Blvd., Mentor near Cleveland, OH 44060 in Great Lakes Plaza",7900 Plaza Blvd.,, Mentor near Cleveland,OH,44060
+93,"447 Great Mall Drive, Milpitas, CA 95035 in Great Mall",447 Great Mall Drive,, Milpitas,CA,95035
+94,"447 Great Mall Drive, Milpitas, CA in Great Mall",447 Great Mall Drive,, Milpitas,CA,
+95,"4155 State Route 31, Clay, NY in Great Northern Mall",4155 State Route 31,, Clay,NY,
+96,"757 E Lewis and Clark Pkwy, Clarksville, IN in Green Tree Mall",757 E Lewis and Clark Pkwy,, Clarksville,IN,
+97,"1401 Greenbrier Pkwy South, Chesapeake, VA in Greenbrier Mall",1401 Greenbrier Pkwy South,, Chesapeake,VA,
+98,"7 Neponset Street, Worcester, MA 01606 in Greendale Mall",7 Neponset Street,, Worcester,MA,1606
+99,"2625 Scottsville Rd., Bowling Green, KY in Greenwood Mall",2625 Scottsville Rd.,, Bowling Green,KY,
+100,"1251 Us Highway 31 N, Greenwood, IN 46142 in Greenwood Park Mall",1251 Us Highway 31 N,, Greenwood,IN,46142
+101,"9903 GULF COAST MAIN STREET, Fort Myers, FL in Gulf Coast Town Center",9903 GULF COAST MAIN STREET,, Fort Myers,FL,
+102,"2100 Hamilton Place Blvd, Chattanooga, TN in Hamilton Place",2100 Hamilton Place Blvd,, Chattanooga,TN,
+103,"3320 Silas Creek Parkway, Winston-Salem, NC in Hanes Mall",3320 Silas Creek Parkway,, Winston-Salem,NC,
+104,"1675 West Lacey Blvd, Hanford, CA in Hanford Mall",1675 West Lacey Blvd,, Hanford,CA,
+105,"696A BEL AIR ROAD, Bel Air, MD in Harford Mall",696A BEL AIR ROAD,, Bel Air,MD,
+106,"700 Haywood Road, Suite 106, Greenville, SC 29607 in Haywood Mall",700 Haywood Road, Suite 106, Greenville,SC,29607
+107,"1895 14th Avenue SE, Albany, OR in Heritage Mall",1895 14th Avenue SE,, Albany,OR,
+108,"1146 HICKORY POINT MALL, Forsyth, IL in Hickory Point Mall",1146 HICKORY POINT MALL,, Forsyth,IL,
+109,"3401 SOUTH US HIGHWAY 41, Terre Haute, IN in Honey Creek Mall",3401 SOUTH US HIGHWAY 41,, Terre Haute,IN,
+110,"3111 W Chandler Blvd, Chandler, AZ in Chandler Fashion Center",3111 W Chandler Blvd,, Chandler,AZ,
+111,"2000 BRITTAIN ROAD, Akron, OH in Chapel Hill Mall",2000 BRITTAIN ROAD,, Akron,OH,
+112,"1600 Rio Rd E, Charlottesville, VA 22901 in Charlottesville Fashion Square",1600 Rio Rd E,, Charlottesville,VA,22901
+113,"318 East Fairmount Avenue, Lakewood, NY 14750 in Chautauqua Mall",318 East Fairmount Avenue,, Lakewood,NY,14750
+114,"7200 HARRISON AVENUE SUITE 5, Rockford, IL in CherryVale Mall",7200 HARRISON AVENUE SUITE 5,, Rockford,IL,
+115,"291 CHESTERFIELD MALL, Chesterfield, MO in Chesterfield Mall",291 CHESTERFIELD MALL,, Chesterfield,MO,
+116,"11500 Midlothian Turnpike, Richmond, VA in Chesterfield Towne Center",11500 Midlothian Turnpike,, Richmond,VA,
+117,"3451 SOUTH DOGWOOD AVENUE, El Centro, CA in Imperial Valley Mall",3451 SOUTH DOGWOOD AVENUE,, El Centro,CA,
+118,"2035 Independence Center Drive, Independence, MO 64057 in Independence Center",2035 Independence Center Drive,, Independence,MO,64057
+119,"771 South 30th Street, Heath, OH in Indian Mound Mall",771 South 30th Street,, Heath,OH,
+120,"6200 20th Street, Room 471, Vero Beach, FL 32966 in Indian River Mall",6200 20th Street,, Room 471,FL,32966
+121,"6301 NW Loop 410, San Antonio, TX 78238 in Ingram Park Mall",6301 NW Loop 410,, San Antonio,TX,78238
+183,"921 Eastchester Dr, High Point, NC in Oak Hollow Mall",921 Eastchester Dr,, High Point,NC,
+122,"500 Inland Center Drive, San Bernardino, CA in Inland Center",500 Inland Center Drive,, San Bernardino,CA,
+123,"3880 Irving Mall, Irving, TX 75062 in Irving Mall",3880 Irving Mall,, Irving,TX,75062
+124,"375 Jacksonville Mall, Jacksonville, NC 28546 in Jacksonville Mall",375 Jacksonville Mall,, Jacksonville,NC,28546
+125,"2500 Milton Ave, Janesville, WI in Janesville Mall",2500 Milton Ave,, Janesville,WI,
+126,"4801/302 Outer Loop, Louisville, KY in Jefferson Mall",4801/302 Outer Loop,, Louisville,KY,
+127,"650 Lee Boulevard, Yorktown Heights, NY 10598 in Jefferson Valley Mall",650 Lee Boulevard,, Yorktown Heights,NY,10598
+128,"651 Kapkowski Road, Elizabeth, NJ in Jersey Gardens",651 Kapkowski Road,, Elizabeth,NJ,
+129,"101 Jordan Creek Parkway, West Des Moines, IA in Jordan Creek Town Center",101 Jordan Creek Parkway,, West Des Moines,IA,
+130,"7875 Montgomery Road, Cincinnati, OH in Kenwood Towne Centre",7875 Montgomery Road,, Cincinnati,OH,
+131,"2100 South W.S. Young Drive, Killeen, TX in Killeen Mall",2100 South W.S. Young Drive,, Killeen,TX,
+132,"10315 Silverdale Way NW, Silverdale, WA in Kitsap Mall",10315 Silverdale Way NW,, Silverdale,WA,
+133,"2200 South 10th Street, McAllen, TX 78503 in La Plaza Mall",2200 South 10th Street,, McAllen,TX,78503
+134,"11200 Lakeline Mall Dr, Cedar Park, TX 78613 in Lakeline Mall",11200 Lakeline Mall Dr,, Cedar Park,TX,78613
+135,"11066 Pecan Park Boulevard, Cedar Park, TX 78613 in Lakeline Plaza",11066 Pecan Park Boulevard,, Cedar Park,TX,78613
+136,"901 US HIGHWAY 27 N SUITE 68, Sebring, FL in Lakeshore Mall",901 US HIGHWAY 27 N SUITE 68,, Sebring,FL,
+137,"5775 Beckley Rd., Battle Creek, MI in Lakeview Square Mall",5775 Beckley Rd.,, Battle Creek,MI,
+138,"500 Lakewood Center Mall, Lakewood, CA in Lakewood Center",500 Lakewood Center Mall,, Lakewood,CA,
+139,"5330 West Saginaw Highway, Lansing, MI in Lansing Mall",5330 West Saginaw Highway,, Lansing,MI,
+140,"1076 Layton Hills Mall, Layton, UT 84041 in Layton Hills Mall",1076 Layton Hills Mall,, Layton,UT,84041
+141,"250 Lehigh Valley Mall, Whitehall, PA 18052 in Lehigh Valley Mall",250 Lehigh Valley Mall,, Whitehall,PA,18052
+142,"2400 Elida Road, Lima, OH 45805 in Lima Mall",2400 Elida Road,, Lima,OH,45805
+143,"3333 West Touhy Avenue, Lincolnwood, IL 60712 in Lincolnwood Town Center",3333 West Touhy Avenue,, Lincolnwood,IL,60712
+144,"4444 First Avenue NE, Cedar Rapids, IA in Lindale Mall",4444 First Avenue NE,, Cedar Rapids,IA,
+145,"112 Eisenhower Parkway, Livingston, NJ 07039 in Livingston Mall",112 Eisenhower Parkway,, Livingston,NJ,7039
+146,"5901 University drive, Huntsville, AL in Madison Square",5901 University drive,, Huntsville,AL,
+147,"4310 Buffalo Gap Road, Abilene, TX in Mall of Abilene",4310 Buffalo Gap Road,, Abilene,TX,
+148,"3205 Woodward Crossing Blvd, Buford , GA 30519 in Mall of Georgia Crossing, The",3205 Woodward Crossing Blvd,, Buford ,GA,30519
+149,"3333 Buford Drive, Buford, GA 30519 in Mall of Georgia®",3333 Buford Drive,, Buford,GA,30519
+150,"1500 South Willow Street, Manchester, NH 03103 in Mall of New Hampshire",1500 South Willow Street,, Manchester,NH,3103
+151,"1751 Madison Ave., Council Bluffs, IA in Mall of the Bluffs",1751 Madison Ave.,, Council Bluffs,IA,
+152,"14400 Bear Valley Rd, Victorville, CA in Mall of Victor Valley",14400 Bear Valley Rd,, Victorville,CA,
+153,"1114 17th St, Kokomo, IN 46902 in Markland Plaza",1114 17th St,, Kokomo,IN,46902
+154,"2500 North Mayfair Rd., Wauwatosa, WI in Mayfair",2500 North Mayfair Rd.,, Wauwatosa,WI,
+155,"3929 McCain Blvd., North Little Rock, AR 72116 in McCain Mall",3929 McCain Blvd.,, North Little Rock,AR,72116
+156,"3701 McKinley Parkway, Buffalo, NY in McKinley Mall",3701 McKinley Parkway,, Buffalo,NY,
+157,"5000 Meadowood Mall Circle, Suite 1, Reno, NV 89502 in Meadowood Mall",5000 Meadowood Mall Circle, Suite 1, Reno,NV,89502
+158,"4300 Meadows Lane, Suite 10, Las Vegas, NV in Meadows Mall",4300 Meadows Lane, Suite 10, Las Vegas,NV,
+159,"100 Menlo Park, Edison, NJ in Menlo Park Mall",100 Menlo Park,, Edison,NJ,
+160,"1982 W. Grand River Ave., Okemos, MI in Meridian Mall",1982 W. Grand River Ave.,, Okemos,MI,
+161,"777 E. Merritt Island Causeway, Merritt Island, FL in Merritt Square Mall",777 E. Merritt Island Causeway,, Merritt Island,FL,
+162,"2424 Highway 6 and 50, Grand Junction, CO in Mesa Mall",2424 Highway 6 and 50,, Grand Junction,CO,
+163,"9617 N Metro Parkway W, Phoenix, AZ in Metrocenter",9617 N Metro Parkway W,, Phoenix,AZ,
+164,"1600 MID RIVERS MALL, St Peters, MO in Mid Rivers Mall",1600 MID RIVERS MALL,, St Peters,MO,
+165,"6800 EASTMAN AVE. SUITE 6800, Midland, MI in Midland Mall",6800 EASTMAN AVE. SUITE 6800,, Midland,MI,
+166,"1600 Miller Trunk Highway, Duluth, MN 55811 in Miller Hill Mall",1600 Miller Trunk Highway,, Duluth,MN,55811
+167,"2301 Liberty Heights Ave., Baltimore, MD in Mondawmin Mall",2301 Liberty Heights Ave.,, Baltimore,MD,
+168,"100 Mall Blvd, Monroeville, PA in Monroeville Mall",100 Mall Blvd,, Monroeville,PA,
+169,"2134 Montebello Town Center, Montebello, CA in Montebello Town Center",2134 Montebello Town Center,, Montebello,CA,
+170,"230 Montgomery Mall, North Wales, PA 19454 in Montgomery Mall",230 Montgomery Mall,, North Wales,PA,19454
+171,"400 Route 38, Moorestown, NJ in Moorestown Mall",400 Route 38,, Moorestown,NJ,
+172,"9500 Mall Road, Morgantown, WV in Morgantown Mall",9500 Mall Road,, Morgantown,WV,
+173,"1245 Worcester St., Natick, MA in Natick Collection",1245 Worcester St.,, Natick,MA,
+174,"30 Mall Drive West, Jersey City, NJ 07310 in Newport Centre",30 Mall Drive West,, Jersey City,NJ,7310
+175,"1155 Carlisle Street, Hanover, PA in North Hanover Mall",1155 Carlisle Street,, Hanover,PA,
+176,"1600 N State Route 50, Bourbonnais, IL 60914 in Northfield Square Mall",1600 N State Route 50,, Bourbonnais,IL,60914
+177,"5800 Northgate Mall, San Rafael, CA in Northgate",5800 Northgate Mall,, San Rafael,CA,
+178,"4800 Briarcliff Road, Atlanta, GA 30345 in Northlake Mall",4800 Briarcliff Road,, Atlanta,GA,30345
+179,"320 West Kimberly Road, Davenport, IA 52806 in NorthPark Mall",320 West Kimberly Road,, Davenport,IA,52806
+180,"N Main St at San Juan Grade Rd, Salinas, CA in Northridge Mall",N Main St at San Juan Grade Rd,, Salinas,CA,
+181,"RT-128 N and RT-114 E, Peabody, MA 01960 in Northshore Mall",RT-128 N and RT-114 E,, Peabody,MA,1960
+182,"2150 Northwoods Blvd, North Charleston, SC in Northwoods Mall",2150 Northwoods Blvd,, North Charleston,SC,
+184,"11149 WEST 95TH STREET, Overland Park, KS in Oak Park Mall",11149 WEST 95TH STREET,, Overland Park,KS,
+185,"1201 Hooper Avenue, Toms River, NJ 08753 in Ocean County Mall",1201 Hooper Avenue,, Toms River,NJ,8753
+186,"2021 N. HIGHLAND AVENUE, Jackson, TN in Old Hickory Mall",2021 N. HIGHLAND AVENUE,, Jackson,TN,
+187,"2300 E. Lincoln Hwy., Suite 220-A, Langhorne, PA 19047 in Oxford Valley Mall",2300 E. Lincoln Hwy., Suite 220-A, Langhorne,PA,19047
+188,"2150 MARTIN LUTHER KING JR. BLVD., Panama City, FL in Panama City Mall",2150 MARTIN LUTHER KING JR. BLVD.,, Panama City,FL,
+189,"Van Nuys & Roscoe Blvd, Panorama City, CA in Panorama Mall",Van Nuys & Roscoe Blvd,, Panorama City,CA,
+190,"4568 E Cactus Rd, Phoenix, AZ in Paradise Valley Mall",4568 E Cactus Rd,, Phoenix,AZ,
+191,"142 Park City Center, Lancaster, PA in Park City Center",142 Park City Center,, Lancaster,PA,
+192,"6155 Eastex Freeway, Beaumont, TX in Parkdale Mall",6155 Eastex Freeway,, Beaumont,TX,
+193,"Highway 288 at FM 518, Pearland, TX in Pearland Town Center",Highway 288 at FM 518,, Pearland,TX,
+194,"1200 Highway 22 East, Phillipsburg, NJ in Phillipsburg Mall",1200 Highway 22 East,, Phillipsburg,NJ,
+195,"1500 Polaris Parkway, Columbus, OH in Polaris Fashion Place",1500 Polaris Parkway,, Columbus,OH,
+196,"1441 Tamiami Trail, suite 608, Port Charlotte, FL 33948 in Port Charlotte Town Center",1441 Tamiami Trail, suite 608, Port Charlotte,FL,33948
+197,"1500 Harvey Rd, College Station, TX in Post Oak Mall",1500 Harvey Rd,, College Station,TX,
+198,"2700 Potomac Mills Circle, Prince William, VA in Potomac Mills",2700 Potomac Mills Circle,, Prince William,VA,
+199,"2700 Potomac Mills Circle, Woodbridge, VA 22192 in Potomac Mills",2700 Potomac Mills Circle,, Woodbridge,VA,22192
+200,"3250 Gateway Blvd, Prescott, AZ in Prescott Gateway Mall",3250 Gateway Blvd,, Prescott,AZ,
+201,"111 East Puainako St., Hilo, HI in Prince Kuhio Plaza",111 East Puainako St.,, Hilo,HI,
+202,"3429 Dillon Drive, Pueblo, CO in Pueblo Mall",3429 Dillon Drive,, Pueblo,CO,
+203,"2501 W. Memorial Rd. Suite 100, Oklahoma City, OK in Quail Springs Mall",2501 W. Memorial Rd. Suite 100,, Oklahoma City,OK,
+204,"150 Quaker Bridge Mall , Lawrenceville, NJ 08648 in Quaker Bridge Mall",150 Quaker Bridge Mall ,, Lawrenceville,NJ,8648
+205,"90-15 Queens Blvd, Elmhurst, NY in Queens Center",90-15 Queens Blvd,, Elmhurst,NY,
+206,"345 RANDOLPH MALL, Asheboro, NC in Randolph Mall",345 RANDOLPH MALL,, Asheboro,NC,
+207,"7525 166th Ave. NE, Redmond, WA in Redmond Town Center",7525 166th Ave. NE,, Redmond,WA,
+208,"5538 Durand Ave, Racine, WI in Regency Mall",5538 Durand Ave,, Racine,WI,
+209,"1888 Green Oaks Rd, Fort Worth, TX in Ridgmar Mall",1888 Green Oaks Rd,, Fort Worth,TX,
+210,"3801 National Road East, Richmond, IN in Richmond Square Mall",3801 National Road East,, Richmond,IN,
+211,"691 Richmond Road, Richmond Heights, OH 44143 in Richmond Town Square",691 Richmond Road,, Richmond Heights,OH,44143
+212,"300 S 24th St W, Billings, MT in Rimrock Mall",300 S 24th St W,, Billings,MT,
+213,"96 River Oaks Center Dr, Calumet City, IL 60409 in River Oaks Center",96 River Oaks Center Dr,, Calumet City,IL,60409
+214,"3405 Candlers Mountain Rd, Lynchburg, VA in River Ridge Mall",3405 Candlers Mountain Rd,, Lynchburg,VA,
+215,"1000 RiverGate Pkwy, Goodlettsville, TN in RiverGate Mall",1000 RiverGate Pkwy,, Goodlettsville,TN,
+216,"301 Mt. Hope Ave, Suite 1900, Rockaway, NJ 07866 in Rockaway Townsquare",301 Mt. Hope Ave, Suite 1900, Rockaway,NJ,7866
+217,"6909 North Loop 1604 East, San Antonio, TX 78247 in Rolling Oaks Mall",6909 North Loop 1604 East,, San Antonio,TX,78247
+218,"1000 Ross Park Mall Drive, Pittsburgh, PA 15237 in Ross Park Mall",1000 Ross Park Mall Drive,, Pittsburgh,PA,15237
+219,"93 W Campbell Rd, Schenectady, NY in Rotterdam Square",93 W Campbell Rd,, Schenectady,NY,
+220,"2200 N Maple Ave, Rapid City, SD in Rushmore Mall",2200 N Maple Ave,, Rapid City,SD,
+221,"300 Mary Esther Blvd, Mary Esther, FL in Santa Rosa Mall",300 Mary Esther Blvd,, Mary Esther,FL,
+222,"1071 Santa Rosa Plaza, Santa Rosa, CA 95401 in Santa Rosa Plaza",1071 Santa Rosa Plaza,, Santa Rosa,CA,95401
+223,"12801 West Sunrise Blvd, Sunrise, FL 33323 in Sawgrass Mills",12801 West Sunrise Blvd,, Sunrise,FL,33323
+224,"7014-590 East Camelback Road, Scottsdale, AZ in Scottsdale Fashion Square",7014-590 East Camelback Road,, Scottsdale,AZ,
+225,"313 Smith Haven Mall, Lake Grove, NY 11755 in Smith Haven Mall",313 Smith Haven Mall,, Lake Grove,NY,11755
+226,"601 Donald Lynch Boulevard, Marlborough, MA 01752 in Solomon Pond Mall",601 Donald Lynch Boulevard,, Marlborough,MA,1752
+227,"18 SOUTH COUNTY CENTER WAY, St Louis, MO in South County Center",18 SOUTH COUNTY CENTER WAY,, St Louis,MO,
+228,"301 S Hills Vlg,, Bethel Park, PA 15241 in South Hills Village",301 S Hills Vlg,, Bethel Park,PA,15241
+229,"2310 SW Military Drive, San Antonio, TX in South Park Mall",2310 SW Military Drive,, San Antonio,TX,
+230,"6002 Slide Road, Lubbock, TX in South Plains Mall",6002 Slide Road,, Lubbock,TX,
+231,"4400 Sergeant Rd, Sioux City, IA in Southern Hills Mall",4400 Sergeant Rd,, Sioux City,IA,
+232,"7401 Market St., Youngstown, OH 44512 in Southern Park Mall",7401 Market St.,, Youngstown,OH,44512
+233,"230 Southpark Circle, Colonial Heights, VA in Southpark Mall",230 Southpark Circle,, Colonial Heights,VA,
+234,"4500 16th Street, Moline, IL 61265 in SouthPark Mall Moline",4500 16th Street,, Moline,IL,61265
+235,"14700 East Indiana, Spokane, WA in Spokane Valley Mall",14700 East Indiana,, Spokane,WA,
+236,"1250 Baltimore Pike, Springfield, PA in Springfield Mall",1250 Baltimore Pike,, Springfield,PA,
+237,"1201 Broadway, Saugus, MA 01906 in Square One Mall",1201 Broadway,, Saugus,MA,1906
+238,"134 ST. CLAIR SQUARE, Fairview Heights, IL in St. Clair Square",134 ST. CLAIR SQUARE,, Fairview Heights,IL,
+239,"11110 Mall Cir, P.O. Box 6040, Waldorf, MD 20603 in St. Charles Towne Center",11110 Mall Cir, P.O. Box 6040, Waldorf,MD,20603
+240,"4663 River City Drive, Jacksonville, FL 32246 in St. Johns Town Center",4663 River City Drive,, Jacksonville,FL,32246
+241,"100 Greyrock Place, Stamford, CT in Stamford Town Center",100 Greyrock Place,, Stamford,CT,
+242,"2601 Preston Rd., Frisco, TX in Stonebriar Centre",2601 Preston Rd.,, Frisco,TX,
+243,"One Stoneridge Mall, Pleasanton, CA 94588 in Stoneridge Shopping Center",One Stoneridge Mall,, Pleasanton,CA,94588
+244,"9200 Stony Point Parkway, Richmond, VA in Stony Point Fashion Park",9200 Stony Point Parkway,, Richmond,VA,
+245,"2370 N. Expressway, Brownsville, TX in Sunrise Mall",2370 N. Expressway,, Brownsville,TX,
+246,"4001 Sunset Drive, San Angelo, TX in Sunset Mall",4001 Sunset Drive,, San Angelo,TX,
+247,"1 Sunvalley Mall, Concord, CA in Sunvalley Shopping Center",1 Sunvalley Mall,, Concord,CA,
+248,"6555 E Southern Ave, Mesa, AZ in Superstition Springs Center",6555 E Southern Ave,, Mesa,AZ,
+249,"4502 S Steele St. Ste. 1177, Tacoma, WA 98409 in Tacoma Mall",4502 S Steele St. Ste. 1177,, Tacoma,WA,98409
+250,"10300 Southside Boulevard, Jacksonville, FL 32256 in The Avenues",10300 Southside Boulevard,, Jacksonville,FL,32256
+251,"20 City Boulevard West., Orange, CA in The Block at Orange",20 City Boulevard West.,, Orange,CA,
+252,"2300 North Salisbury Blvd, Salisbury, MD in The Centre at Salisbury",2300 North Salisbury Blvd,, Salisbury,MD,
+253,"1401 W. Esplanade Avenue, Suite 100, Kenner, LA 70065 in The Esplanade",1401 W. Esplanade Avenue, Suite 100, Kenner,LA,70065
+254,"8888 SW 136 Street, Miami, FL 33176 in The Falls",8888 SW 136 Street,, Miami,FL,33176
+255,"5085 Westheimer Rd., Suite 4850, Houston, TX 77056 in The Galleria",5085 Westheimer Rd., Suite 4850, Houston,TX,77056
+256,"5600 Harvey St, Muskegon, MI in The Lakes Mall",5600 Harvey St,, Muskegon,MI,
+257,"1843 Village West Parkway, Kansas City, KS in The Legends at Village West",1843 Village West Parkway,, Kansas City,KS,
+258,"2011 North Roan Street, Johnson City, TN in The Mall at Johnson City",2011 North Roan Street,, Johnson City,TN,
+259,"17420 Hall Rd, Clinton Township, MI in The Mall at Partridge Creek",17420 Hall Rd,, Clinton Township,MI,
+260,"1200 Morris Turnpike, Short Hills, NJ in The Mall at Short Hills",1200 Morris Turnpike,, Short Hills,NJ,
+261,"5043 Tuttle Crossing Boulevard, Dublin, OH 43016 in The Mall at Tuttle Crossing",5043 Tuttle Crossing Boulevard,, Dublin,OH,43016
+262,"10300 W. Forest Hill Blvd, Palm Beach County, FL in The Mall at Wellington Green",10300 W. Forest Hill Blvd,, Palm Beach County,FL,
+263,"100 Commercial Road, Leominster, MA in The Mall at Whitney Field",100 Commercial Road,, Leominster,MA,
+264,"5725 JOHNSTON STREET, Lafayette, LA in The Mall of Acadiana",5725 JOHNSTON STREET,, Lafayette,LA,
+265,"350 West Hillcrest Drive, Thousand Oaks, CA in The Oaks",350 West Hillcrest Drive,, Thousand Oaks,CA,
+266,"3811 South Cooper Street, Arlington, TX in The Parks at Arlington",3811 South Cooper Street,, Arlington,TX,
+267,"1470 Pleasant Valley Road, Manchester, CT 06040 in The Plaza at Buckland Hills",1470 Pleasant Valley Road,, Manchester,CT,6040
+268,"631 East Boughton Rd, Bolingbrook, IL in The Promenade Bolingbrook",631 East Boughton Rd,, Bolingbrook,IL,
+269,"5080 Riverside Drive, Macon, GA in The Shoppes at River Crossing",5080 Riverside Drive,, Macon,GA,
+270,"40 Catherwood Road, Ithaca, NY in The Shops at Ithaca Mall",40 Catherwood Road,, Ithaca,NY,
+271,"555 The Shops At Mission Viejo, Mission Viejo, CA 92691 in The Shops at Mission Viejo",555 The Shops At Mission Viejo,, Mission Viejo,CA,92691
+272,"2134 Montebello Town Center Drive, Montebello, CA 90640 in The Shops at Montebello",2134 Montebello Town Center Drive,, Montebello,CA,90640
+273,"6121 West Park Blvd, Plano, TX in The Shops at Willow Bend",6121 West Park Blvd,, Plano,TX,
+274,"6000 Glades Road, Boca Raton, FL 33431 in Town Center at Boca Raton",6000 Glades Road,, Boca Raton,FL,33431
+275,"400 Ernest W Barrett Pkwy, Suite 100, Kennesaw, GA 30144 in Town Center at Cobb",400 Ernest W Barrett Pkwy, Suite 100, Kennesaw,GA,30144
+276,"1704 N Dixie Hwy, Elizabethtown, KY in Towne Mall",1704 N Dixie Hwy,, Elizabethtown,KY,
+277,"400 North Center Street, Westminster, MD in TownMall of Westminster",400 North Center Street,, Westminster,MD,
+278,"825 Dulaney Valley Road, Towson, MD in Towson Town Center",825 Dulaney Valley Road,, Towson,MD,
+279,"5959 Triangle Town Blvd, Raleigh, NC in Triangle Town Center",5959 Triangle Town Blvd,, Raleigh,NC,
+280,"27500 Novi Road, Novi, MI in Twelve Oaks Mall",27500 Novi Road,, Novi,MI,
+281,"6901 Tyrone Square, St Petersburg, FL 33710 in Tyrone Square Mall",6901 Tyrone Square,, St Petersburg,FL,33710
+282,"1961 Chain Bridge Rd, McLean, VA in Tysons Corner Center",1961 Chain Bridge Rd,, McLean,VA,
+283,"1368 Mall Run Road, Uniontown, PA in Uniontown Mall",1368 Mall Run Road,, Uniontown,PA,
+284,"1237 East Main, Carbondale, IL in University Mall Carbondale",1237 East Main,, Carbondale,IL,
+285,"1700 Norman Drive, Valdosta, GA in Valdosta Mall",1700 Norman Drive,, Valdosta,GA,
+286,"2020 S. Expressway 83, Harlingen, TX 78552 in Valle Vista Mall",2020 S. Expressway 83,, Harlingen,TX,78552
+287,"1925 E. Market Street, Harrisonburg, VA 22801 in Valley Mall",1925 E. Market Street,, Harrisonburg,VA,22801
+288,"17301 Valley Mall Road, Hagerstown, MD in Valley Mall",17301 Valley Mall Road,, Hagerstown,MD,
+289,"293 Valley River Center, Eugene, OR in Valley River Center",293 Valley River Center,, Eugene,OR,
+290,"13331 Preston Rd, Dallas, TX in Valley View Center",13331 Preston Rd,, Dallas,TX,
+291,"4802 Valley View Blvd NW, Roanoke, VA in Valley View Mall",4802 Valley View Blvd NW,, Roanoke,VA,
+292,"3800 State Road 16, La Crosse, WI in Valley View Mall",3800 State Road 16,, La Crosse,WI,
+293,"1627-53 Opelika Road, Auburn, AL in Village Mall",1627-53 Opelika Road,, Auburn,AL,
+294,"3401 Dale Rd, Modesto, CA in Vintage Faire Mall",3401 Dale Rd,, Modesto,CA,
+295,"1700 W. International Speedway Blvd., Daytona Beach, FL in Volusia Mall",1700 W. International Speedway Blvd.,, Daytona Beach,FL,
+296,"Burnt Mill & Somerdale Road, Voorhees, NJ in Voorhees Town Center",Burnt Mill & Somerdale Road,, Voorhees,NJ,
+297,"2150 East Walnut Av., Dalton, GA in Walnut Square",2150 East Walnut Av.,, Dalton,GA,
+298,"9585 SW Washington Square Rd, Portland, OR in Washington Square",9585 SW Washington Square Rd,, Portland,OR,
+299,"413 North Alafaya Trail, Orlando, FL 32828 in Waterford Lakes Town Center",413 North Alafaya Trail,, Orlando,FL,32828
+300,"C-302 Wausau Center, Wausau, WI 54403 in Wausau Center",C-302 Wausau Center,, Wausau,WI,54403
+301,"4950 Pacific Avenue, Stockton, CA in Weberstown Mall",4950 Pacific Avenue,, Stockton,CA,
+302,"80 West County Center, St. Louis, MO in West County Center",80 West County Center,, St. Louis,MO,
+303,"1801 SW Wanamaker Rd, Topeka, KS 66604 in West Ridge Mall",1801 SW Wanamaker Rd,, Topeka,KS,66604
+304,"7600 Kingston Pike, Knoxville, TN 37919 in West Town Mall",7600 Kingston Pike,, Knoxville,TN,37919
+305,"66 West Towne Mall, Madison, WI in West Towne Mall",66 West Towne Mall,, Madison,WI,
+306,"3340 Mall Loop Dr, Joliet Mall Shopping Center, Joliet, IL 60431 in Westfield Louis Joliet Shopping Centre",3340 Mall Loop Dr,, Joliet Mall Shopping Center,IL,60431
+307,"1350 Travis Blvd., Fairfield, CA in Westfield Solano Shopping Centre",1350 Travis Blvd.,, Fairfield,CA,
+308,"2002 Annapolis Mall, Annapolis, MD in Westfield Annapolis Shopping Centre",2002 Annapolis Mall,, Annapolis,MD,
+309,"459 Brandon Town Center, Brandon, FL in Westfield Brandon Shopping Centre",459 Brandon Town Center,, Brandon,FL,
+310,"8000 West Broward Boulevard, Plantation, FL in Westfield Broward Shopping Centre",8000 West Broward Boulevard,, Plantation,FL,
+311,"8021 Citrus Park Town Center, Tampa, FL in Westfield Citrus Park Shopping Centre",8021 Citrus Park Town Center,, Tampa,FL,
+312,"1201 Boston Post Road, Milford, CT in Westfield Connecticut Post Shopping Centre",1201 Boston Post Road,, Milford,CT,
+313,"195 Fox Valley Center, Aurora, IL in Westfield Fox Valley Shopping Centre",195 Fox Valley Center,, Aurora,IL,
+314,"5001 Monroe Street, Toledo, OH in Westfield Franklin Park Shopping Centre",5001 Monroe Street,, Toledo,OH,
+315,"5 Gateway Mall, Lincoln, NE 68505 in Westfield Gateway Shopping Centre",5 Gateway Mall,, Lincoln,NE,68505
+316,"4954 Great Northern Mall, North Olmsted, OH in Westfield Great Northern Shopping Centre",4954 Great Northern Mall,, North Olmsted,OH,
+317,"122 Hawthorn Center, Vernon Hills, IL in Westfield Hawthorn Shopping Centre",122 Hawthorn Center,, Vernon Hills,IL,
+318,"324 Horton Plaza, San Diego, CA in Westfield Horton Plaza Shopping Centre",324 Horton Plaza,, San Diego,CA,
+319,"444 Chicago Ridge Mall, Chicago Ridge, IL in Westfield Chicago Ridge Shopping Centre",444 Chicago Ridge Mall,, Chicago Ridge,IL,
+320,"2800 N. Main Street, Santa Ana, CA in Westfield MainPlace Shopping Centre",2800 N. Main Street,, Santa Ana,CA,
+321,"470 Lewis Avenue, Meriden, CT in Westfield Meriden Shopping Centre",470 Lewis Avenue,, Meriden,CT,
+322,"1640 Camino Del Rio North, San Diego, CA in Westfield Mission Valley Shopping Centre",1640 Camino Del Rio North,, San Diego,CA,
+323,"272 East Via Rancho Parkway, Escondido, CA in Westfield North County Shopping Centre",272 East Via Rancho Parkway,, Escondido,CA,
+324,"925 Blossom Hill Road, San Jose, CA in Westfield Oakridge Shopping Centre",925 Blossom Hill Road,, San Jose,CA,
+325,"72-840 Highway 111, Palm Desert, CA in Westfield Palm Desert Shopping Centre",72-840 Highway 111,, Palm Desert,CA,
+326,"3030 Plaza Bonita Road, National City, CA in Westfield Plaza Bonita Shopping Centre",3030 Plaza Bonita Road,, National City,CA,
+327,"8201 S. Tamiami Trail, Sarasota, FL in Westfield Sarasota Square Shopping Center",8201 S. Tamiami Trail,, Sarasota,FL,
+328,"1701 Sunrise Highway, Bay Shore, NY in Westfield South Shore Shopping Centre",1701 Sunrise Highway,, Bay Shore,NY,
+329,"633 Southcenter, Seattle, WA in Westfield Southcenter Shopping Centre",633 Southcenter,, Seattle,WA,
+330,"500 Southpark Center, Strongsville, OH in Westfield SouthPark Shopping Centre",500 Southpark Center,, Strongsville,OH,
+331,"One Sunrise Mall, Massapequa, NY in Westfield Sunrise Shopping Centre",One Sunrise Mall,, Massapequa,NY,
+332,"5065 Main Street, Trumbull, CT in Westfield Trumbull Shopping Centre",5065 Main Street,, Trumbull,CT,
+333,"24201 West Valencia Blvd, Valencia, CA in Westfield Valencia Town Center Shopping Centre",24201 West Valencia Blvd,, Valencia,CA,
+334,"8700 N.E. Vancouver Mall Drive, Vancouver, WA in Westfield Vancouver Shopping Centre",8700 N.E. Vancouver Mall Drive,, Vancouver,WA,
+335,"112 Plaza Drive, West Covina, CA in Westfield West Covina Shopping Centre",112 Plaza Drive,, West Covina,CA,
+336,"11160 Veirs Mill Road, Wheaton, MD in Westfield Wheaton Shopping Centre",11160 Veirs Mill Road,, Wheaton,MD,
+337,"1025 Westminster Mall, Westminster, CA 92683 in Westminster Mall",1025 Westminster Mall,, Westminster,CA,92683
+338,"5256 Route 30, Greensburg, PA in Westmoreland Mall",5256 Route 30,, Greensburg,PA,
+339,"10000 California, Omaha, NE in Westroads Mall",10000 California,, Omaha,NE,
+340,"250 WestShore Plaza, Tampa, FL in WestShore Plaza",250 WestShore Plaza,, Tampa,FL,
+341,"10800 West Pico Blvd, Los Angeles, CA in Westside Pavilion",10800 West Pico Blvd,, Los Angeles,CA,
+342,"2501 Wabash Avenue, Springfield, IL 62704 in White Oaks Mall",2501 Wabash Avenue,, Springfield,IL,62704
+343,"3003 South Veterans Parkway, Springfield, IL 62704 in White Oaks Plaza",3003 South Veterans Parkway,, Springfield,IL,62704
+344,"2500 Moreland Road, Willow Grove, PA in Willow Grove Park",2500 Moreland Road,, Willow Grove,PA,
+345,"3065 Route 50, Saratoga Springs, NY in Wilton Mall",3065 Route 50,, Saratoga Springs,NY,
+346,"1015 W. University Avenue, Suite 601, Georgetown, TX 78628 in Wolf Ranch Town Center",1015 W. University Avenue, Suite 601, Georgetown,TX,78628
+347,"5 Woodfield Mall, Schaumburg, IL in Woodfield Shopping Center",5 Woodfield Mall,, Schaumburg,IL,
+348,"29 Wyoming Valley Mall, Wilkes-Barre, PA in Wyoming Valley Mall",29 Wyoming Valley Mall,, Wilkes-Barre,PA,
+349,"1215 Colusa Avenue, Yuba City, CA in Yuba Sutter Mall",1215 Colusa Avenue,, Yuba City,CA,

@@ -1,0 +1,60 @@
+/*
+	extracting the year out of a string value
+
+	sometimes you'll see data that looks like this 
+	and it is really helpful for a report but then
+	you'll end up wanting to query some other table
+	that has a date column and not this modfied year/month
+	string value.
+
+	to start, you'll want to be able to grab the month and
+	year but how do we do that when it look like this?
+*/
+select
+	'2023M01'
+
+
+/*
+	we can use another special function called
+	split part. what this does is it takes your string
+	value as the first parameter or argument, then the
+	characther(s) that you want to split on. 
+
+	what this does is it breaks the string up into chunks.
+	so we just have to tell the database which chunk we want
+	it to return.
+*/
+
+select
+	SPLIT_PART('2023M01', 'M', 1)
+
+
+/*
+	now if we want to query for a date, we can
+	easily do this by using some of our begginer functions
+	such as cast and concatenate
+*/
+select
+	split_part('2023M01', 'M', 1) as date_yyyy
+  , split_part('2023M01', 'M', 2) as date_mm
+  
+	
+
+	
+
+with partitioned_date as (
+	select
+			SPLIT_PART('2023M01', 'M', 1) as date_yyyy-- returns 2023
+		, SPLIT_PART('2023M01', 'M', 2) as date_mm -- returns 01
+)
+
+select
+	cast(
+				concat(p.date_yyyy, '-', p.date_mm, '-01')
+		    as date
+		  ) as first_of_month_dt
+from
+	partitioned_date p		
+
+
+

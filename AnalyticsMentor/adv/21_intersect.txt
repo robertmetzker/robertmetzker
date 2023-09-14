@@ -1,0 +1,67 @@
+/*
+	in my previous sql course, we talked about union, which 
+	combines the results of two different select
+	statements.
+
+	but what if you wanted to get the records wehre they exist in 
+	both tables?  you could use an inner join and then a distinct function
+	but you could just use the intersect function
+
+
+*/
+
+create temp table tmp_foods (
+	food_name varchar(255)
+)
+;
+
+insert into tmp_foods values ('pizza');
+insert into tmp_foods values ('tacos');
+insert into tmp_foods values ('apples');
+insert into tmp_foods values ('grapes');
+insert into tmp_foods values ('pizza');
+
+create temp table tmp_fav_foods (
+	food_name varchar(255)
+)
+;
+
+insert into tmp_fav_foods values ('pizza');
+insert into tmp_fav_foods values ('tacos');
+
+
+/*
+	here's how we write the intersect. it's quite similar to 
+	the union statement
+*/	
+select
+	f.food_name
+from
+	tmp_foods f
+
+intersect
+
+select
+	f.food_name
+from
+	tmp_fav_foods f
+
+
+/*
+	here's how we'd do the same thing with the join
+*/
+select
+	distinct
+		f.food_name
+from
+	tmp_foods f
+		join tmp_fav_foods ff
+			on f.food_name = ff.food_name
+
+
+
+
+
+
+
+			

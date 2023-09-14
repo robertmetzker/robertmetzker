@@ -1,0 +1,77 @@
+/*
+	we have data in our temp table but
+	what if we wanted to update this table with additional.
+
+	let's say that the price changed in the main table,
+	the products table. and we hae this ps4_5_products table
+	that has pricing data in it, but now it's not the same
+	as the original table. this is a bad thing. so we need
+	to update the data in our table to match the original table.
+
+
+	one way would be to delete everything out of the table
+	and start over. but that's not always an option. the
+	other option is to perform an update to the table,
+	but we're going to need to udpate from a select
+	statement
+
+	what we want to do is find the records that we want 
+	to have inserted, and then perform an update based
+	on some conditions in our select.
+*/
+select
+	*
+from
+	ps_4_5_products
+;
+
+/*
+	to start, let's delete the price out of our new table.
+*/
+update ps_4_5_products
+	set price = null
+;
+
+/*
+	verify
+*/
+select
+	*
+from
+	tmp_ps_4_5_products
+;
+
+
+/*
+	now to update our table, we can update from a select statement.
+*/
+update ps_4_5_products
+	set price = p.price
+	from (
+					select
+						  p.product_id
+					  , p.price
+					from
+						products p
+				) p
+	where
+		product_id = p.product_id
+
+/*
+	but there's an issue. we're getting an error because
+	the database is confused about which table the product_id
+	comes from. is it in our select data or in the table that
+	we're updating. since we don't have an alias, we're
+	going to use the full table name like this.
+*/
+update ps_4_5_products
+	set price = p.price
+	from (
+					select
+						  p.product_id
+					  , p.price
+					from
+						products p
+				) p
+	where
+		ps_4_5_products.product_id = p.product_id

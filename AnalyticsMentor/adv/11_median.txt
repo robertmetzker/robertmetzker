@@ -1,0 +1,103 @@
+select
+		t.items_in_trans
+	  , ntile(4) over(order by t.items_in_trans asc) as quartile
+	from
+		transactions t
+	where
+		  1=1
+	  and t.trans_dt = '2022-01-12'
+	  
+/*
+	we have our results but what about the median? the middle number?
+	well, we've seen sum, average, and percentiles, but no functions
+	for the median number. that's because the 50% percentile is the
+	same as the median. it's the middle number.
+	so if we want to get the median, we can simply query for the 50%
+	percentile
+*/
+with trans_items_percentiles as (
+	select
+		t.items_in_trans
+	  , ntile(100) over(order by t.items_in_trans asc) as percentile
+	from
+		transactions t
+	where
+		  1=1
+	  and t.trans_dt = '2022-01-12'
+) 
+
+select
+	t.items_in_trans
+  , t.percentile
+from
+	trans_items_percentiles t
+where
+	t.percentile = 0.50
+
+/*
+	well, that didn't work? how come? because we didn't have rounded values
+	we could try to do this instead,
+*/
+
+with trans_items_percentiles as (
+	select
+		t.*
+	  , ntile(100) over(order by t.items_in_trans) as percentile
+	from
+		transactions t
+	where
+		t.trans_dt = '2022-01-12'
+)
+
+select
+	t.items_in_trans
+  , t.percentile
+from
+	trans_items_percentiles t
+where
+	t.percentile >= .50
+;
+
+
+
+with trans_items_percentiles as (
+	select
+		t.items_in_trans
+	  , ntile(100) over(order by t.items_in_trans asc) as percentile
+	from
+		transactions t
+	where
+		  1=1
+	  and t.trans_dt = '2022-01-12'
+) 
+
+select
+	min(t.items_in_trans) as items_in_trans
+from
+	trans_items_percentiles t
+where
+	t.percentile >= 50
+	
+/*
+	as we can see, this is similar to what we saw with quartiles
+	but it's more precise
+*/
+with trans_items_quartiles as (
+	select
+		  t.items_in_trans
+	  , ntile(4) over(order by t.items_in_trans asc) as quartile
+	from
+		transactions t
+	where
+		    1=1
+	  and t.trans_dt = '2022-01-12'
+) 
+
+select
+	  t.quartile
+  , min(t.items_in_trans) as min_items_in_trans
+from
+	trans_items_quartiles t
+group by
+	t.quartile
+	

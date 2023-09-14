@@ -1,0 +1,14 @@
+/*
+  with window functions, you can do all of your aggregate
+  functions
+*/
+
+select
+	t.*
+  , min(t.items_in_trans) over(partition by t.trans_dt) as min_items_in_trans_for_date
+  , max(t.items_in_trans) over(partition by t.trans_dt) as max_items_in_trans_for_date
+  , avg(t.items_in_trans) over(partition by t.trans_dt) as avg_items_in_trans_for_date
+  , sum(t.items_in_trans) over(partition by t.trans_dt) as sum_items_in_trans_for_date
+  , count(t.items_in_trans) over(partition by t.trans_dt) as count_items_in_trans_for_date
+from
+	transactions t
