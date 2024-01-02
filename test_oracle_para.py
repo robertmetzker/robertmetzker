@@ -125,10 +125,11 @@ def extract_tables_to_csv(table_details, output_dir, year, segment):
     where_clause = " AND ".join(conditions)
     where_clause = f" WHERE {where_clause}" if conditions else ""
 
-    year_str = str(year)
-    schema_dir = os.path.join(output_dir, schema, year_str if year_str != 'pre-2020' else 'pre-2020')
+    year_str = 'pre-2020' if year == 'pre-2020' else str(year)
+    schema_dir = os.path.join(output_dir, schema, year_str)
     os.makedirs(schema_dir, exist_ok=True)
-    segment_label = 'pre-2020' if year_str == f'pre-2020_{segment+1:02}' else f"{year_str}_{segment+1:02}"
+    segment_label = f"{year_str}_{segment+1:02}"
+    segment_str = f"{segment+1:02}"
     csv_file = os.path.join(schema_dir, f"{table_name}_{segment_label}.csv")
 
     query = f"SELECT * FROM {schema}.{table_name} {where_clause}"
@@ -148,7 +149,7 @@ def extract_tables_to_csv(table_details, output_dir, year, segment):
     # print(f"... written to {csv_file}")
     logging.info(f"... written to {csv_file}")
 
-    return csv_file, year, slicer 
+    return csv_file, year, segment_str 
 
 
 def process_args():
