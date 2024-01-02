@@ -2,6 +2,7 @@ import getpass, platform, csv, os, argparse, base64, logging
 from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor
 import concurrent.futures
+from sqlalchemy import create_engine
 
 import pandas as pd
 import oracledb
@@ -24,16 +25,19 @@ def init_oracle_client():
     oracledb.init_oracle_client( lib_dir= d )
 
 def connect_to_oracle():
+    init_oracle_client()
     user = "RAC_ACCNT"
     # dsn = "diatmlckidb01.tmlc.ras:1522/DMLCKI"
     dsn = "(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=diatmlckidb01.tmlc.ras)(PORT=1522))(CONNECT_DATA=(SERVICE_NAME=DMLCKI)(INSTANCE_NAME=DMLCKI)))"
     # pw = getpass.getpass( f"Enter a password for {user}: ")
     pw ="kVysh_Ast04r"
 
-    con = oracledb.connect( user=user, password=pw, dsn=dsn )
-    print("Connected.")
-    print("DSN: ", con.dsn)
-    return con
+    # con = oracledb.connect( user=user, password=pw, dsn=dsn )
+    # print("Connected.")
+    # print("DSN: ", con.dsn)
+    # return con
+    engine = create_engine( f'oracle+cx_oracle://user:{user}:{pw}@{dsn}')
+    return engine
 
 def connect_to_snowflake( ):
     password = decode_password( b'NDI0N1hTMnNub3dmbGFrZSE=' )
@@ -47,7 +51,7 @@ def connect_to_snowflake( ):
     ) 
     return sfcon
 
-def upload_file_to_snowflake( sfcon, df, file_path, table_name):
+def upload_file_to_snowflake( sfcon, df, file_path, table_name, year, slicer):
     file_format=f"""file_format =  (type = csv field_delimiter = ',' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"')  """
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
