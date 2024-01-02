@@ -1,10 +1,13 @@
-import getpass, platform, csv, os, argparse, base64
+import getpass, platform, csv, os, argparse, base64, logging
 from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor
+import concurrent.futures
 
 import pandas as pd
 import oracledb
 import snowflake.connector
+
+logging.basicConfig( level=logging.INFO, format="%(processName)s - %(levelname)s - %(message)s" )
 
 def decode_password( encoded_password ):
     return base64.b64decode( encoded_password ).decode()
@@ -24,7 +27,8 @@ def connect_to_oracle():
     user = "RAC_ACCNT"
     # dsn = "diatmlckidb01.tmlc.ras:1522/DMLCKI"
     dsn = "(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=diatmlckidb01.tmlc.ras)(PORT=1522))(CONNECT_DATA=(SERVICE_NAME=DMLCKI)(INSTANCE_NAME=DMLCKI)))"
-    pw = getpass.getpass( f"Enter a password for {user}: ")
+    # pw = getpass.getpass( f"Enter a password for {user}: ")
+    pw ="kVysh_Ast04r"
 
     con = oracledb.connect( user=user, password=pw, dsn=dsn )
     print("Connected.")
@@ -100,7 +104,8 @@ def read_tables_from_csv(file_path):
     print(f"... found {len(tables)} tables")
     return tables
 
-def extract_tables_to_csv(con, table_details, output_dir, year, segment):
+def extract_tables_to_csv(table_details, output_dir, year, segment):
+
     schema, table_name = table_details['schema_table'].split(".")
     date_column = table_details['date_column']
     slicer_column = table_details['slicer_column']
@@ -116,22 +121,29 @@ def extract_tables_to_csv(con, table_details, output_dir, year, segment):
     where_clause = " AND ".join(conditions)
     where_clause = f" WHERE {where_clause}" if conditions else ""
 
-    schema_dir = os.path.join(output_dir, schema, year if year != 'pre-2020' else 'pre-2020')
+    year_str = str(year)
+    schema_dir = os.path.join(output_dir, schema, year_str if year_str != 'pre-2020' else 'pre-2020')
     os.makedirs(schema_dir, exist_ok=True)
-    segment_label = 'pre-2020' if year == 'pre-2020' else f"{year}_{segment+1:02}"
+    segment_label = 'pre-2020' if year_str == 'pre-2020' else f"{year_str}_{segment+1:02}"
     csv_file = os.path.join(schema_dir, f"{table_name}_{segment_label}.csv")
 
-    query = f"SELECT * FROM {schema_table}{where_clause}"
+    query = f"SELECT * FROM {schema}.{table_name} {where_clause}"
     
-    print(f"=> Extracting {schema}.{table_name} for {segment_label}")
+    # print(f"=> Extracting {schema}.{table_name} for {segment_label}")
+    logging.info( f"Extracting {schema}.{table_name} for {segment_label} \n\tUSING: {query}" ) 
     try:
+        #create an oracle connection here instead of being passed one.
+        con = connect_to_oracle()
         df = pd.read_sql(query, con)
     except Exception as e:
-        print(f"Error: {e}")
+        # print(f"Error: {e}")
+        logging.error(f"Error: {e}")
         return None
 
     df.to_csv(csv_file, index=False)
-    print(f"... written to {csv_file}")
+    # print(f"... written to {csv_file}")
+    logging.info(f"... written to {csv_file}")
+
     return csv_file
 
 
@@ -149,7 +161,6 @@ def process_args():
 def main():
     args = process_args()
     init_oracle_client()
-    con = connect_to_oracle()
     tables = read_tables_from_csv(args.tables)
 
     current_year = datetime.now().year
@@ -160,8 +171,9 @@ def main():
 
     for table_details in tables:
         for year in years:
+            logging.info(f"Processing {table_details} for {year}... ")
             with ProcessPoolExecutor(max_workers=4) as executor:
-                futures = [executor.submit(extract_tables_to_csv, con, table_details, args.output, year, segment) for segment in range(4)]
+                futures = [executor.submit(extract_tables_to_csv, table_details, args.output, year, segment) for segment in range(4)]
                 for future in concurrent.futures.as_completed(futures):
                     csv_file = future.result()
                     if csv_file and args.sf:
