@@ -80,45 +80,49 @@ def upload_file_to_snowflake( sfcon, df, file_path, table_name):
 
 
 # Start of actual data movement processing for this script
-def read_tables_from_csv( file_path ):
+def read_tables_from_csv(file_path):
     print(f"=== Reading tables from csv: {file_path} ")
-    tables_with_partitions = []
- 
+
+    tables = []
     with open(file_path, 'r') as f:
         reader = csv.reader(f)
         for row in reader:
-            schema_table, where_clause, slicer = row
-            tables_with_partitions.append({
+            schema_table, date_column, slicer_column = row
+            tables.append({
                 "schema_table": schema_table,
-                "where_clause": where_clause,
-                "slicer": slicer
+                "date_column": date_column,
+                "slicer_column": slicer_column
             })
+    
+    print(f"... found {len(tables)} tables")
+    return tables
 
-    print(f"... found {len(tables_with_partitions)} tables")
-    return tables_with_partitions
-
-def extract_tables_to_csv(con, table_details, output_dir):
+def extract_tables_to_csv(con, table_details, output_dir, year, segment):
     schema, table_name = table_details['schema_table'].split(".")
-    schema_dir = os.path.join(output_dir, schema)
+    slicer_column = table_details['slicer_column']
+    date_column = table_details['date_column']
+    
+    # Handling for pre-2020 and post-2020 data
+    year_condition = f"< '2020'" if year == 'pre-2020' else f"= '{year}'"
+    
+    schema_dir = os.path.join(output_dir, schema, year)
     os.makedirs(schema_dir, exist_ok=True)
-    current_time = datetime.now().strftime("%Y%m")
-    slicer_value = table_details['slicer']
-    csv_file = os.path.join(schema_dir, f"{table_name}_{current_time}_{slicer_value}.csv")
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    segment_label = 'pre-2020' if year == 'pre-2020' else f"{year}_{segment+1:02}"
+    csv_file = os.path.join(schema_dir, f"{table_name}_{segment_label}.csv")
 
-    print(f"\t{now}=> Extracting {schema}.{table_name}")
-    query = f"SELECT * FROM {table_details['schema_table']} {table_details['where_clause']}"
-
+    query = f"SELECT * FROM {schema_table} WHERE TO_CHAR({date_column}, 'YYYY') {year_condition} AND MOD({slicer_column}, 4) = {segment}"
+    
+    print(f"=> Extracting {schema}.{table_name} for {segment_label}")
     try:
         df = pd.read_sql(query, con)
     except Exception as e:
         print(f"Error: {e}")
-        return None, None
+        return None
 
-    print(f"... writing to {csv_file}")
     df.to_csv(csv_file, index=False)
+    print(f"... written to {csv_file}")
+    return csv_file
 
-    return df, csv_file
 
 def process_args():
     parser = argparse.ArgumentParser()
@@ -133,24 +137,26 @@ def process_args():
 
 def main():
     args = process_args()
-    con_snowflake = None
-
     init_oracle_client()
     con = connect_to_oracle()
     tables = read_tables_from_csv(args.tables)
 
+    current_year = datetime.now().year
+    years = ['pre-2020'] + list(range(2020, current_year + 1))
+
     if args.sf:
         con_snowflake = connect_to_snowflake()
-    
-    with ProcessPoolExecutor(max_workers=10) as executor:
-        futures = [executor.submit(extract_tables_to_csv, con, table_details, args.output) for table_details in tables]
-        for future in concurrent.futures.as_completed(futures):
-            df, csv_file = future.result()
-            if df is None:
-                continue
-            print(f"\t... {len(df)} rows extracted")
-            if args.sf and df:
-                upload_file_to_snowflake(con_snowflake, df, csv_file, table_details['schema_table'])
+
+    for table_details in tables:
+        for year in years:
+            with ProcessPoolExecutor(max_workers=4) as executor:
+                futures = [executor.submit(extract_tables_to_csv, con, table_details, args.output, year, segment) for segment in range(4)]
+                for future in concurrent.futures.as_completed(futures):
+                    csv_file = future.result()
+                    if csv_file and args.sf:
+                        df = pd.read_csv(csv_file)
+                        upload_file_to_snowflake(con_snowflake, df, csv_file, table_details['schema_table'])
+
 
 
 if __name__ == "__main__":
