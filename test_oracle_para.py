@@ -86,6 +86,8 @@ def read_tables_from_csv(file_path):
     tables = []
     with open(file_path, 'r') as f:
         reader = csv.reader(f)
+        next(reader, None)  # Skip the header row
+        
         for row in reader:
             schema_table, date_column, slicer_column = row
             tables.append({
@@ -99,18 +101,26 @@ def read_tables_from_csv(file_path):
 
 def extract_tables_to_csv(con, table_details, output_dir, year, segment):
     schema, table_name = table_details['schema_table'].split(".")
-    slicer_column = table_details['slicer_column']
     date_column = table_details['date_column']
+    slicer_column = table_details['slicer_column']
     
-    # Handling for pre-2020 and post-2020 data
-    year_condition = f"< '2020'" if year == 'pre-2020' else f"= '{year}'"
-    
-    schema_dir = os.path.join(output_dir, schema, year)
+    conditions = []
+    if date_column:
+        year_condition = f"< '2020'" if year == 'pre-2020' else f"= '{year}'"
+        conditions.append(f"TO_CHAR({date_column}, 'YYYY') {year_condition}")
+
+    if slicer_column:
+        conditions.append(f"MOD({slicer_column}, 4) = {segment}")
+
+    where_clause = " AND ".join(conditions)
+    where_clause = f" WHERE {where_clause}" if conditions else ""
+
+    schema_dir = os.path.join(output_dir, schema, year if year != 'pre-2020' else 'pre-2020')
     os.makedirs(schema_dir, exist_ok=True)
     segment_label = 'pre-2020' if year == 'pre-2020' else f"{year}_{segment+1:02}"
     csv_file = os.path.join(schema_dir, f"{table_name}_{segment_label}.csv")
 
-    query = f"SELECT * FROM {schema_table} WHERE TO_CHAR({date_column}, 'YYYY') {year_condition} AND MOD({slicer_column}, 4) = {segment}"
+    query = f"SELECT * FROM {schema_table}{where_clause}"
     
     print(f"=> Extracting {schema}.{table_name} for {segment_label}")
     try:
@@ -122,7 +132,6 @@ def extract_tables_to_csv(con, table_details, output_dir, year, segment):
     df.to_csv(csv_file, index=False)
     print(f"... written to {csv_file}")
     return csv_file
-
 
 def process_args():
     parser = argparse.ArgumentParser()
