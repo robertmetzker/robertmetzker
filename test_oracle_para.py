@@ -51,40 +51,40 @@ def connect_to_snowflake( ):
     ) 
     return sfcon
 
-def upload_file_to_snowflake( sfcon, df, file_path, table_name, year, slicer):
-    file_format=f"""file_format =  (type = csv field_delimiter = ',' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"')  """
+def upload_file_to_snowflake(sfcon, df, file_path, table_name, year, slicer):
+    file_format = """file_format = (type = csv field_delimiter = ',' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"')"""
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    print(f"\t{now} ==> Uploading to SF account: PLAYGROUND.RAC_ACCNT")
+    # Create a unique table name for each partition
+    phys_table = f"{table_name}_{year}_{slicer}".replace('.', '_')
+
+    print(f"\t{now} ==> Uploading {phys_table} to SF account: PLAYGROUND.RAC_ACCNT")
     with sfcon.cursor() as cur:
         cur.execute("USE SCHEMA RAC_ACCNT")
         cur.execute("USE WAREHOUSE PLAYGROUND_WH")
         
-        cur.execute( f"CREATE STAGE IF NOT EXISTS oracle_stage FILE_FORMAT = (TYPE='CSV')" )
+        cur.execute(f"CREATE STAGE IF NOT EXISTS oracle_stage FILE_FORMAT = (TYPE='CSV')")
 
         cur.execute(f"PUT file://{file_path} @~/oracle_stage auto_compress=true;")
 
-        phys_table = table_name.split('.')[-1]
-        print(f" >>> {phys_table} <<<")
-
         type_mapping = {
-            'object':'text',
-            'int64':'number',
-            'float64':'float',
-            'datetime64[ns]':'timestamp',
+            'object': 'text',
+            'int64': 'number',
+            'float64': 'float',
+            'datetime64[ns]': 'timestamp',
         }
-        # Generate a list of columns and create an empty table:
-        # columns = ', '.join([ f"{col} TEXT" for col in df.columns])
-        columns = ', '.join([ f"{col} {type_mapping[str(df[col].dtype)]}" for col in df.columns])
+
+        columns = ', '.join([f"{col} {type_mapping[str(df[col].dtype)]}" for col in df.columns])
         create_sql = f"CREATE OR REPLACE TABLE {phys_table} ({columns});"
         print(f"--> {create_sql}")
-        cur.execute( create_sql )
+        cur.execute(create_sql)
 
-        # cur.execute(f"CREATE OR REPLACE TABLE {phys_table} as select *  from @oracle_stage")
         sql = f"""COPY INTO PLAYGROUND.RAC_ACCNT.{phys_table} from @~/oracle_stage/{phys_table} {file_format} on_error='continue'; """
-        print( f'---> {sql}')
-        cur.execute( sql )
-    print(f"\t... copied into {table_name}")
+        print(f'---> {sql}')
+        cur.execute(sql)
+
+    print(f"\t... copied into {phys_table}")
+
 
 
 # Start of actual data movement processing for this script
@@ -148,7 +148,7 @@ def extract_tables_to_csv(table_details, output_dir, year, segment):
     # print(f"... written to {csv_file}")
     logging.info(f"... written to {csv_file}")
 
-    return csv_file
+    return csv_file, year, slicer 
 
 
 def process_args():
@@ -173,16 +173,18 @@ def main():
     if args.sf:
         con_snowflake = connect_to_snowflake()
 
-    for table_details in tables:
+ for table_details in tables:
         for year in years:
             logging.info(f"Processing {table_details} for {year}... ")
             with ProcessPoolExecutor(max_workers=4) as executor:
                 futures = [executor.submit(extract_tables_to_csv, table_details, args.output, year, segment) for segment in range(4)]
                 for future in concurrent.futures.as_completed(futures):
-                    csv_file = future.result()
-                    if csv_file and args.sf:
+                    result = future.result()
+                    if result and args.sf:
+                        csv_file, year_segment, slicer_segment = result
                         df = pd.read_csv(csv_file)
-                        upload_file_to_snowflake(con_snowflake, df, csv_file, table_details['schema_table'])
+                        upload_file_to_snowflake(con_snowflake, df, csv_file, table_details['schema_table'], year_segment, slicer_segment)
+
 
 
 
