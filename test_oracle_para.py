@@ -82,14 +82,15 @@ def upload_file_to_snowflake( sfcon, df, file_path, table_name):
 # Start of actual data movement processing for this script
 def read_tables_from_csv(file_path):
     print(f"=== Reading tables from csv: {file_path} ")
-
     tables = []
+
     with open(file_path, 'r') as f:
         reader = csv.reader(f)
         next(reader, None)  # Skip the header row
-        
         for row in reader:
-            schema_table, date_column, slicer_column = row
+            schema_table = row[0]
+            date_column = row[1] if len(row) > 1 else None
+            slicer_column = row[2] if len(row) > 2 else None
             tables.append({
                 "schema_table": schema_table,
                 "date_column": date_column,
@@ -133,6 +134,7 @@ def extract_tables_to_csv(con, table_details, output_dir, year, segment):
     print(f"... written to {csv_file}")
     return csv_file
 
+
 def process_args():
     parser = argparse.ArgumentParser()
     # parser.add_argument('-f','--file', help='CSV file path', required=True )
@@ -173,5 +175,5 @@ if __name__ == "__main__":
 
 
 
-# python test-oracle.py -t tables.csv -o outputs 
-# python test-oracle.py -t tables.csv -o outputs --sf
+# python test-oracle-para.py -t tables.csv -o outputs 
+# python test-oracle-para.py -t tables.csv -o outputs --sf
