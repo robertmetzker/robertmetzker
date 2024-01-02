@@ -2,7 +2,7 @@ import getpass, platform, csv, os, argparse, base64, logging
 from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor
 import concurrent.futures
-from sqlalchemy import create_engine
+# from sqlalchemy import create_engine
 
 import pandas as pd
 import oracledb
@@ -32,12 +32,12 @@ def connect_to_oracle():
     # pw = getpass.getpass( f"Enter a password for {user}: ")
     pw ="kVysh_Ast04r"
 
-    # con = oracledb.connect( user=user, password=pw, dsn=dsn )
-    # print("Connected.")
-    # print("DSN: ", con.dsn)
-    # return con
-    engine = create_engine( f'oracle+cx_oracle://user:{user}:{pw}@{dsn}')
-    return engine
+    con = oracledb.connect( user=user, password=pw, dsn=dsn )
+    print("Connected.")
+    print("DSN: ", con.dsn)
+    return con
+    # engine = create_engine( f'oracle+cx_oracle://user:{user}:{pw}@{dsn}')
+    # return engine
 
 def connect_to_snowflake( ):
     password = decode_password( b'NDI0N1hTMnNub3dmbGFrZSE=' )
@@ -128,7 +128,7 @@ def extract_tables_to_csv(table_details, output_dir, year, segment):
     year_str = str(year)
     schema_dir = os.path.join(output_dir, schema, year_str if year_str != 'pre-2020' else 'pre-2020')
     os.makedirs(schema_dir, exist_ok=True)
-    segment_label = 'pre-2020' if year_str == 'pre-2020' else f"{year_str}_{segment+1:02}"
+    segment_label = 'pre-2020' if year_str == f'pre-2020_{segment+1:02}' else f"{year_str}_{segment+1:02}"
     csv_file = os.path.join(schema_dir, f"{table_name}_{segment_label}.csv")
 
     query = f"SELECT * FROM {schema}.{table_name} {where_clause}"
@@ -173,7 +173,7 @@ def main():
     if args.sf:
         con_snowflake = connect_to_snowflake()
 
- for table_details in tables:
+    for table_details in tables:
         for year in years:
             logging.info(f"Processing {table_details} for {year}... ")
             with ProcessPoolExecutor(max_workers=4) as executor:
