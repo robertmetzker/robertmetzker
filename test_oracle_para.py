@@ -121,30 +121,27 @@ def extract_and_upload(table_details, output_dir, con_snowflake):
         slicer_clause = f" AND MOD({slicer_column},4) = {slicer_segment}" if slicer_column else ""
         return f"{base_clause}{slicer_clause}"
 
-    with ProcessPoolExecutor() as executor:
-        if granularity == 'YM':
-            monthly_filters = generate_monthly_segments(2021, current_year)
-            for filter in monthly_filters:
-                if int(filter) > int( f"{current_year}{current_month:02}" ):
-                    continue  #ignore future stuff for now
+    if granularity == 'YM':
+        monthly_filters = generate_monthly_segments(2021, current_year)
+        for filter in monthly_filters:
+            if int(filter) > int(f"{current_year}{current_month:02}"):
+                continue  #ignore future months
 
+            with ProcessPoolExecutor(max_workers=4) as executor:
                 base_clause = f"WHERE TO_CHAR({date_column}, 'YYYYMM') = '{filter}'"            
                 for slicer_segment in range(4):
-                    where_clause = build_where_clause( base_clause, slicer_segment )
+                    where_clause = build_where_clause(base_clause, slicer_segment)
                     print(f"==> Submitting job for {table_name} > {filter}_{slicer_segment} > {where_clause} ")
-                    # logging.info(f"==> {table_details}:{where_clause}")
-                    # executor.submit( process_extraction, schema, table_name, where_clause, f"{filter}_{slicer_segment}", output_dir, table_details['schema_table'], con_snowflake )
-                    process_extraction( schema, table_name, where_clause, f"{filter}_{slicer_segment}", output_dir, table_details['schema_table'], con_snowflake )
-        else:
-            yearly_filters = generate_yearly_segments(2021, current_year)
-            for year in yearly_filters:
-                where_clause = f"WHERE TO_CHAR({date_column}, 'YYYY') = '{year}'"
+                    executor.submit(process_extraction, schema, table_name, where_clause, f"{filter}_{slicer_segment}", output_dir, table_details['schema_table'], con_snowflake)
+    else:
+        yearly_filters = generate_yearly_segments(2021, current_year)
+        for year in yearly_filters:
+            with ProcessPoolExecutor(max_workers=4) as executor:
+                base_clause = f"WHERE TO_CHAR({date_column}, 'YYYY') = '{year}'"
                 for slicer_segment in range(4): 
-                    where_clause = build_where_clause( base_clause, slicer_segment )
-                    print(f"==> Submitting job for {table_name} > {filter}_{slicer_segment} > {where_clause} ")
-                    # logging.info(f"==> {table_details}:{where_clause}")
-                    # executor.submit( process_extraction, schema, table_name, where_clause, filter, output_dir, table_details['schema_table'], con_snowflake )
-                    process_extraction( schema, table_name, where_clause, filter, output_dir, table_details['schema_table'], con_snowflake )
+                    where_clause = build_where_clause(base_clause, slicer_segment)
+                    print(f"==> Submitting job for {table_name} > {year}_{slicer_segment} > {where_clause} ")
+                    executor.submit(process_extraction, schema, table_name, where_clause, f"{year}_{slicer_segment}", output_dir, table_details['schema_table'], con_snowflake)
 
 
 def process_extraction( schema, table_name, where_clause, filter, output_dir, full_table_name, con_snowflake ):
