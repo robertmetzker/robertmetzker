@@ -175,9 +175,9 @@ def process_extraction( schema, table_name, where_clause, filter, output_dir, fu
     except Exception as e:
         logging.error(f"Error in process_extraction: {e}")
         return
-    finally:
-        con.close()
-        con_snowflake.close()
+    # finally:
+    #     con.close()
+    #     con_snowflake.close()
 
 
 
