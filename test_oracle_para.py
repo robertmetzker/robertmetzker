@@ -152,6 +152,7 @@ def process_extraction( schema, table_name, where_clause, filter, output_dir, fu
         filter_dir = filter[:4] if len(filter) > 4  else filter     # Parse out the year portion
         schema_dir = os.path.join( output_dir, schema, filter_dir )
         os.makedirs(schema_dir, exist_ok=True)
+        year, slicer = (filter.split('_') + [None])[:2] if '_' in filter else (filter, None)
 
         csv_file_name = f"{table_name}_{filter}.csv" if filter else f"{table_name}.csv"
         csv_file = os.path.join(schema_dir, csv_file_name )
@@ -167,7 +168,7 @@ def process_extraction( schema, table_name, where_clause, filter, output_dir, fu
             logging.info(f"... written to {csv_file}")
 
             if con_snowflake:
-                upload_file_to_snowflake( con_snowflake, df, csv_file, full_table_name, filter)
+                upload_file_to_snowflake(con_snowflake, df, csv_file, full_table_name, year, slicer)
         except Exception as e:
             logging.error(f"Error: {e}")
             return
