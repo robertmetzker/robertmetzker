@@ -1,7 +1,7 @@
 import getpass, platform, csv, os, argparse, base64, logging
 from datetime import datetime
-from concurrent.futures import ProcessPoolExecutor
 import concurrent.futures
+from concurrent.futures import ProcessPoolExecutor
 
 import pandas as pd
 import oracledb
@@ -89,39 +89,58 @@ def read_tables_from_csv(file_path):
                 schema_table = row[0]
                 date_column = row[1] if len(row) > 1 else None
                 slicer_column = row[2] if len(row) > 2 else None
-                tables.append({"schema_table": schema_table, "date_column": date_column, "slicer_column": slicer_column})
+                granularity = row[3] if len(row) > 3 else 'Y'
+                tables.append({"schema_table": schema_table, "date_column": date_column, "slicer_column": slicer_column, "granularity": granularity})
 
     logging.info(f"... found {len(tables)} tables")
     return tables
 
-def extract_and_upload(table_details, output_dir, year, segment, con_snowflake):
+def extract_and_upload(table_details, output_dir, con_snowflake):
     schema, table_name = table_details['schema_table'].split(".")
     date_column = table_details['date_column']
     slicer_column = table_details['slicer_column']
-    conditions = []
+    granularity = table_details['granularity']
 
-    if date_column and year:
-        year_condition = f"< '2020'" if year == 'PRE_2020' else f"= '{year}'"
-        conditions.append(f"TO_CHAR({date_column}, 'YYYY') {year_condition}")
-    if slicer_column and segment is not None:
-        conditions.append(f"MOD({slicer_column}, 4) = {segment}")
+    current_year = datetime.now().year
+    current_month = datetime.now().month
 
-    where_clause = " AND ".join(conditions)
-    where_clause = f" WHERE {where_clause}" if conditions else ""
+    def build_where_clause(base_clause, slicer_segment):
+        slicer_clause = f" AND MOD({slicer_column},4) = {slicer_segment}" if slicer_column else ""
+        return f"{base_clause}{slicer_clause}"
 
-    dir_parts = [output_dir, schema]
-    if year:
-        dir_parts.append(str(year))
-    schema_dir = os.path.join(*dir_parts)
+    with ProcessPoolExecutor() as executor:
+        if granularity == 'YM':
+            monthly_filters = generate_monthly_segments(2021, current_year)
+            for filter in monthly_filters:
+                if int(filter) > int( f"{current_year}{current_month:02}" ):
+                    continue  #ignore future stuff for now
+
+                base_clause = f"WHERE TO_CHAR({date_column}, 'YYYYMM') = '{filter}'"            
+                if slicer_column:
+                    for slicer_segment in range(4):
+                        where_clause = build_where_clause( base_clause, slicer_segment )
+                        # logging.info(f"==> {table_details}:{where_clause}")
+                        executor.submit( process_extraction, schema, table_name, where_clause, f"{filter}_{slicer_segment}", output_dir, table_details['schema_table'], con_snowflake )
+        else:
+            yearly_filters = generate_yearly_segments(2021, current_year)
+            for year in yearly_filters:
+                where_clause = f"WHERE TO_CHAR({date_column}, 'YYYY') = '{year}'"
+                if slicer_column:
+                    for slicer_segment in range(4): 
+                        where_clause = build_where_clause( base_clause, slicer_segment )
+                        # logging.info(f"==> {table_details}:{where_clause}")
+                        executor.submit( process_extraction, schema, table_name, where_clause, filter, output_dir, table_details['schema_table'], con_snowflake )
+
+
+def process_extraction( schema, table_name, where_clause, filter, output_dir, full_table_name, con_snowflake ):
+    logging.info(f"PROCESSING EXTRACTION OF {schema}.{table_name} to {csv_file_name} \n\tUSING: {query}") 
+
+    filter_dir = filter[:4] if len(filter) == 6 else filter     # Parse out the year portion
+    schema_dir = os.path.join( output_dir, schema, filter_dir )
     os.makedirs(schema_dir, exist_ok=True)
 
-    file_parts = [table_name]
-    if year:
-        file_parts.append(str(year))
-    if segment is not None:
-        file_parts.append(f"{segment+1:02}")
-    csv_file_name = "_".join(file_parts)
-    csv_file = os.path.join(schema_dir, f"{csv_file_name}.csv")
+    csv_file_name = f"{table_name}_{filter}.csv" if filter else f"{table_name}.csv"
+    csv_file = os.path.join(schema_dir, csv_file_name )
 
     query = f"SELECT * FROM {schema}.{table_name} {where_clause}"
     logging.info(f"Extracting {schema}.{table_name} for {csv_file_name} \n\tUSING: {query}") 
@@ -129,15 +148,22 @@ def extract_and_upload(table_details, output_dir, year, segment, con_snowflake):
     try:
         con = connect_to_oracle()
         df = pd.read_sql(query, con)
+        df.to_csv( csv_file, index=False)
+        logging.info(f"... written to {csv_file}")
+
+        if con_snowflake:
+            upload_file_to_snowflake( con_snowflake, df, csv_file, full_table_name, filter)
     except Exception as e:
         logging.error(f"Error: {e}")
         return
     
-    df.to_csv(csv_file, index=False)
-    logging.info(f"... written to {csv_file}")
 
-    if con_snowflake:
-        upload_file_to_snowflake(con_snowflake, df, csv_file, table_details['schema_table'], year, segment)
+def generate_yearly_segments(start_year, end_year):
+    return [ str(year) for year in range(start_year, end_year+1)]
+
+def generate_monthly_segments(start_year, end_year):
+    return [ f"{year}{month:02}" for year in range(start_year, end_year+1) for month in range(1,13)]
+
 
 def process_args():
     parser = argparse.ArgumentParser()
@@ -156,17 +182,7 @@ def main():
 
     for table_details in tables:
         logging.info(f"--- PROCESSING: {table_details}")
-        if table_details['date_column']:
-            years = ['PRE_2020'] + list(range(2020, current_year + 1))
-            for year in years:
-                if table_details['slicer_column']:
-                    with ProcessPoolExecutor(max_workers=4) as executor:
-                        futures = [executor.submit(extract_and_upload, table_details, args.output, year, segment, con_snowflake) for segment in range(4)]
-                        concurrent.futures.wait(futures)
-                else:
-                    extract_and_upload(table_details, args.output, year, None, con_snowflake)
-        else:
-            extract_and_upload(table_details, args.output, None, None, con_snowflake)
+        extract_and_upload(table_details, args.output, con_snowflake)
 
 if __name__ == "__main__":
     main()
