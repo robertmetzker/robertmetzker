@@ -66,6 +66,7 @@ def upload_file_to_snowflake(sfcon, df, file_path, table_name, year, slicer):
     if slicer:
         phys_table_parts.append(slicer)
     phys_table = "_".join(phys_table_parts)
+    print(f"\t{now} ==> Uploading {phys_table} to SF account: PLAYGROUND.RAC_ACCNT")
     logging.info(f"\t{now} ==> Uploading {phys_table} to SF account: PLAYGROUND.RAC_ACCNT")
     
     with sfcon.cursor() as cur:
@@ -83,6 +84,7 @@ def upload_file_to_snowflake(sfcon, df, file_path, table_name, year, slicer):
         sql = f"""COPY INTO PLAYGROUND.RAC_ACCNT.{phys_table} from @~/oracle_stage/{phys_table} {file_format} on_error='continue'; """
         logging.info(f'---> {sql}')
         cur.execute(sql)
+    print(f"\t... copied into {phys_table}: {sql}")
     logging.info(f"\t... copied into {phys_table}")
 
 def read_tables_from_csv(file_path):
@@ -121,37 +123,25 @@ def extract_and_upload(table_details, output_dir, con_snowflake):
         slicer_clause = f" AND MOD({slicer_column},4) = {slicer_segment}" if slicer_column else ""
         return f"{base_clause}{slicer_clause}"
 
-    if granularity == 'YM':
-        monthly_filters = generate_monthly_segments(2021, current_year)
-        for filter in monthly_filters:
-            if int(filter) > int(f"{current_year}{current_month:02}"):
-                continue  #ignore future months
+    combinations = generate_monthly_segments(2021, current_year) if granularity =='YM' else generate_yearly_segments(2021, current_year) 
+    for combination in combinations:
+        if granularity == 'YM'  and int(combination) > int(f"{current_year}{current_month:02}"):
+            continue  #ignore future months
 
-            with ProcessPoolExecutor(max_workers=4) as executor:
-                futures = []
-                base_clause = f"WHERE TO_CHAR({date_column}, 'YYYYMM') = '{filter}'"            
-                for slicer_segment in range(4):
-                    where_clause = build_where_clause(base_clause, slicer_segment)
-                    print(f"==> Submitting job for {table_name} > {filter}_{slicer_segment} > {where_clause} ")
-                    executor.submit(process_extraction, schema, table_name, where_clause, f"{filter}_{slicer_segment}", output_dir, table_details['schema_table'], con_snowflake)
-                    futures.append(futures)
-                concurrent.futures.wait(futures)
-    else:
-        yearly_filters = generate_yearly_segments(2021, current_year)
-        for year in yearly_filters:
-            with ProcessPoolExecutor(max_workers=4) as executor:
-                futures = []
-                base_clause = f"WHERE TO_CHAR({date_column}, 'YYYY') = '{year}'"
-                for slicer_segment in range(4): 
-                    where_clause = build_where_clause(base_clause, slicer_segment)
-                    print(f"==> Submitting job for {table_name} > {year}_{slicer_segment} > {where_clause} ")
-                    executor.submit(process_extraction, schema, table_name, where_clause, f"{year}_{slicer_segment}", output_dir, table_details['schema_table'], con_snowflake)
-                    futures.append(futures)
-                concurrent.futures.wait(futures)
+        base_clause = f"WHERE TO_CHAR({date_column}, 'YYYY{'' if granularity=='Y' else 'MM'}') = '{combination}'"
+        with ProcessPoolExecutor(max_workers=4) as executor:
+            futures = []
+            for slicer_segment in range(4):
+                where_clause = build_where_clause(base_clause, slicer_segment)
+                print(f"\t==> Queueing job for {table_name} > {combination}_{slicer_segment} > {where_clause} ")
+                future = executor.submit(process_extraction, schema, table_name, where_clause, f"{filter}_{slicer_segment}", output_dir, table_details['schema_table'], con_snowflake)
+                futures.append(future)
+                # process_extraction( schema, table_name, where_clause, f"{filter}_{slicer_segment}", output_dir, table_details['schema_table'], con_snowflake)
+            concurrent.futures.wait(futures)                
 
 
 def process_extraction( schema, table_name, where_clause, filter, output_dir, full_table_name, con_snowflake ):
-    print(f">>>> starting PROCESS_EXTRACTION for {table_name}")
+    print(f">>>>> PROCESS_EXTRACTION for {table_name} > {filter} > {where_clause}")
 
     setup_logging()
     try:
