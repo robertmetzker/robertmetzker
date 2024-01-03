@@ -116,7 +116,7 @@ def extract_tables_to_csv(table_details, output_dir, year, segment):
     
     conditions = []
     if date_column:
-        year_condition = f"< '2020'" if year == 'pre-2020' else f"= '{year}'"
+        year_condition = f"< '2020'" if year == 'PRE_2020' else f"= '{year}'"
         conditions.append(f"TO_CHAR({date_column}, 'YYYY') {year_condition}")
 
     if slicer_column:
@@ -125,7 +125,7 @@ def extract_tables_to_csv(table_details, output_dir, year, segment):
     where_clause = " AND ".join(conditions)
     where_clause = f" WHERE {where_clause}" if conditions else ""
 
-    year_str = 'pre-2020' if year == 'pre-2020' else str(year)
+    year_str = 'PRE_2020' if year == 'PRE_2020' else str(year)
     schema_dir = os.path.join(output_dir, schema, year_str)
     os.makedirs(schema_dir, exist_ok=True)
     segment_label = f"{year_str}_{segment+1:02}"
@@ -169,7 +169,7 @@ def main():
     tables = read_tables_from_csv(args.tables)
 
     current_year = datetime.now().year
-    years = ['pre-2020'] + list(range(2020, current_year + 1))
+    years = ['PRE_2020'] + list(range(2020, current_year + 1))
 
     if args.sf:
         con_snowflake = connect_to_snowflake()
