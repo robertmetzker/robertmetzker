@@ -83,10 +83,13 @@ def read_tables_from_csv(file_path):
         reader = csv.reader(f)
         next(reader, None)  # Skip the header row
         for row in reader:
-            schema_table = row[0]
-            date_column = row[1] if len(row) > 1 else None
-            slicer_column = row[2] if len(row) > 2 else None
-            tables.append({"schema_table": schema_table, "date_column": date_column, "slicer_column": slicer_column})
+            if row[0].startswith('#'): 
+                continue
+            else:
+                schema_table = row[0]
+                date_column = row[1] if len(row) > 1 else None
+                slicer_column = row[2] if len(row) > 2 else None
+                tables.append({"schema_table": schema_table, "date_column": date_column, "slicer_column": slicer_column})
 
     logging.info(f"... found {len(tables)} tables")
     return tables
@@ -151,25 +154,19 @@ def main():
     current_year = datetime.now().year
     con_snowflake = connect_to_snowflake() if args.sf else None
 
-    with ProcessPoolExecutor(max_workers=4) as executor:
-        futures = []
-        for table_details in tables:
-            if table_details['date_column']:
-                years = ['PRE_2020'] + list(range(2020, current_year + 1))
-                for year in years:
-                    if table_details['slicer_column']:
-                        for segment in range(4):
-                            future = executor.submit(extract_and_upload, table_details, args.output, year, segment, con_snowflake)
-                            futures.append(future)
-                    else:
-                        future = executor.submit(extract_and_upload, table_details, args.output, year, None, con_snowflake)
-                        futures.append(future)
-            else:
-                # Submit a single task for tables without a date/slicer column
-                future = executor.submit(extract_and_upload, table_details, args.output, None, None, con_snowflake)
-                futures.append(future)
-
-        concurrent.futures.wait(futures)
+    for table_details in tables:
+        logging.info(f"--- PROCESSING: {table_details}")
+        if table_details['date_column']:
+            years = ['PRE_2020'] + list(range(2020, current_year + 1))
+            for year in years:
+                if table_details['slicer_column']:
+                    with ProcessPoolExecutor(max_workers=4) as executor:
+                        futures = [executor.submit(extract_and_upload, table_details, args.output, year, segment, con_snowflake) for segment in range(4)]
+                        concurrent.futures.wait(futures)
+                else:
+                    extract_and_upload(table_details, args.output, year, None, con_snowflake)
+        else:
+            extract_and_upload(table_details, args.output, None, None, con_snowflake)
 
 if __name__ == "__main__":
     main()
