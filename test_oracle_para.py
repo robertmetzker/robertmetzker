@@ -144,6 +144,24 @@ def extract_tables_to_csv(table_details, output_dir, year, segment=None):
     logging.info(f"... written to {csv_file}")
     return csv_file, year, segment_str
 
+def process_table(table_details, year, args, con_snowflake):
+    logging.info(f"Processing {table_details} for {year}... ")
+    if table_details['slicer_column']:
+        with ProcessPoolExecutor(max_workers=4) as executor:
+            futures = [executor.submit(extract_tables_to_csv, table_details, args.output, year, segment) for segment in range(4)]
+            for future in concurrent.futures.as_completed(futures):
+                result = future.result()
+                if result and args.sf:
+                    csv_file, year_segment, slicer_segment = result
+                    df = pd.read_csv(csv_file)
+                    upload_file_to_snowflake(con_snowflake, df, csv_file, table_details['schema_table'], year_segment, slicer_segment)
+    else:
+        result = extract_tables_to_csv(table_details, args.output, year)
+        if result and args.sf:
+            csv_file, year_segment, _ = result
+            df = pd.read_csv(csv_file)
+            upload_file_to_snowflake(con_snowflake, df, csv_file, table_details['schema_table'], year_segment, None)
+
 
 def process_args():
     parser = argparse.ArgumentParser()
@@ -161,29 +179,19 @@ def main():
     init_oracle_client()
     tables = read_tables_from_csv(args.tables)
     current_year = datetime.now().year
-    years = ['PRE_2020'] + list(range(2020, current_year + 1))
 
     if args.sf:
         con_snowflake = connect_to_snowflake()
-    
+
     for table_details in tables:
-        for year in years:
-            logging.info(f"Processing {table_details} for {year}... ")
-            if table_details['slicer_column']:
-                with ProcessPoolExecutor(max_workers=4) as executor:
-                    futures = [executor.submit(extract_tables_to_csv, table_details, args.output, year, segment) for segment in range(4)]
-                    for future in concurrent.futures.as_completed(futures):
-                        result = future.result()
-                        if result and args.sf:
-                            csv_file, year_segment, slicer_segment = result
-                            df = pd.read_csv(csv_file)
-                            upload_file_to_snowflake(con_snowflake, df, csv_file, table_details['schema_table'], year_segment, slicer_segment)
-            else:
-                result = extract_tables_to_csv(table_details, args.output, year)
-                if result and args.sf:
-                    csv_file, year_segment, _ = result
-                    df = pd.read_csv(csv_file)
-                    upload_file_to_snowflake(con_snowflake, df, csv_file, table_details['schema_table'], year_segment, None)
+        if table_details['date_column']:
+            # Process for each year if there's a date column
+            years = ['PRE_2020'] + list(range(2020, current_year + 1))
+            for year in years:
+                process_table(table_details, year, args, con_snowflake)
+        else:
+            # Process only once if there's no date column
+            process_table(table_details, None, args, con_snowflake)
 
 
 
