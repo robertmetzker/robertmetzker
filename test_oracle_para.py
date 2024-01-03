@@ -7,7 +7,15 @@ import pandas as pd
 import oracledb
 import snowflake.connector
 
-logging.basicConfig(level=logging.INFO, format="%(processName)s - %(levelname)s - %(message)s")
+
+def setup_logging():
+    logging.basicConfig(
+        level = logging.INFO,
+        format="%(processName)s - %(levelname)s - %(message)s",
+        handlers=[logging.StreamHandler()]
+    )
+
+
 
 def decode_password(encoded_password):
     return base64.b64decode(encoded_password).decode()
@@ -22,8 +30,8 @@ def init_oracle_client():
         d = r"C:\temp\instantclient_19_21"
     oracledb.init_oracle_client(lib_dir=d)
 
+
 def connect_to_oracle():
-    init_oracle_client()
     user = "RAC_ACCNT"
     dsn = "(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=diatmlckidb01.tmlc.ras)(PORT=1522))(CONNECT_DATA=(SERVICE_NAME=DMLCKI)(INSTANCE_NAME=DMLCKI)))"
     pw = "kVysh_Ast04r"
@@ -47,6 +55,8 @@ def connect_to_snowflake():
     return sfcon
 
 def upload_file_to_snowflake(sfcon, df, file_path, table_name, year, slicer):
+    print(f">>>> starting UPLOAD_FILE_TO_SNOWFLAKE for {table_name}")
+
     file_format = """file_format = (type = csv field_delimiter = ',' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"')"""
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     phys_table_parts = [table_name.replace('.', '_')]
@@ -76,6 +86,7 @@ def upload_file_to_snowflake(sfcon, df, file_path, table_name, year, slicer):
     logging.info(f"\t... copied into {phys_table}")
 
 def read_tables_from_csv(file_path):
+    print(">>> READING TABLES FROM CSV")
     logging.info(f"=== Reading tables from csv: {file_path} ")
     tables = []
 
@@ -96,6 +107,8 @@ def read_tables_from_csv(file_path):
     return tables
 
 def extract_and_upload(table_details, output_dir, con_snowflake):
+    print(f">>>> STARTING EXTRACT AND UPLOAD: {table_details}")
+
     schema, table_name = table_details['schema_table'].split(".")
     date_column = table_details['date_column']
     slicer_column = table_details['slicer_column']
@@ -116,52 +129,62 @@ def extract_and_upload(table_details, output_dir, con_snowflake):
                     continue  #ignore future stuff for now
 
                 base_clause = f"WHERE TO_CHAR({date_column}, 'YYYYMM') = '{filter}'"            
-                if slicer_column:
-                    for slicer_segment in range(4):
-                        where_clause = build_where_clause( base_clause, slicer_segment )
-                        # logging.info(f"==> {table_details}:{where_clause}")
-                        executor.submit( process_extraction, schema, table_name, where_clause, f"{filter}_{slicer_segment}", output_dir, table_details['schema_table'], con_snowflake )
+                for slicer_segment in range(4):
+                    where_clause = build_where_clause( base_clause, slicer_segment )
+                    print(f"==> Submitting job for {table_name} > {filter}_{slicer_segment} > {where_clause} ")
+                    # logging.info(f"==> {table_details}:{where_clause}")
+                    # executor.submit( process_extraction, schema, table_name, where_clause, f"{filter}_{slicer_segment}", output_dir, table_details['schema_table'], con_snowflake )
+                    process_extraction( schema, table_name, where_clause, f"{filter}_{slicer_segment}", output_dir, table_details['schema_table'], con_snowflake )
         else:
             yearly_filters = generate_yearly_segments(2021, current_year)
             for year in yearly_filters:
                 where_clause = f"WHERE TO_CHAR({date_column}, 'YYYY') = '{year}'"
-                if slicer_column:
-                    for slicer_segment in range(4): 
-                        where_clause = build_where_clause( base_clause, slicer_segment )
-                        # logging.info(f"==> {table_details}:{where_clause}")
-                        executor.submit( process_extraction, schema, table_name, where_clause, filter, output_dir, table_details['schema_table'], con_snowflake )
+                for slicer_segment in range(4): 
+                    where_clause = build_where_clause( base_clause, slicer_segment )
+                    print(f"==> Submitting job for {table_name} > {filter}_{slicer_segment} > {where_clause} ")
+                    # logging.info(f"==> {table_details}:{where_clause}")
+                    # executor.submit( process_extraction, schema, table_name, where_clause, filter, output_dir, table_details['schema_table'], con_snowflake )
+                    process_extraction( schema, table_name, where_clause, filter, output_dir, table_details['schema_table'], con_snowflake )
 
 
 def process_extraction( schema, table_name, where_clause, filter, output_dir, full_table_name, con_snowflake ):
-    logging.info(f"PROCESSING EXTRACTION OF {schema}.{table_name} to {csv_file_name} \n\tUSING: {query}") 
+    print(f">>>> starting PROCESS_EXTRACTION for {table_name}")
 
-    filter_dir = filter[:4] if len(filter) == 6 else filter     # Parse out the year portion
-    schema_dir = os.path.join( output_dir, schema, filter_dir )
-    os.makedirs(schema_dir, exist_ok=True)
-
-    csv_file_name = f"{table_name}_{filter}.csv" if filter else f"{table_name}.csv"
-    csv_file = os.path.join(schema_dir, csv_file_name )
-
-    query = f"SELECT * FROM {schema}.{table_name} {where_clause}"
-    logging.info(f"Extracting {schema}.{table_name} for {csv_file_name} \n\tUSING: {query}") 
-
+    setup_logging()
     try:
-        con = connect_to_oracle()
-        df = pd.read_sql(query, con)
-        df.to_csv( csv_file, index=False)
-        logging.info(f"... written to {csv_file}")
+        filter_dir = filter[:4] if len(filter) > 4  else filter     # Parse out the year portion
+        schema_dir = os.path.join( output_dir, schema, filter_dir )
+        os.makedirs(schema_dir, exist_ok=True)
 
-        if con_snowflake:
-            upload_file_to_snowflake( con_snowflake, df, csv_file, full_table_name, filter)
+        csv_file_name = f"{table_name}_{filter}.csv" if filter else f"{table_name}.csv"
+        csv_file = os.path.join(schema_dir, csv_file_name )
+
+        query = f"SELECT * FROM {schema}.{table_name} {where_clause}"
+        # logging.info(f"PROCESSING EXTRACTION OF {schema}.{table_name} to {csv_file_name} \n\tUSING: {query}") 
+        logging.info(f"Extracting {schema}.{table_name} for {csv_file_name} \n\tUSING: {query}") 
+
+        try:
+            con = connect_to_oracle()
+            df = pd.read_sql(query, con)
+            df.to_csv( csv_file, index=False)
+            logging.info(f"... written to {csv_file}")
+
+            if con_snowflake:
+                upload_file_to_snowflake( con_snowflake, df, csv_file, full_table_name, filter)
+        except Exception as e:
+            logging.error(f"Error: {e}")
+            return
+
     except Exception as e:
-        logging.error(f"Error: {e}")
-        return
-    
+        logging.error(f"!!! ERROR in the Process Extraction: {e}")
+
 
 def generate_yearly_segments(start_year, end_year):
+    print(f">>>> GENERATING YEARLY SEGMENTS BETWEEN {start_year} and {end_year}")
     return [ str(year) for year in range(start_year, end_year+1)]
 
 def generate_monthly_segments(start_year, end_year):
+    print(f">>>> GENERATING MONTHLY SEGMENTS BETWEEN {start_year} and {end_year}")
     return [ f"{year}{month:02}" for year in range(start_year, end_year+1) for month in range(1,13)]
 
 
@@ -174,15 +197,16 @@ def process_args():
     return args
 
 def main():
+    print(">> STARTING MAIN")
     args = process_args()
     init_oracle_client()
     tables = read_tables_from_csv(args.tables)
-    current_year = datetime.now().year
     con_snowflake = connect_to_snowflake() if args.sf else None
 
     for table_details in tables:
         logging.info(f"--- PROCESSING: {table_details}")
         extract_and_upload(table_details, args.output, con_snowflake)
+        logging.info(f"--- COMPLETED: {table_details}")
 
 if __name__ == "__main__":
     main()
