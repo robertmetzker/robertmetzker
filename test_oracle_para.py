@@ -151,18 +151,25 @@ def main():
     current_year = datetime.now().year
     con_snowflake = connect_to_snowflake() if args.sf else None
 
-    for table_details in tables:
-        if table_details['date_column']:
-            years = ['PRE_2020'] + list(range(2020, current_year + 1))
-            for year in years:
-                if table_details['slicer_column']:
-                    with ProcessPoolExecutor(max_workers=4) as executor:
-                        futures = [executor.submit(extract_and_upload, table_details, args.output, year, segment, con_snowflake) for segment in range(4)]
-                        concurrent.futures.wait(futures)
-                else:
-                    extract_and_upload(table_details, args.output, year, None, con_snowflake)
-        else:
-            extract_and_upload(table_details, args.output, None, None, con_snowflake)
+    with ProcessPoolExecutor(max_workers=4) as executor:
+        futures = []
+        for table_details in tables:
+            if table_details['date_column']:
+                years = ['PRE_2020'] + list(range(2020, current_year + 1))
+                for year in years:
+                    if table_details['slicer_column']:
+                        for segment in range(4):
+                            future = executor.submit(extract_and_upload, table_details, args.output, year, segment, con_snowflake)
+                            futures.append(future)
+                    else:
+                        future = executor.submit(extract_and_upload, table_details, args.output, year, None, con_snowflake)
+                        futures.append(future)
+            else:
+                # Submit a single task for tables without a date/slicer column
+                future = executor.submit(extract_and_upload, table_details, args.output, None, None, con_snowflake)
+                futures.append(future)
+
+        concurrent.futures.wait(futures)
 
 if __name__ == "__main__":
     main()
