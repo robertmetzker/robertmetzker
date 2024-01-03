@@ -135,9 +135,9 @@ def extract_and_upload(table_details, output_dir, con_snowflake):
             for slicer_segment in range(4):
                 where_clause = build_where_clause(base_clause, slicer_segment)
                 print(f"\t==> Queueing job for {table_name} > {combination}_{slicer_segment} > {where_clause} ")
-                future = executor.submit(process_extraction, schema, table_name, where_clause, f"{filter}_{slicer_segment}", output_dir, table_details['schema_table'], con_snowflake)
+                future = executor.submit(process_extraction, schema, table_name, where_clause, f"{combination}_{slicer_segment}", output_dir, table_details['schema_table'] )
                 futures.append(future)
-                # process_extraction( schema, table_name, where_clause, f"{filter}_{slicer_segment}", output_dir, table_details['schema_table'], con_snowflake)
+                # process_extraction( schema, table_name, where_clause, f"{combination}_{slicer_segment}", output_dir, table_details['schema_table'], con_snowflake)
             concurrent.futures.wait(futures)                
 
         for future in futures:
@@ -145,15 +145,18 @@ def extract_and_upload(table_details, output_dir, con_snowflake):
                 print(f"!!!! Exception: {str(future.exception()) }")
                 logging.error("A Task encountered an Exception")
 
-def process_extraction( schema, table_name, where_clause, filter, output_dir, full_table_name, con_snowflake ):
-    print(f">>>>> PROCESS_EXTRACTION for {table_name} > {filter} > {where_clause}")
+def process_extraction( schema, table_name, where_clause, filter, output_dir, full_table_name ):
+    print(f">>>>> PROCESS_EXTRACTION for {table_name} > {str(filter)} > {where_clause}")
 
     setup_logging()
     try:
+        con = connect_to_oracle()
+        con_snowflake = connect_to_snowflake()
 
         filter_dir = filter[:4] if len(filter) > 4  else filter     # Parse out the year portion
         schema_dir = os.path.join( output_dir, schema, filter_dir )
         os.makedirs(schema_dir, exist_ok=True)
+
         year, slicer = (filter.split('_') + [None])[:2] if '_' in filter else (filter, None)
 
         csv_file_name = f"{table_name}_{filter}.csv" if filter else f"{table_name}.csv"
@@ -163,25 +166,19 @@ def process_extraction( schema, table_name, where_clause, filter, output_dir, fu
         # logging.info(f"PROCESSING EXTRACTION OF {schema}.{table_name} to {csv_file_name} \n\tUSING: {query}") 
         logging.info(f"Extracting {schema}.{table_name} for {csv_file_name} \n\tUSING: {query}") 
 
-        try:
-            con = connect_to_oracle()
-            con_snowflake = connect_to_snowflake()
+        df = pd.read_sql(query, con)
+        df.to_csv( csv_file, index=False)
+        logging.info(f"... written to {csv_file}")
 
-            df = pd.read_sql(query, con)
-            df.to_csv( csv_file, index=False)
-            logging.info(f"... written to {csv_file}")
-
-            if con_snowflake:
-                upload_file_to_snowflake(con_snowflake, df, csv_file, full_table_name, year, slicer)
-        except Exception as e:
-            logging.error(f"Error in process_extraction: {e}")
-            return
-        finally:
-            con.close()
-            con_snowflake.close()
+        upload_file_to_snowflake(con_snowflake, df, csv_file, full_table_name, year, slicer)
 
     except Exception as e:
-        logging.error(f"!!! ERROR in the Process Extraction: {e}")
+        logging.error(f"Error in process_extraction: {e}")
+        return
+    finally:
+        con.close()
+        con_snowflake.close()
+
 
 
 def generate_yearly_segments(start_year, end_year):
