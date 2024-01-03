@@ -128,20 +128,26 @@ def extract_and_upload(table_details, output_dir, con_snowflake):
                 continue  #ignore future months
 
             with ProcessPoolExecutor(max_workers=4) as executor:
+                futures = []
                 base_clause = f"WHERE TO_CHAR({date_column}, 'YYYYMM') = '{filter}'"            
                 for slicer_segment in range(4):
                     where_clause = build_where_clause(base_clause, slicer_segment)
                     print(f"==> Submitting job for {table_name} > {filter}_{slicer_segment} > {where_clause} ")
                     executor.submit(process_extraction, schema, table_name, where_clause, f"{filter}_{slicer_segment}", output_dir, table_details['schema_table'], con_snowflake)
+                    futures.append(futures)
+                concurrent.futures.wait(futures)
     else:
         yearly_filters = generate_yearly_segments(2021, current_year)
         for year in yearly_filters:
             with ProcessPoolExecutor(max_workers=4) as executor:
+                futures = []
                 base_clause = f"WHERE TO_CHAR({date_column}, 'YYYY') = '{year}'"
                 for slicer_segment in range(4): 
                     where_clause = build_where_clause(base_clause, slicer_segment)
                     print(f"==> Submitting job for {table_name} > {year}_{slicer_segment} > {where_clause} ")
                     executor.submit(process_extraction, schema, table_name, where_clause, f"{year}_{slicer_segment}", output_dir, table_details['schema_table'], con_snowflake)
+                    futures.append(futures)
+                concurrent.futures.wait(futures)
 
 
 def process_extraction( schema, table_name, where_clause, filter, output_dir, full_table_name, con_snowflake ):
