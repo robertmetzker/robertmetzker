@@ -108,48 +108,41 @@ def read_tables_from_csv(file_path):
     print(f"... found {len(tables)} tables")
     return tables
 
-def extract_tables_to_csv(table_details, output_dir, year, segment):
-
+def extract_tables_to_csv(table_details, output_dir, year, segment=None):
     schema, table_name = table_details['schema_table'].split(".")
     date_column = table_details['date_column']
     slicer_column = table_details['slicer_column']
-    
     conditions = []
+    
     if date_column:
         year_condition = f"< '2020'" if year == 'PRE_2020' else f"= '{year}'"
         conditions.append(f"TO_CHAR({date_column}, 'YYYY') {year_condition}")
-
-    if slicer_column:
+    if slicer_column and segment is not None:
         conditions.append(f"MOD({slicer_column}, 4) = {segment}")
-
+    
     where_clause = " AND ".join(conditions)
     where_clause = f" WHERE {where_clause}" if conditions else ""
-
     year_str = 'PRE_2020' if year == 'PRE_2020' else str(year)
+    
     schema_dir = os.path.join(output_dir, schema, year_str)
     os.makedirs(schema_dir, exist_ok=True)
-    segment_label = f"{year_str}_{segment+1:02}"
-    segment_str = f"{segment+1:02}"
+    segment_label = f"{year_str}_{segment+1:02}" if segment is not None else year_str
+    segment_str = f"{segment+1:02}" if segment is not None else ""
     csv_file = os.path.join(schema_dir, f"{table_name}_{segment_label}.csv")
-
-    query = f"SELECT * FROM {schema}.{table_name} {where_clause}"
     
-    # print(f"=> Extracting {schema}.{table_name} for {segment_label}")
-    logging.info( f"Extracting {schema}.{table_name} for {segment_label} \n\tUSING: {query}" ) 
+    query = f"SELECT * FROM {schema}.{table_name} {where_clause}"
+    logging.info(f"Extracting {schema}.{table_name} for {segment_label} \n\tUSING: {query}") 
+    
     try:
-        #create an oracle connection here instead of being passed one.
         con = connect_to_oracle()
         df = pd.read_sql(query, con)
     except Exception as e:
-        # print(f"Error: {e}")
         logging.error(f"Error: {e}")
         return None
-
+    
     df.to_csv(csv_file, index=False)
-    # print(f"... written to {csv_file}")
     logging.info(f"... written to {csv_file}")
-
-    return csv_file, year, segment_str 
+    return csv_file, year, segment_str
 
 
 def process_args():
@@ -167,25 +160,30 @@ def main():
     args = process_args()
     init_oracle_client()
     tables = read_tables_from_csv(args.tables)
-
     current_year = datetime.now().year
     years = ['PRE_2020'] + list(range(2020, current_year + 1))
 
     if args.sf:
         con_snowflake = connect_to_snowflake()
-
+    
     for table_details in tables:
         for year in years:
             logging.info(f"Processing {table_details} for {year}... ")
-            with ProcessPoolExecutor(max_workers=4) as executor:
-                futures = [executor.submit(extract_tables_to_csv, table_details, args.output, year, segment) for segment in range(4)]
-                for future in concurrent.futures.as_completed(futures):
-                    result = future.result()
-                    if result and args.sf:
-                        csv_file, year_segment, slicer_segment = result
-                        df = pd.read_csv(csv_file)
-                        upload_file_to_snowflake(con_snowflake, df, csv_file, table_details['schema_table'], year_segment, slicer_segment)
-
+            if table_details['slicer_column']:
+                with ProcessPoolExecutor(max_workers=4) as executor:
+                    futures = [executor.submit(extract_tables_to_csv, table_details, args.output, year, segment) for segment in range(4)]
+                    for future in concurrent.futures.as_completed(futures):
+                        result = future.result()
+                        if result and args.sf:
+                            csv_file, year_segment, slicer_segment = result
+                            df = pd.read_csv(csv_file)
+                            upload_file_to_snowflake(con_snowflake, df, csv_file, table_details['schema_table'], year_segment, slicer_segment)
+            else:
+                result = extract_tables_to_csv(table_details, args.output, year)
+                if result and args.sf:
+                    csv_file, year_segment, _ = result
+                    df = pd.read_csv(csv_file)
+                    upload_file_to_snowflake(con_snowflake, df, csv_file, table_details['schema_table'], year_segment, None)
 
 
 
