@@ -138,7 +138,7 @@ def extract_and_upload(args, table_details, output_dir, con_snowflake):
         for combination in combinations:
             if granularity == 'YM'  and int(combination) > int(f"{current_year}{current_month:02}"):
                 continue  #ignore future months
-            base_clause = f""" WHERE {f" {filter_using} AND " if filter_using is not None else ' ' }"""
+            base_clause = f""" WHERE {f" {filter_using} AND " if filter_using else ' ' }"""
             base_clause += f" TO_CHAR({date_column}, 'YYYY{'' if granularity=='Y' else 'MM'}') = '{combination}' "
         
             with ProcessPoolExecutor(max_workers= args.p) as executor:
