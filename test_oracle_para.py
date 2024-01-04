@@ -1,4 +1,4 @@
-import getpass, platform, csv, os, argparse, base64, logging
+import getpass, platform, csv, os, argparse, base64, logging, warnings
 from datetime import datetime
 import concurrent.futures
 from concurrent.futures import ProcessPoolExecutor
@@ -40,8 +40,8 @@ def connect_to_oracle():
     pw = decode_password(pw)
 
     con = oracledb.connect(user=user, password=pw, dsn=dsn)
-    print(f"Connected to Oracle: {dsn}")
-    logging.info("Connected to Oracle.")
+    # print(f"Connected to Oracle: {dsn}")
+    logging.info(f"Connected to Oracle: {dsn}")
     return con
 
 def connect_to_snowflake():
@@ -58,12 +58,14 @@ def connect_to_snowflake():
     logging.info("Connected to Snowflake.")
     return sfcon
 
-def upload_file_to_snowflake(sfcon, df, file_path, table_name, year, slicer):
+def upload_file_to_snowflake(sfcon, args, df, file_path, table_name, year, slicer):
     print(f">>>> starting UPLOAD_FILE_TO_SNOWFLAKE for {table_name}")
 
     file_format = """file_format = (type = csv field_delimiter = ',' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"')"""
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     phys_table_parts = [table_name.replace('.', '_')]
+
+    stg = args.output if args.output else 'oracle_stage'
 
     if year:
         phys_table_parts.append(str(year))
@@ -76,18 +78,18 @@ def upload_file_to_snowflake(sfcon, df, file_path, table_name, year, slicer):
     with sfcon.cursor() as cur:
         cur.execute("USE SCHEMA RAC_ACCNT")
         cur.execute("USE WAREHOUSE PLAYGROUND_WH")
-        cur.execute(f"CREATE STAGE IF NOT EXISTS oracle_stage FILE_FORMAT = (TYPE='CSV')")
-        cur.execute(f"PUT file://{file_path} @~/oracle_stage auto_compress=true;")
+        cur.execute(f"CREATE STAGE IF NOT EXISTS {stg} FILE_FORMAT = (TYPE='CSV')")
+        cur.execute(f"PUT file://{file_path} @~/{stg} auto_compress=true;")
 
         type_mapping = {'object': 'text', 'int64': 'number', 'float64': 'float', 'datetime64[ns]': 'timestamp'}
         columns = ', '.join([f"{col} {type_mapping[str(df[col].dtype)]}" for col in df.columns])
         create_sql = f"CREATE OR REPLACE TABLE {phys_table} ({columns});"
-        print(f"--> {create_sql}")
+        print(f"--> {create_sql[0:80]}...")
         logging.info(f"--> {create_sql}")
         cur.execute(create_sql)
 
-        sql = f"""COPY INTO PLAYGROUND.RAC_ACCNT.{phys_table} from @~/oracle_stage/{phys_table} {file_format} on_error='continue'; """
-        print(f'---> {sql}')
+        sql = f"""COPY INTO PLAYGROUND.RAC_ACCNT.{phys_table} from @~/{stg}/{phys_table} {file_format} on_error='continue'; """
+        print(f'---> {sql[0:80]}...')
         logging.info(f'---> {sql}')
         cur.execute(sql)
     print(f"\t... copied into {phys_table}: {sql}")
@@ -102,7 +104,7 @@ def read_tables_from_csv(file_path):
         reader = csv.reader(f)
         next(reader, None)  # Skip the header row
         for row in reader:
-            if row[0].startswith('#'): 
+            if not row or row[0].startswith('#'): 
                 continue
             else:
                 schema_table = row[0]
@@ -116,7 +118,7 @@ def read_tables_from_csv(file_path):
     return tables
 
 def extract_and_upload(args, table_details, output_dir, con_snowflake):
-    print(f">>>> STARTING EXTRACT AND UPLOAD: {table_details}")
+    print(f"\n>>>> STARTING EXTRACT AND UPLOAD: {table_details}")
 
     schema, table_name = table_details['schema_table'].split(".")
     date_column = table_details['date_column']
@@ -175,14 +177,16 @@ def process_extraction( args, schema, table_name, where_clause, filter, output_d
         print(f"Extracting {schema}.{table_name} for {csv_file_name} \n\tUSING: {query}") 
         logging.info(f"Extracting {schema}.{table_name} for {csv_file_name} \n\tUSING: {query}") 
 
-        df = pd.read_sql(query, con)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=UserWarning)
+            df = pd.read_sql(query, con)
         df.to_csv( csv_file, index=False)
         print(f"... written to {csv_file}")
         logging.info(f"... written to {csv_file}")
 
         if args.sf:
             con_snowflake = connect_to_snowflake()
-            upload_file_to_snowflake(con_snowflake, df, csv_file, full_table_name, year, slicer)
+            upload_file_to_snowflake(con_snowflake, args, df, csv_file, full_table_name, year, slicer)
 
     except Exception as e:
         print(f"Error in process_extraction: {e}")
@@ -231,5 +235,4 @@ if __name__ == "__main__":
     main()
 
 
-# python test-oracle-para.py -t tables.csv -o outputs 
-# python test-oracle-para.py -t tables.csv -o outputs -p 4 --sf
+# python test_oracle_para.py -t biapp-tables.csv -o output -p 4 --sf
