@@ -158,7 +158,6 @@ def process_extraction( args, schema, table_name, where_clause, filter, output_d
     setup_logging()
     try:
         con = connect_to_oracle()
-        con_snowflake = connect_to_snowflake()
 
         filter_dir = filter[:4] if len(filter) > 4  else filter     # Parse out the year portion
         schema_dir = os.path.join( output_dir, schema, filter_dir )
@@ -179,6 +178,7 @@ def process_extraction( args, schema, table_name, where_clause, filter, output_d
         logging.info(f"... written to {csv_file}")
 
         if args.sf:
+            con_snowflake = connect_to_snowflake()
             upload_file_to_snowflake(con_snowflake, df, csv_file, full_table_name, year, slicer)
 
     except Exception as e:
