@@ -15,8 +15,6 @@ def setup_logging():
         handlers=[logging.StreamHandler()]
     )
 
-
-
 def decode_password(encoded_password):
     return base64.b64decode(encoded_password).decode()
 
@@ -34,9 +32,11 @@ def init_oracle_client():
 def connect_to_oracle():
     user = "RAC_ACCNT"
     dsn = "(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=diatmlckidb01.tmlc.ras)(PORT=1522))(CONNECT_DATA=(SERVICE_NAME=DMLCKI)(INSTANCE_NAME=DMLCKI)))"
-    pw = "kVysh_Ast04r"
+    pw = 'a1Z5c2hfQXN0MDRy'.encode("ascii")
+    pw = decode_password(pw)
 
     con = oracledb.connect(user=user, password=pw, dsn=dsn)
+    print(f"Connected to Oracle: {dsn}")
     logging.info("Connected to Oracle.")
     return con
 
@@ -155,7 +155,6 @@ def extract_and_upload(args, table_details, output_dir, con_snowflake):
 def process_extraction( args, schema, table_name, where_clause, filter, output_dir, full_table_name ):
     print(f">>>>> PROCESS_EXTRACTION for {table_name} > {str(filter)} > {where_clause}")
 
-    setup_logging()
     try:
         con = connect_to_oracle()
 
