@@ -58,14 +58,12 @@ def connect_to_snowflake():
     logging.info("Connected to Snowflake.")
     return sfcon
 
-def upload_file_to_snowflake(sfcon, args, df, file_path, table_name, year, slicer):
+def upload_file_to_snowflake(sfcon, df, file_path, table_name, year, slicer):
     print(f">>>> starting UPLOAD_FILE_TO_SNOWFLAKE for {table_name}")
 
     file_format = """file_format = (type = csv field_delimiter = ',' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"')"""
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     phys_table_parts = [table_name.replace('.', '_')]
-
-    stg = args.output if args.output else 'oracle_stage'
 
     if year:
         phys_table_parts.append(str(year))
@@ -78,21 +76,21 @@ def upload_file_to_snowflake(sfcon, args, df, file_path, table_name, year, slice
     with sfcon.cursor() as cur:
         cur.execute("USE SCHEMA RAC_ACCNT")
         cur.execute("USE WAREHOUSE PLAYGROUND_WH")
-        cur.execute(f"CREATE STAGE IF NOT EXISTS {stg} FILE_FORMAT = (TYPE='CSV')")
-        cur.execute(f"PUT file://{file_path} @~/{stg} auto_compress=true;")
+        cur.execute(f"CREATE STAGE IF NOT EXISTS oracle_stage FILE_FORMAT = (TYPE='CSV')")
+        cur.execute(f"PUT file://{file_path} @~/oracle_stage auto_compress=true;")
 
         type_mapping = {'object': 'text', 'int64': 'number', 'float64': 'float', 'datetime64[ns]': 'timestamp'}
         columns = ', '.join([f"{col} {type_mapping[str(df[col].dtype)]}" for col in df.columns])
         create_sql = f"CREATE OR REPLACE TABLE {phys_table} ({columns});"
-        print(f"--> {create_sql[0:80]}...")
+        print(f"--> {create_sql[0:120]}...")
         logging.info(f"--> {create_sql}")
         cur.execute(create_sql)
 
-        sql = f"""COPY INTO PLAYGROUND.RAC_ACCNT.{phys_table} from @~/{stg}/{phys_table} {file_format} on_error='continue'; """
-        print(f'---> {sql[0:80]}...')
+        sql = f"""COPY INTO PLAYGROUND.RAC_ACCNT.{phys_table} from @~/oracle_stage/{phys_table} {file_format} on_error='continue'; """
+        print(f'---> {sql[0:120]}...')
         logging.info(f'---> {sql}')
         cur.execute(sql)
-    print(f"\t... copied into {phys_table}: {sql}")
+    print(f"\t... copied into {phys_table}: {sql[0:120]}...")
     logging.info(f"\t... copied into {phys_table}")
 
 def read_tables_from_csv(file_path):
@@ -101,17 +99,18 @@ def read_tables_from_csv(file_path):
     tables = []
 
     with open(file_path, 'r') as f:
-        reader = csv.reader(f)
+        reader = csv.reader(f, quoting=csv.QUOTE_MINIMAL )
         next(reader, None)  # Skip the header row
         for row in reader:
             if not row or row[0].startswith('#'): 
                 continue
             else:
                 schema_table = row[0]
-                date_column = row[1] if len(row) > 1 else None
-                slicer_column = row[2] if len(row) > 2 else None
-                granularity = row[3] if len(row) > 3 else 'Y'
-                tables.append({"schema_table": schema_table, "date_column": date_column, "slicer_column": slicer_column, "granularity": granularity})
+                filter_using = row[1] if len(row) > 1 else None
+                date_column = row[2] if len(row) > 2 else None
+                slicer_column = row[3] if len(row) > 3 else None
+                granularity = row[4] if len(row) > 4 else 'Y'
+                tables.append({"schema_table": schema_table, "filter_using": filter_using, "date_column": date_column, "slicer_column": slicer_column, "granularity": granularity})
 
     print(f"... found {len(tables)} tables")
     logging.info(f"... found {len(tables)} tables")
@@ -124,6 +123,7 @@ def extract_and_upload(args, table_details, output_dir, con_snowflake):
     date_column = table_details['date_column']
     slicer_column = table_details['slicer_column']
     granularity = table_details['granularity']
+    filter_using = table_details['filter_using']
 
     current_year = datetime.now().year
     current_month = datetime.now().month
@@ -138,7 +138,8 @@ def extract_and_upload(args, table_details, output_dir, con_snowflake):
         for combination in combinations:
             if granularity == 'YM'  and int(combination) > int(f"{current_year}{current_month:02}"):
                 continue  #ignore future months
-            base_clause = f"WHERE TO_CHAR({date_column}, 'YYYY{'' if granularity=='Y' else 'MM'}') = '{combination}'"
+            base_clause = f""" WHERE {f" {filter_using}" if filter_using is not None else ' ' }"""
+            base_clause += f" AND TO_CHAR({date_column}, 'YYYY{'' if granularity=='Y' else 'MM'}') = '{combination}' "
         
             with ProcessPoolExecutor(max_workers= args.p) as executor:
                 futures = []
@@ -180,13 +181,16 @@ def process_extraction( args, schema, table_name, where_clause, filter, output_d
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=UserWarning)
             df = pd.read_sql(query, con)
-        df.to_csv( csv_file, index=False)
-        print(f"... written to {csv_file}")
-        logging.info(f"... written to {csv_file}")
+        if not df.empty:
+            df.to_csv( csv_file, index=False)
+            print(f"... written to {csv_file}")
+            logging.info(f"... written to {csv_file}")
 
-        if args.sf:
-            con_snowflake = connect_to_snowflake()
-            upload_file_to_snowflake(con_snowflake, args, df, csv_file, full_table_name, year, slicer)
+            if args.sf:
+                con_snowflake = connect_to_snowflake()
+                upload_file_to_snowflake(con_snowflake, df, csv_file, full_table_name, year, slicer)
+        else:
+            print(f":: NO rows generated for {table_name}_{filter}")
 
     except Exception as e:
         print(f"Error in process_extraction: {e}")
@@ -235,4 +239,5 @@ if __name__ == "__main__":
     main()
 
 
-# python test_oracle_para.py -t biapp-tables.csv -o output -p 4 --sf
+# python test-oracle-para.py -t tables.csv -o outputs 
+# python test-oracle-para.py -t missed.csv -o outputs -p 4 --sf
