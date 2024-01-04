@@ -7,6 +7,10 @@ import pandas as pd
 import oracledb
 import snowflake.connector
 
+# Per Thick Client requirements: https://python-oracledb.readthedocs.io/en/latest/user_guide/troubleshooting.html#dpy-4011
+# trying to this and INIT_ORACLE_CLIENT call to thick client libraries:
+# https://python-oracledb.readthedocs.io/en/latest/user_guide/initialization.html#enablingthick
+oracledb.init_oracle_client(lib_dir=r"C:\temp\instantclient_19_21")
 
 def setup_logging():
     logging.basicConfig(
@@ -134,7 +138,7 @@ def extract_and_upload(args, table_details, output_dir, con_snowflake):
                 continue  #ignore future months
             base_clause = f"WHERE TO_CHAR({date_column}, 'YYYY{'' if granularity=='Y' else 'MM'}') = '{combination}'"
         
-            with ProcessPoolExecutor(max_workers=1) as executor:
+            with ProcessPoolExecutor(max_workers= args.p) as executor:
                 futures = []
                 for slicer_segment in range(4):
                     where_clause = build_where_clause(base_clause, slicer_segment)
@@ -202,9 +206,13 @@ def generate_monthly_segments(start_year, end_year):
 def process_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-o','--output', help='Output directory', required=True)
+    parser.add_argument('-p', help='Parallel- 0-5, number of concurrent connections', required=False)
     parser.add_argument('-t','--tables', help='Comma separated list of tables to extract', required=True)
     parser.add_argument('--sf', action='store_true', help='If set, load tables into SF')
     args = parser.parse_args()
+
+    args.p = 1 if not args.p else int( args.p )
+
     return args
 
 def main():
@@ -224,4 +232,4 @@ if __name__ == "__main__":
 
 
 # python test-oracle-para.py -t tables.csv -o outputs 
-# python test-oracle-para.py -t tables.csv -o outputs --sf
+# python test-oracle-para.py -t tables.csv -o outputs -p 4 --sf
