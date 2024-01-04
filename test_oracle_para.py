@@ -78,10 +78,12 @@ def upload_file_to_snowflake(sfcon, df, file_path, table_name, year, slicer):
         type_mapping = {'object': 'text', 'int64': 'number', 'float64': 'float', 'datetime64[ns]': 'timestamp'}
         columns = ', '.join([f"{col} {type_mapping[str(df[col].dtype)]}" for col in df.columns])
         create_sql = f"CREATE OR REPLACE TABLE {phys_table} ({columns});"
+        print(f"--> {create_sql}")
         logging.info(f"--> {create_sql}")
         cur.execute(create_sql)
 
         sql = f"""COPY INTO PLAYGROUND.RAC_ACCNT.{phys_table} from @~/oracle_stage/{phys_table} {file_format} on_error='continue'; """
+        print(f'---> {sql}')
         logging.info(f'---> {sql}')
         cur.execute(sql)
     print(f"\t... copied into {phys_table}: {sql}")
@@ -89,7 +91,7 @@ def upload_file_to_snowflake(sfcon, df, file_path, table_name, year, slicer):
 
 def read_tables_from_csv(file_path):
     print(">>> READING TABLES FROM CSV")
-    logging.info(f"=== Reading tables from csv: {file_path} ")
+    print(f"=== Reading tables from csv: {file_path} ")
     tables = []
 
     with open(file_path, 'r') as f:
@@ -105,10 +107,11 @@ def read_tables_from_csv(file_path):
                 granularity = row[3] if len(row) > 3 else 'Y'
                 tables.append({"schema_table": schema_table, "date_column": date_column, "slicer_column": slicer_column, "granularity": granularity})
 
+    print(f"... found {len(tables)} tables")
     logging.info(f"... found {len(tables)} tables")
     return tables
 
-def extract_and_upload(table_details, output_dir, con_snowflake):
+def extract_and_upload(args, table_details, output_dir, con_snowflake):
     print(f">>>> STARTING EXTRACT AND UPLOAD: {table_details}")
 
     schema, table_name = table_details['schema_table'].split(".")
@@ -123,29 +126,33 @@ def extract_and_upload(table_details, output_dir, con_snowflake):
         slicer_clause = f" AND MOD({slicer_column},4) = {slicer_segment}" if slicer_column else ""
         return f"{base_clause}{slicer_clause}"
 
-    combinations = generate_monthly_segments(2021, current_year) if granularity =='YM' else generate_yearly_segments(2021, current_year) 
+    if date_column:
+        combinations = generate_monthly_segments(2021, current_year) if granularity =='YM' else generate_yearly_segments(2021, current_year) 
 
-    for combination in combinations:
-        if granularity == 'YM'  and int(combination) > int(f"{current_year}{current_month:02}"):
-            continue  #ignore future months
-        base_clause = f"WHERE TO_CHAR({date_column}, 'YYYY{'' if granularity=='Y' else 'MM'}') = '{combination}'"
-    
-        with ProcessPoolExecutor(max_workers=4) as executor:
-            futures = []
-            for slicer_segment in range(4):
-                where_clause = build_where_clause(base_clause, slicer_segment)
-                print(f"\t==> Queueing job for {table_name} > {combination}_{slicer_segment} > {where_clause} ")
-                future = executor.submit(process_extraction, schema, table_name, where_clause, f"{combination}_{slicer_segment}", output_dir, table_details['schema_table'] )
-                futures.append(future)
-                # process_extraction( schema, table_name, where_clause, f"{combination}_{slicer_segment}", output_dir, table_details['schema_table'], con_snowflake)
-            concurrent.futures.wait(futures)                
+        for combination in combinations:
+            if granularity == 'YM'  and int(combination) > int(f"{current_year}{current_month:02}"):
+                continue  #ignore future months
+            base_clause = f"WHERE TO_CHAR({date_column}, 'YYYY{'' if granularity=='Y' else 'MM'}') = '{combination}'"
+        
+            with ProcessPoolExecutor(max_workers=1) as executor:
+                futures = []
+                for slicer_segment in range(4):
+                    where_clause = build_where_clause(base_clause, slicer_segment)
+                    print(f"\t==> Queueing job for {table_name} > {combination}_{slicer_segment} > {where_clause} ")
+                    future = executor.submit(process_extraction, args, schema, table_name, where_clause, f"{combination}_{slicer_segment}", output_dir, table_details['schema_table'] )
+                    futures.append(future)
+                    # process_extraction( schema, table_name, where_clause, f"{combination}_{slicer_segment}", output_dir, table_details['schema_table'], con_snowflake)
+                concurrent.futures.wait(futures)                
 
-        for future in futures:
-            if future.exception() is not None:
-                print(f"!!!! Exception: {str(future.exception()) }")
-                logging.error("A Task encountered an Exception")
+            for future in futures:
+                if future.exception() is not None:
+                    print(f"!!!! Exception: {str(future.exception()) }")
+                    logging.error("A Task encountered an Exception")
 
-def process_extraction( schema, table_name, where_clause, filter, output_dir, full_table_name ):
+    else:
+        process_extraction( args, schema, table_name, '', '', output_dir, table_details['schema_table'] )
+
+def process_extraction( args, schema, table_name, where_clause, filter, output_dir, full_table_name ):
     print(f">>>>> PROCESS_EXTRACTION for {table_name} > {str(filter)} > {where_clause}")
 
     setup_logging()
@@ -163,16 +170,19 @@ def process_extraction( schema, table_name, where_clause, filter, output_dir, fu
         csv_file = os.path.join(schema_dir, csv_file_name )
 
         query = f"SELECT * FROM {schema}.{table_name} {where_clause}"
-        # logging.info(f"PROCESSING EXTRACTION OF {schema}.{table_name} to {csv_file_name} \n\tUSING: {query}") 
+        print(f"Extracting {schema}.{table_name} for {csv_file_name} \n\tUSING: {query}") 
         logging.info(f"Extracting {schema}.{table_name} for {csv_file_name} \n\tUSING: {query}") 
 
         df = pd.read_sql(query, con)
         df.to_csv( csv_file, index=False)
+        print(f"... written to {csv_file}")
         logging.info(f"... written to {csv_file}")
 
-        upload_file_to_snowflake(con_snowflake, df, csv_file, full_table_name, year, slicer)
+        if args.sf:
+            upload_file_to_snowflake(con_snowflake, df, csv_file, full_table_name, year, slicer)
 
     except Exception as e:
+        print(f"Error in process_extraction: {e}")
         logging.error(f"Error in process_extraction: {e}")
         return
     # finally:
@@ -207,7 +217,7 @@ def main():
 
     for table_details in tables:
         logging.info(f"--- PROCESSING: {table_details}")
-        extract_and_upload(table_details, args.output, con_snowflake)
+        extract_and_upload(args, table_details, args.output, con_snowflake)
         logging.info(f"--- COMPLETED: {table_details}")
 
 if __name__ == "__main__":
