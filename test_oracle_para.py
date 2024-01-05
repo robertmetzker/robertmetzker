@@ -1,4 +1,4 @@
-import getpass, platform, csv, os, argparse, base64, logging, warnings
+import getpass, platform, csv, os, argparse, base64, glob, logging, warnings
 from datetime import datetime
 import concurrent.futures
 from concurrent.futures import ProcessPoolExecutor
@@ -57,6 +57,17 @@ def connect_to_snowflake():
 
     logging.info("Connected to Snowflake.")
     return sfcon
+
+
+def push_csv_to_snowflake( args, sfcon):
+    print(f">> PUSHING CSV FILES TO SNOWFLAKE")
+    for root, dirs, files in os.walk( args.output ):
+        for file in files:
+            if file.endswith('.csv'):
+                file_path = os.path.join( root, file )
+                table_name = os.path.splitext(file)[0]
+                df = pd.read_csv( file_path )
+                upload_file_to_snowflake( args, sfcon, df, file_path, table_name, None, None )
 
 def upload_file_to_snowflake(args, sfcon, df, file_path, table_name, year, slicer):
     print(f">>>> starting UPLOAD_FILE_TO_SNOWFLAKE for {table_name}")
@@ -202,7 +213,6 @@ def process_extraction( args, schema, table_name, where_clause, filter, output_d
     #     con_snowflake.close()
 
 
-
 def generate_yearly_segments(start_year, end_year):
     print(f">>>> GENERATING YEARLY SEGMENTS BETWEEN {start_year} and {end_year}")
     return [ str(year) for year in range(start_year, end_year+1)]
@@ -216,8 +226,9 @@ def process_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-o','--output', help='Output directory', required=True)
     parser.add_argument('-p', help='Parallel- 0-5, number of concurrent connections', required=False)
-    parser.add_argument('-t','--tables', help='Comma separated list of tables to extract', required=True)
+    parser.add_argument('-t','--tables', help='Comma separated list of tables to extract', required=False)
     parser.add_argument('--sf', action='store_true', help='If set, load tables into SF')
+    parser.add_argument('--push', action='store_true', help='If set, push CSV files from output directory into SF')
     args = parser.parse_args()
 
     args.p = 1 if not args.p else int( args.p )
@@ -228,13 +239,18 @@ def main():
     print(">> STARTING MAIN")
     args = process_args()
     init_oracle_client()
-    tables = read_tables_from_csv(args.tables)
-    con_snowflake = connect_to_snowflake() if args.sf else None
 
-    for table_details in tables:
-        logging.info(f"--- PROCESSING: {table_details}")
-        extract_and_upload(args, table_details, args.output, con_snowflake)
-        logging.info(f"--- COMPLETED: {table_details}")
+    if args.push:
+        con_snowflake = connect_to_snowflake()
+        push_csv_to_snowflake( args, con_snowflake)
+    else:
+        tables = read_tables_from_csv(args.tables)
+        con_snowflake = connect_to_snowflake() if args.sf else None
+
+        for table_details in tables:
+            logging.info(f"--- PROCESSING: {table_details}")
+            extract_and_upload(args, table_details, args.output, con_snowflake)
+            logging.info(f"--- COMPLETED: {table_details}")
 
 if __name__ == "__main__":
     main()
@@ -242,3 +258,5 @@ if __name__ == "__main__":
 
 # python test-oracle-para.py -t tables.csv -o outputs 
 # python test-oracle-para.py -t missed.csv -o outputs -p 4 --sf
+# python test-oracle-para.py -o outputs --sf --push
+    
