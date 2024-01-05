@@ -59,6 +59,24 @@ def connect_to_snowflake():
     return sfcon
 
 
+def extract_table_ddl( schema, table_name ):
+    con = connect_to_oracle()
+    ddl_sql = f"SELECT DBMS_METADATA.GET_DDL('TABLE', '{table_name}','{schema}') FROM DUAL"
+    print(f">> GENERATING DDL for {schema}.{table_name}:{ddl_sql}")
+
+    cursor = con.cursor()
+    cursor.execute( ddl_sql )
+    ddl = cursor.fetchone()[0]
+    cursor.close()
+    return str(ddl)
+
+def write_ddl_to_file( ddl, table_schema, ddl_folder ):
+    fname = f"{table_schema.replace('.','_')}.sql"
+    ddl_output = os.path.join( ddl_folder, fname )
+    with open( ddl_output, 'w' ) as file:
+        file.write( ddl )
+
+
 def push_csv_to_snowflake( args, sfcon):
     print(f">> PUSHING CSV FILES TO SNOWFLAKE")
     for root, dirs, files in os.walk( args.output ):
@@ -66,7 +84,7 @@ def push_csv_to_snowflake( args, sfcon):
             if file.endswith('.csv'):
                 file_path = os.path.join( root, file )
                 table_name = os.path.splitext(file)[0]
-                df = pd.read_csv( file_path, low_memory=False )
+                df = pd.read_csv( file_path, low_memory=False ) #Use more memory to get a better feel for datatypes
                 upload_file_to_snowflake( args, sfcon, df, file_path, table_name, None, None )
 
 def upload_file_to_snowflake(args, sfcon, df, file_path, table_name, year, slicer):
@@ -172,7 +190,9 @@ def extract_and_upload(args, table_details, output_dir, con_snowflake):
         process_extraction( args, schema, table_name, '', '', output_dir, table_details['schema_table'] )
 
 def process_extraction( args, schema, table_name, where_clause, filter, output_dir, full_table_name ):
-    print(f">>>>> PROCESS_EXTRACTION for {table_name} > {str(filter)} > {where_clause}")
+    start_time = datetime.now()
+    print(f">>>>> PROCESS_EXTRACTION for {table_name} @{start_time} > {str(filter)} > {where_clause}")
+    row_cnt = 0
 
     try:
         con = connect_to_oracle()
@@ -195,8 +215,10 @@ def process_extraction( args, schema, table_name, where_clause, filter, output_d
             df = pd.read_sql(query, con)
         if not df.empty:
             df.to_csv( csv_file, index=False)
-            print(f"... {len(df)} rows written to {csv_file}")
-            logging.info(f"... {len(df)} rows written to {csv_file}")
+            end_time = datetime.now()
+            row_cnt = len(df)
+            print(f"... {row_cnt} rows written to {csv_file}")
+            logging.info(f"... {row_cnt} rows written to {csv_file}")
 
             if args.sf:
                 con_snowflake = connect_to_snowflake()
@@ -208,6 +230,10 @@ def process_extraction( args, schema, table_name, where_clause, filter, output_d
         print(f"Error in process_extraction: {e}")
         logging.error(f"Error in process_extraction: {e}")
         return
+
+    elapsed_time = end_time - start_time
+    print( f"::: Completed {csv_file_name} with {row_cnt} in {elapsed_time}s from {start_time} - {end_time}")
+    
     # finally:
     #     con.close()
     #     con_snowflake.close()
@@ -228,6 +254,7 @@ def process_args():
     parser.add_argument('-p', help='Parallel- 0-5, number of concurrent connections', required=False)
     parser.add_argument('-t','--tables', help='Comma separated list of tables to extract', required=False)
     parser.add_argument('--sf', action='store_true', help='If set, load tables into SF')
+    parser.add_argument('--ddl', action='store_true', help='If set, generate table DDL from oracle into ddl folder')
     parser.add_argument('--push', action='store_true', help='If set, push CSV files from output directory into SF')
     args = parser.parse_args()
 
@@ -238,6 +265,9 @@ def process_args():
 def main():
     print(">> STARTING MAIN")
     args = process_args()
+    ddl_folder = os.path.join( args.output, 'ddl')
+    if not os.path.exists( ddl_folder ):
+        os.makedirs( ddl_folder )
     init_oracle_client()
 
     if args.push:
@@ -249,8 +279,13 @@ def main():
 
         for table_details in tables:
             logging.info(f"--- PROCESSING: {table_details}")
-            extract_and_upload(args, table_details, args.output, con_snowflake)
-            logging.info(f"--- COMPLETED: {table_details}")
+            if not args.ddl:
+                extract_and_upload(args, table_details, args.output, con_snowflake)
+                logging.info(f"--- COMPLETED: {table_details}")
+            else:
+                sch_name, tbl_name = table_details['schema_table'].split(".")
+                ddl = extract_table_ddl( sch_name, tbl_name )
+                write_ddl_to_file(ddl, f"{sch_name}.{tbl_name}", ddl_folder )
 
 if __name__ == "__main__":
     main()
@@ -259,4 +294,5 @@ if __name__ == "__main__":
 # python test-oracle-para.py -t tables.csv -o outputs 
 # python test-oracle-para.py -t missed.csv -o outputs -p 4 --sf
 # python test-oracle-para.py -o outputs --sf --push
+# python test-oracle-para.py -t tables.csv -o outputs --ddl
     
