@@ -109,8 +109,12 @@ def upload_file_to_snowflake(args, sfcon, df, file_path, table_name, year, slice
         cur.execute(f"CREATE STAGE IF NOT EXISTS {stg} FILE_FORMAT = (TYPE='CSV')")
         cur.execute(f"PUT file://{file_path} @~/{stg} auto_compress=true;")
 
-        type_mapping = {'object': 'text', 'int64': 'number', 'float64': 'float', 'datetime64[ns]': 'timestamp'}
-        columns = ', '.join([f"{col} {type_mapping[str(df[col].dtype)]}" for col in df.columns])
+        if args.ddl:
+            columns = ', '.join([f"{col} TEXT}" for col in df.columns])
+        else:
+            type_mapping = {'object': 'text', 'int64': 'number', 'float64': 'float', 'datetime64[ns]': 'timestamp'}
+            columns = ', '.join([f"{col} {type_mapping[str(df[col].dtype)]}" for col in df.columns])
+            
         create_sql = f"CREATE OR REPLACE TABLE {phys_table} ({columns});"
         print(f"--> {create_sql[0:120]}...")
         logging.info(f"--> {create_sql}")
