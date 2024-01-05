@@ -58,12 +58,13 @@ def connect_to_snowflake():
     logging.info("Connected to Snowflake.")
     return sfcon
 
-def upload_file_to_snowflake(sfcon, df, file_path, table_name, year, slicer):
+def upload_file_to_snowflake(args, sfcon, df, file_path, table_name, year, slicer):
     print(f">>>> starting UPLOAD_FILE_TO_SNOWFLAKE for {table_name}")
 
     file_format = """file_format = (type = csv field_delimiter = ',' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"')"""
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     phys_table_parts = [table_name.replace('.', '_')]
+    stg = args.output if args.output else 'oracle_stage'
 
     if year:
         phys_table_parts.append(str(year))
@@ -76,8 +77,8 @@ def upload_file_to_snowflake(sfcon, df, file_path, table_name, year, slicer):
     with sfcon.cursor() as cur:
         cur.execute("USE SCHEMA RAC_ACCNT")
         cur.execute("USE WAREHOUSE PLAYGROUND_WH")
-        cur.execute(f"CREATE STAGE IF NOT EXISTS oracle_stage FILE_FORMAT = (TYPE='CSV')")
-        cur.execute(f"PUT file://{file_path} @~/oracle_stage auto_compress=true;")
+        cur.execute(f"CREATE STAGE IF NOT EXISTS {stg} FILE_FORMAT = (TYPE='CSV')")
+        cur.execute(f"PUT file://{file_path} @~/{stg} auto_compress=true;")
 
         type_mapping = {'object': 'text', 'int64': 'number', 'float64': 'float', 'datetime64[ns]': 'timestamp'}
         columns = ', '.join([f"{col} {type_mapping[str(df[col].dtype)]}" for col in df.columns])
@@ -86,7 +87,7 @@ def upload_file_to_snowflake(sfcon, df, file_path, table_name, year, slicer):
         logging.info(f"--> {create_sql}")
         cur.execute(create_sql)
 
-        sql = f"""COPY INTO PLAYGROUND.RAC_ACCNT.{phys_table} from @~/oracle_stage/{phys_table} {file_format} on_error='continue'; """
+        sql = f"""COPY INTO PLAYGROUND.RAC_ACCNT.{phys_table} from @~/{stg}/{phys_table} {file_format} on_error='continue'; """
         print(f'---> {sql[0:120]}...')
         logging.info(f'---> {sql}')
         cur.execute(sql)
@@ -183,12 +184,12 @@ def process_extraction( args, schema, table_name, where_clause, filter, output_d
             df = pd.read_sql(query, con)
         if not df.empty:
             df.to_csv( csv_file, index=False)
-            print(f"... written to {csv_file}")
-            logging.info(f"... written to {csv_file}")
+            print(f"... {len(df)} rows written to {csv_file}")
+            logging.info(f"... {len(df)} rows written to {csv_file}")
 
             if args.sf:
                 con_snowflake = connect_to_snowflake()
-                upload_file_to_snowflake(con_snowflake, df, csv_file, full_table_name, year, slicer)
+                upload_file_to_snowflake(args, con_snowflake, df, csv_file, full_table_name, year, slicer)
         else:
             print(f":: NO rows generated for {table_name}_{filter}")
 
