@@ -66,7 +66,7 @@ def push_csv_to_snowflake( args, sfcon):
             if file.endswith('.csv'):
                 file_path = os.path.join( root, file )
                 table_name = os.path.splitext(file)[0]
-                df = pd.read_csv( file_path )
+                df = pd.read_csv( file_path, low_memory=False )
                 upload_file_to_snowflake( args, sfcon, df, file_path, table_name, None, None )
 
 def upload_file_to_snowflake(args, sfcon, df, file_path, table_name, year, slicer):
