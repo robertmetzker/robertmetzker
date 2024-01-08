@@ -91,7 +91,7 @@ def connect_to_snowflake():
     logging.info("Connected to Snowflake.")
     return sfcon
 
-
+# Walk through the output directory and push all CSV files to Snowflake
 def push_csv_to_snowflake( args, sfcon):
     print(f">> PUSHING CSV FILES TO SNOWFLAKE")
     for root, dirs, files in os.walk( args.output ):
@@ -102,6 +102,7 @@ def push_csv_to_snowflake( args, sfcon):
                 df = pd.read_csv( file_path, low_memory=False )
                 upload_file_to_snowflake( args, sfcon, df, file_path, table_name, None, None )
 
+# Internal Components for handling Snowflake-  Creates stage if not exists
 def create_stage_in_snowflake(sfcon, stage_name, file_format):
     sql = f"CREATE STAGE IF NOT EXISTS {stage_name} FILE_FORMAT = {file_format}"
     try:
@@ -111,7 +112,7 @@ def create_stage_in_snowflake(sfcon, stage_name, file_format):
     except Exception as e:
         logging.error(f"Error executing SQL: {sql}, Error: {e}")
 
-
+# Internal Components for handling Snowflake-  Uploads file to stage
 def upload_file_to_stage(sfcon, file_path, stage_name):
     sql = f"PUT file://{file_path} @~/{stage_name} auto_compress=true;"
     try:
@@ -121,10 +122,14 @@ def upload_file_to_stage(sfcon, file_path, stage_name):
     except Exception as e:
         logging.error(f"Error executing SQL: {sql}, Error: {e}")
 
-
-def create_table_from_stage(sfcon, df, phys_table, stage_name):
-    type_mapping = {'object': 'text', 'int64': 'number', 'float64': 'float', 'datetime64[ns]': 'timestamp'}
-    columns = ', '.join([f"{col} {type_mapping[str(df[col].dtype)]}" for col in df.columns])
+# Internal Components for handling Snowflake-  Creates table from data frame-  if PUSH, all columns shoukd be TEXT
+def create_table_from_stage(args, sfcon, df, phys_table, stage_name):
+    if args.push:
+        columns = ', '.join([f"{col} text" for col in df.columns])
+    else:
+        type_mapping = {'object': 'text', 'int64': 'number', 'float64': 'float', 'datetime64[ns]': 'timestamp'}
+        columns = ', '.join([f"{col} {type_mapping[str(df[col].dtype)]}" for col in df.columns])
+    
     create_sql = f"CREATE OR REPLACE TABLE {phys_table} ({columns});"
     try:
         with sfcon.cursor() as cur:
@@ -184,7 +189,7 @@ def upload_file_to_snowflake(args, sfcon, df, file_path, table_name, year, slice
     file_format = "(type = csv field_delimiter = ',' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '\"')"
     create_stage_in_snowflake(sfcon, stg, file_format)
     upload_file_to_stage(sfcon, file_path, stg)
-    create_table_from_stage(sfcon, df, phys_table, stg)
+    create_table_from_stage(args, sfcon, df, phys_table, stg)
     copy_data_to_table(sfcon, phys_table, stg, file_format)
 
     print(f"\t... Completed processing for {phys_table}.")
@@ -385,10 +390,10 @@ def main():
     # trying to this and INIT_ORACLE_CLIENT call to thick client libraries:
     # https://python-oracledb.readthedocs.io/en/latest/user_guide/initialization.html#enablingthick
     oracledb.init_oracle_client(lib_dir=r"C:\temp\instantclient_19_21")
+    # init_oracle_client()
 
-    setup_logging(args.log_level)
     args = process_args()
-    init_oracle_client()
+    setup_logging(args.log_level)
 
     if args.push:
         con_snowflake = connect_to_snowflake()
