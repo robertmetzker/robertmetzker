@@ -175,9 +175,10 @@ def extract_and_upload(args, table_details, output_dir, con_snowflake):
 
     if filter_using:
         base_clause = f""" WHERE {filter_using} """
+        filter_year = ''.join(c for c in filter_using if c.isdigit())
         where_clause = base_clause
         print(f"\t==> Queueing job for {table_name} > {where_clause} ")
-        process_extraction(args, schema, table_name, where_clause, '', output_dir, table_details['schema_table'])
+        process_extraction(args, schema, table_name, where_clause, filter_year, output_dir, table_details['schema_table'])
     else:
         current_year = datetime.now().year
         current_month = datetime.now().month
