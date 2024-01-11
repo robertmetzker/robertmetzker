@@ -173,45 +173,50 @@ def extract_and_upload(args, table_details, output_dir, con_snowflake):
     granularity = table_details['granularity']
     filter_using = table_details['filter_using']
 
-    current_year = datetime.now().year
-    current_month = datetime.now().month
-
-    def build_where_clause(base_clause, slicer_segment):
-        slicer_clause = ''
-        # slicer_clause = f" AND MOD({slicer_column},4) = {slicer_segment}" if slicer_column else ""
-        return f"{base_clause}{slicer_clause}"
-
-    if date_column:
-        combinations = generate_monthly_segments(2021, current_year) if granularity =='YM' else generate_yearly_segments(2021, current_year) 
-
-        for combination in combinations:
-            if granularity == 'YM'  and int(combination) > int(f"{current_year}{current_month:02}"):
-                continue  #ignore future months
-            base_clause = f""" WHERE {f" {filter_using} AND " if filter_using else ' ' }"""
-            base_clause += f" TO_CHAR({date_column}, 'YYYY{'' if granularity=='Y' else 'MM'}') = '{combination}' "
-
-            slicer_segment = ''
-            where_clause = build_where_clause(base_clause, slicer_segment)
-            print(f"\t==> Queueing job for {table_name} > {combination} > {where_clause} ")
-            process_extraction(  args, schema, table_name, where_clause, f"{combination}", output_dir, table_details['schema_table'])
-
-            # with ProcessPoolExecutor(max_workers= args.p) as executor:
-            #     futures = []
-            #     for slicer_segment in range(4):
-            #         where_clause = build_where_clause(base_clause, slicer_segment)
-            #         print(f"\t==> Queueing job for {table_name} > {combination}_{slicer_segment} > {where_clause} ")
-            #         future = executor.submit(process_extraction, args, schema, table_name, where_clause, f"{combination}_{slicer_segment}", output_dir, table_details['schema_table'] )
-            #         futures.append(future)
-            #         # process_extraction( schema, table_name, where_clause, f"{combination}_{slicer_segment}", output_dir, table_details['schema_table'], con_snowflake)
-            #     concurrent.futures.wait(futures)                
-
-            # for future in futures:
-            #     if future.exception() is not None:
-            #         print(f"!!!! Exception: {str(future.exception()) }")
-            #         logging.error("A Task encountered an Exception")
-
+    if filter_using:
+        base_clause = f""" WHERE {filter_using} """
+        where_clause = base_clause
+        print(f"\t==> Queueing job for {table_name} > {where_clause} ")
+        process_extraction(args, schema, table_name, where_clause, '', output_dir, table_details['schema_table'])
     else:
-        process_extraction( args, schema, table_name, '', '', output_dir, table_details['schema_table'] )
+        current_year = datetime.now().year
+        current_month = datetime.now().month
+
+        def build_where_clause(base_clause, slicer_segment):
+            slicer_clause = ''
+            # slicer_clause = f" AND MOD({slicer_column},4) = {slicer_segment}" if slicer_column else ""
+            return f"{base_clause}{slicer_clause}"
+
+        if date_column:
+            combinations = generate_monthly_segments(2021, current_year) if granularity =='YM' else generate_yearly_segments(2021, current_year)
+
+            for combination in combinations:
+                if granularity == 'YM'  and int(combination) > int(f"{current_year}{current_month:02}"):
+                    continue  #ignore future months
+                base_clause = f""" WHERE {date_column} = '{combination}' """
+
+                slicer_segment = ''
+                where_clause = build_where_clause(base_clause, slicer_segment)
+                print(f"\t==> Queueing job for {table_name} > {combination} > {where_clause} ")
+                process_extraction(args, schema, table_name, where_clause, f"{combination}", output_dir, table_details['schema_table'])
+
+                # with ProcessPoolExecutor(max_workers= args.p) as executor:
+                #     futures = []
+                #     for slicer_segment in range(4):
+                #         where_clause = build_where_clause(base_clause, slicer_segment)
+                #         print(f"\t==> Queueing job for {table_name} > {combination}_{slicer_segment} > {where_clause} ")
+                #         future = executor.submit(process_extraction, args, schema, table_name, where_clause, f"{combination}_{slicer_segment}", output_dir, table_details['schema_table'] )
+                #         futures.append(future)
+                #         # process_extraction( schema, table_name, where_clause, f"{combination}_{slicer_segment}", output_dir, table_details['schema_table'], con_snowflake)
+                #     concurrent.futures.wait(futures)                
+
+                # for future in futures:
+                #     if future.exception() is not None:
+                #         print(f"!!!! Exception: {str(future.exception()) }")
+                #         logging.error("A Task encountered an Exception")
+
+        else:
+            process_extraction(args, schema, table_name, '', '', output_dir, table_details['schema_table'])
 
 def process_extraction( args, schema, table_name, where_clause, filter, output_dir, full_table_name ):
     start_time = datetime.now()
