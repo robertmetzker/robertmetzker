@@ -10,6 +10,7 @@ import snowflake.connector      # pip install snowflake-connector-python
 
 def setup_logging():
     logging.basicConfig(
+        filemname = f'logs/run_extract_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log',
         level = logging.INFO,
         format="%(processName)s - %(levelname)s - %(message)s",
         handlers=[logging.StreamHandler()]
@@ -45,8 +46,8 @@ def connect_to_oracle():
     pw = decode_password(pw)
 
     con = oracledb.connect(user=user, password=pw, dsn=dsn)
-    print(f"Connected to Oracle: {dsn}")
-    logging.info(f"Connected to Oracle: {dsn}")
+    print(f"\t- Connected to Oracle: {dsn}")
+    logging.info(f"\t- Connected to Oracle: {dsn}")
     return con
 
 def connect_to_snowflake():
@@ -67,7 +68,8 @@ def connect_to_snowflake():
 def extract_table_ddl( schema, table_name ):
     con = connect_to_oracle()
     ddl_sql = f"SELECT DBMS_METADATA.GET_DDL('TABLE', '{table_name}','{schema}') FROM DUAL"
-    print(f">> GENERATING DDL for {schema}.{table_name}:{ddl_sql}")
+    print(f"\t<< GENERATING DDL for {schema}.{table_name}:{ddl_sql}")
+    logging.info(f"\t<< GENERATING DDL for {schema}.{table_name}:{ddl_sql}")
 
     cursor = con.cursor()
     cursor.execute( ddl_sql )
@@ -76,16 +78,69 @@ def extract_table_ddl( schema, table_name ):
     return str(ddl)
 
 def write_ddl_to_file( ddl, table_schema, ddl_folder ):
-    fname = f"{table_schema.replace('.','_')}.sql"
-    ddl_output = os.path.join( ddl_folder, fname )
-    with open( ddl_output, 'w' ) as file:
-        file.write( ddl )
+    if ddl is not None:
+        fname = f"{table_schema.replace('.','_')}.sql"
+        ddl_output = os.path.join( ddl_folder, fname )
+        with open( ddl_output, 'w' ) as file:
+            file.write( ddl )
+        
+        print(f"\t>> WROTE {table_schema} DDL to file: {ddl_output}")
+        logging.info(f"\t>> WROTE {table_schema} DDL to file: {ddl_output}")
+    else:
+        print(f"\t-- No DDL for {table_schema}")
+        logging.info(f"\t-- No DDL for {table_schema}")
+
+def get_column_data_types(schema, table_name):
+    print(f"\t>> Getting Datatypes for {schema}.{table_name}")
+    logging.info(f"\t>> Getting Datatypes for {schema}.{table_name}")
+
+    con = connect_to_oracle()
+    cursor = con.cursor()
+    query = f"""
+    SELECT COLUMN_NAME, DATA_TYPE
+    FROM ALL_TAB_COLUMNS
+    WHERE TABLE_NAME = '{table_name.upper()}'
+    AND OWNER = '{schema.upper()}'
+    """
+    cursor.execute(query)
+    col_data_types = {row[0]: row[1] for row in cursor.fetchall()}
+    cursor.close()
+    con.close()
     
-    ~print(f">> WROTE {table_schema} DDL to file: {ddl_output}")
+    print(f"\t>> {col_data_types}")
+    logging.info(f"\t>> {col_data_types}")
+    return col_data_types
+
+
+def generate_select_query(schema, table_name, columns_data_types):
+    print(f"\t>> Generating SELECT SQL for {schema}.{table_name}")
+    logging.info(f"\t>> Generating SELECT SQL for {schema}.{table_name}")
+
+    # Define how different data types should be formatted
+    type_formatting = {
+        "DATE": {"pre": "to_char(", "post": ", 'YYYY-MM-DD HH24:MI:SS') as "},
+        "TIMESTAMP": {"pre": "to_char(", "post": ", 'YYYY-MM-DD HH24:MI:SS') as "},
+    }
+
+    select_clauses = []
+    for column, data_type in columns_data_types.items():
+        if data_type in type_formatting:
+            # Wrap the column in the specified formatting
+            pre = type_formatting[data_type]["pre"]
+            post = type_formatting[data_type]["post"]
+            select_clauses.append(f"{pre}{column}{post}{column}")
+        else:
+            # Add the column without any formatting
+            select_clauses.append(column)
+
+    select_statement = ", ".join(select_clauses)
+    query = f"select {select_statement} from {schema}.{table_name}"
+    return query
 
 
 def push_csv_to_snowflake( args, sfcon):
     print(f">> PUSHING CSV FILES TO SNOWFLAKE")
+    logging.info(f">> PUSHING CSV FILES TO SNOWFLAKE")
     for root, dirs, files in os.walk( args.output ):
         for file in files:
             if file.endswith('.csv'):
@@ -94,9 +149,11 @@ def push_csv_to_snowflake( args, sfcon):
                 df = pd.read_csv( file_path, low_memory=False ) #Use more memory to get a better feel for datatypes
                 upload_file_to_snowflake( args, sfcon, df, file_path, table_name, None, None )
 
+
 def upload_file_to_snowflake(args, sfcon, df, file_path, table_name, year, slicer):
     tgt_schema = 'ES_BASE'
-    print(f">>>> starting UPLOAD_FILE_TO_SNOWFLAKE for {table_name}")
+    print(f"  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for {table_name}")
+    logging.info(f"  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for {table_name}")
 
     file_format = """file_format = (type = csv field_delimiter = ',' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"')"""
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -109,41 +166,44 @@ def upload_file_to_snowflake(args, sfcon, df, file_path, table_name, year, slice
     if slicer:
         phys_table_parts.append(slicer)
     phys_table = "_".join(phys_table_parts)
-    print(f"\t{now} ==> Uploading {phys_table} to SF account: PLAYGROUND.{tgt_schema}")
-    logging.info(f"\t{now} ==> Uploading {phys_table} to SF account: PLAYGROUND.{tgt_schema}")
+    print(f"\t\t{now} ==> Uploading {phys_table} to SF account: PLAYGROUND.{tgt_schema}")
+    logging.info(f"\t\t{now} ==> Uploading {phys_table} to SF account: PLAYGROUND.{tgt_schema}")
     
     with sfcon.cursor() as cur:
         cur.execute(f"USE SCHEMA {tgt_schema}")
         cur.execute("USE WAREHOUSE PLAYGROUND_WH")
         create_stg = f"CREATE STAGE IF NOT EXISTS {stg} {file_format};"
-        cur.execute( create_stg ); print(create_stg)
+        cur.execute( create_stg ); print(create_stg); logging.info(create_stg)
 
         put_file = f"PUT file://{file_path} @~/{stg} auto_compress=true;"
-        cur.execute( put_file ); print(put_file)
+        cur.execute( put_file ); print(f"\t\t{put_file}"); logging.info(f"\t\t{put_file}")
 
         if args.ddl:
-            columns = ', '.join([f"{''.join(c for c in col if c.isalnum() or c=='_')} TEXT" for col in new_cols])
+            columns = ', '.join([f"{''.join(c for c in col if c.isalnum() or c=='_')} TEXT" for col in df.columns])
         else:
             type_mapping = {'object': 'text', 'int64': 'number', 'float64': 'float', 'datetime64[ns]': 'timestamp'}
             # columns = ', '.join([f"{col} {type_mapping[str(df[col].dtype)]}" for col in df.columns])
             columns = ', '.join([f"{''.join(c for c in col if c.isalnum() or c=='_')} {type_mapping[str(df[col].dtype)]}" for col in df.columns])
             
         create_sql = f"CREATE OR REPLACE TABLE {phys_table} ({columns});"
-        print(f"--> {create_sql[0:120]}...")
-        logging.info(f"--> {create_sql}")
+        print(f"\t\t--> {create_sql[0:120]}...")
+        logging.info(f"\t--> {create_sql}")
         cur.execute(create_sql)
 
         # sql = f"""COPY INTO PLAYGROUND.{tgt_schema}.{phys_table} from @~/{stg}/{phys_table} {file_format} on_error='continue'; """
         sql = f"""COPY INTO PLAYGROUND.{tgt_schema}.{phys_table} from @~/{stg}/{real_table_name} {file_format} on_error='continue'; """
-        print(f'---> {sql[0:120]}...')
-        logging.info(f'---> {sql}')
+        print(f'\t\t--> {sql[0:120]}...')
+        logging.info(f'\t\t--> {sql}')
         cur.execute(sql)
-    print(f"\t... copied into {phys_table}: {sql[0:120]}...")
-    logging.info(f"\t... copied into {phys_table}")
+    print(f"... copied into {phys_table}: {sql[0:120]}...")
+    logging.info(f"... copied into {phys_table}")
+
 
 def read_tables_from_csv(file_path):
-    print(">>> READING TABLES FROM CSV")
-    print(f"=== Reading tables from csv: {file_path} ")
+    print("<<< READING TABLES FROM CSV")
+    logging.info("<<< READING TABLES FROM CSV")
+    print(f"<-- Reading tables from csv: {file_path} ")
+    logging.info(f"<-- Reading tables from csv: {file_path} ")
     tables = []
 
     with open(file_path, 'r') as f:
@@ -164,21 +224,30 @@ def read_tables_from_csv(file_path):
     logging.info(f"... found {len(tables)} tables")
     return tables
 
+
 def extract_and_upload(args, table_details, output_dir, con_snowflake):
-    print(f"\n>>>> STARTING EXTRACT AND UPLOAD: {table_details}")
+    print(f"\n>> STARTING EXTRACT AND UPLOAD:\n   {table_details}")
+    logging.info(f"\n>> STARTING EXTRACT AND UPLOAD:\n   {table_details}")
 
     schema, table_name = table_details['schema_table'].split(".")
+    columns_data_types = get_column_data_types(schema, table_name)
+    select_query = generate_select_query(schema, table_name, columns_data_types)
+    combination = ''
+
     date_column = table_details['date_column']
     slicer_column = table_details['slicer_column']
+    slicer_segment = 1 if slicer_column else None
     granularity = table_details['granularity']
     filter_using = table_details['filter_using']
 
     if filter_using:
-        base_clause = f""" WHERE {filter_using} """
+        base_clause = f""" where {filter_using} """
         filter_year = ''.join(c for c in filter_using if c.isdigit())
         where_clause = base_clause
-        print(f"\t==> Queueing job for {table_name} > {where_clause} ")
-        process_extraction(args, schema, table_name, where_clause, filter_year, output_dir, table_details['schema_table'])
+        print(f"\n\n\t==> Queueing job for {table_name} > {where_clause} ")
+        query_sql = f"{select_query} {where_clause}"
+        process_extraction(args, schema, table_name, query_sql, filter_year, output_dir, table_details['schema_table'])
+
     else:
         current_year = datetime.now().year
         current_month = datetime.now().month
@@ -189,93 +258,81 @@ def extract_and_upload(args, table_details, output_dir, con_snowflake):
             return f"{base_clause}{slicer_clause}"
 
         if date_column:
-            combinations = generate_monthly_segments(2021, current_year) if granularity =='YM' else generate_yearly_segments(2021, current_year)
+            combinations = generate_monthly_segments(2023, current_year) if granularity =='YM' else generate_yearly_segments(2021, current_year) 
 
             for combination in combinations:
                 if granularity == 'YM'  and int(combination) > int(f"{current_year}{current_month:02}"):
                     continue  #ignore future months
-                base_clause = f""" WHERE {date_column} = '{combination}' """
+                base_clause = f""" WHERE {f" {filter_using} AND " if filter_using else ' ' }"""
+                base_clause += f" TO_CHAR({date_column}, 'YYYY{'' if granularity=='Y' else 'MM'}') = '{combination}' "
 
                 slicer_segment = ''
                 where_clause = build_where_clause(base_clause, slicer_segment)
-                print(f"\t==> Queueing job for {table_name} > {combination} > {where_clause} ")
-                process_extraction(args, schema, table_name, where_clause, f"{combination}", output_dir, table_details['schema_table'])
-
-                # with ProcessPoolExecutor(max_workers= args.p) as executor:
-                #     futures = []
-                #     for slicer_segment in range(4):
-                #         where_clause = build_where_clause(base_clause, slicer_segment)
-                #         print(f"\t==> Queueing job for {table_name} > {combination}_{slicer_segment} > {where_clause} ")
-                #         future = executor.submit(process_extraction, args, schema, table_name, where_clause, f"{combination}_{slicer_segment}", output_dir, table_details['schema_table'] )
-                #         futures.append(future)
-                #         # process_extraction( schema, table_name, where_clause, f"{combination}_{slicer_segment}", output_dir, table_details['schema_table'], con_snowflake)
-                #     concurrent.futures.wait(futures)                
-
-                # for future in futures:
-                #     if future.exception() is not None:
-                #         print(f"!!!! Exception: {str(future.exception()) }")
-                #         logging.error("A Task encountered an Exception")
-
+                print(f"\n\n\t==> Queueing job for {table_name} > {combination} > {where_clause} ")
+                logging.info(f"\n\n\t==> Queueing job for {table_name} > {combination} > {where_clause} ")
         else:
-            process_extraction(args, schema, table_name, '', '', output_dir, table_details['schema_table'])
+            combination = ''
+            #     process_extraction( args, schema, table_name, '', '', output_dir, table_details['schema_table'] )
 
-def process_extraction( args, schema, table_name, where_clause, filter, output_dir, full_table_name ):
+    if len(select_query.strip()) > 5:
+        query_sql = f"{select_query} {where_clause}"
+        process_extraction(args, schema, table_name, query_sql, f"{combination}", output_dir, table_details['schema_table'])
+    else:
+        print(f"Empty SELECT query for table {schema}.{table_name}. Skipping this table.\n\n")
+        logging.error(f"Empty SELECT query for table {schema}.{table_name}. Skipping this table.")
+        # Optionally, you can add 'continue' if this code is inside a loop to process the next table
+        pass
+
+
+def process_extraction(args, schema, table_name, query_sql, filter, output_dir, full_table_name):
     start_time = datetime.now()
-    print(f">>>>> PROCESS_EXTRACTION for {table_name} @{start_time} > {str(filter)} > {where_clause}")
-    row_cnt = 0
+    print(f" <<< PROCESS_EXTRACTION for {table_name} @{start_time} > {str(filter)} > {query_sql[-80:]}")
+    logging.info(f" <<< PROCESS_extraction for {table_name} @{start_time} > {str(filter)} > {query_sql[-80:]}")
 
     try:
         con = connect_to_oracle()
-        cur = con.cursor()
-
-        filter_dir = filter[:4] if len(filter) > 4  else filter     # Parse out the year portion
-        schema_dir = os.path.join( output_dir, schema, filter_dir )
-        os.makedirs(schema_dir, exist_ok=True)
-
-        year, slicer = (filter.split('_') + [None])[:2] if '_' in filter else (filter, None)
-
         csv_file_name = f"{table_name}_{filter}.csv" if filter else f"{table_name}.csv"
-        csv_file = os.path.join(schema_dir, csv_file_name )
+        csv_file = os.path.join(output_dir, schema, csv_file_name)
 
-        query = f"SELECT * FROM {schema}.{table_name} {where_clause}"
-        print(f"Extracting {schema}.{table_name} for {csv_file_name} \n\tUSING: {query}") 
-        logging.info(f"Extracting {schema}.{table_name} for {csv_file_name} \n\tUSING: {query}") 
+        # print(f"\t Extracting {schema}.{table_name} for {csv_file_name} \n\t USING: {query_sql}")
+        print(f"\t Extracting {schema}.{table_name} for {csv_file_name} \n\t USING: {query_sql[:50]} ... {query_sql[-80:]}")
+        logging.info(f"\t Extracting {schema}.{table_name} for {csv_file_name} \n\t USING: {query_sql[:50]} ... {query_sql[-80:]}")
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=UserWarning)
-            df = pd.read_sql(query, con)
+        df = pd.read_sql(query_sql, con)
+
         if not df.empty:
-            df.to_csv( csv_file, index=False)
-            end_time = datetime.now()
-            row_cnt = len(df)
-            print(f"... {row_cnt} rows written to {csv_file}\n")
-            logging.info(f"... {row_cnt} rows written to {csv_file}")
+            df.to_csv(csv_file, index=False, doublequote=True, escapechar='\\')
+            print(f"... {len(df)} rows written to {csv_file}\n")
+            logging.info(f"... {len(df)} rows written to {csv_file}")
 
             if args.sf:
                 con_snowflake = connect_to_snowflake()
-                upload_file_to_snowflake(args, con_snowflake, df, csv_file, full_table_name, year, slicer)
+                upload_file_to_snowflake(args, con_snowflake, df, csv_file, full_table_name, None, None)
         else:
             print(f":: NO rows generated for {table_name}_{filter}")
+            logging.info(f":: NO rows generated for {table_name}_{filter}")
 
     except Exception as e:
         print(f"Error in process_extraction: {e}")
         logging.error(f"Error in process_extraction: {e}")
         return
 
-    elapsed_time = end_time - start_time
-    print( f"::: Completed {csv_file_name} with {row_cnt} in {elapsed_time}s from {start_time} - {end_time}")
-    
-    # finally:
-    #     con.close()
-    #     con_snowflake.close()
+    elapsed_time = datetime.now() - start_time
+    print(f"::: Completed {csv_file_name} with {len(df)} rows in {elapsed_time} from {start_time} to {datetime.now()}")
+    logging.info(f"::: Completed {csv_file_name} with {len(df)} rows in {elapsed_time} from {start_time} to {datetime.now()}")
+
+    # Finally, close the Oracle connection
+    con.close()
 
 
 def generate_yearly_segments(start_year, end_year):
-    print(f">>>> GENERATING YEARLY SEGMENTS BETWEEN {start_year} and {end_year}")
+    print(f"=== GENERATING YEARLY SEGMENTS BETWEEN {start_year} and {end_year}")
+    logging.info(f"=== GENERATING YEARLY SEGMENTS BETWEEN {start_year} and {end_year}")
     return [ str(year) for year in range(start_year, end_year+1)]
 
 def generate_monthly_segments(start_year, end_year):
-    print(f">>>> GENERATING MONTHLY SEGMENTS BETWEEN {start_year} and {end_year}")
+    print(f"==== GENERATING MONTHLY SEGMENTS BETWEEN {start_year} and {end_year}")
+    logging.info(f"==== GENERATING MONTHLY SEGMENTS BETWEEN {start_year} and {end_year}")
     return [ f"{year}{month:02}" for year in range(start_year, end_year+1) for month in range(1,13)]
 
 
@@ -294,7 +351,8 @@ def process_args():
     return args
 
 def main():
-    print(">> STARTING MAIN")
+    print(":: STARTING MAIN")
+    logging.info(":: STARTING MAIN")
     args = process_args()
     ddl_folder = os.path.join( args.output, 'ddl')
     if not os.path.exists( ddl_folder ):
@@ -334,4 +392,5 @@ hq8627osx:DEVOPS_INF>pyenv activate ora_envx86                                  
 # python es-oracle-para.py -t moen-tables.csv -o moen 
 # python es-oracle-para.py -t missed.csv -o moen -p 4 --sf
 # python es-oracle-para.py -o moen --sf --push
-# python es-oracle-para.py -t moen-tables.csv -o moen --sf -p 4
+# python es-oracle-para.py -t moen-tables.csv -o moen --ddl --sf
+# python es-oracle-para.py -t moen3.csv -o moen --ddl --sf
