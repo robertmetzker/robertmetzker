@@ -101,6 +101,7 @@ def get_column_data_types(schema, table_name):
     FROM ALL_TAB_COLUMNS
     WHERE TABLE_NAME = '{table_name.upper()}'
     AND OWNER = '{schema.upper()}'
+    ORDER BY COLUMN_ID
     """
     cursor.execute(query)
     col_data_types = {row[0]: row[1] for row in cursor.fetchall()}
@@ -138,7 +139,7 @@ def generate_select_query(schema, table_name, columns_data_types):
     return query
 
 
-def push_csv_to_snowflake( args, sfcon):
+def push_csv_to_snowflake( args ):
     print(f">> PUSHING CSV FILES TO SNOWFLAKE")
     logging.info(f">> PUSHING CSV FILES TO SNOWFLAKE")
     for root, dirs, files in os.walk( args.output ):
@@ -146,20 +147,27 @@ def push_csv_to_snowflake( args, sfcon):
             if file.endswith('.csv'):
                 file_path = os.path.join( root, file )
                 table_name = os.path.splitext(file)[0]
-                df = pd.read_csv( file_path, low_memory=False ) #Use more memory to get a better feel for datatypes
-                upload_file_to_snowflake( args, sfcon, df, file_path, table_name, None, None )
+                print(f"\n... Trying to PUSH {file_path} to {table_name} ...")
+                df = pd.read_csv( file_path, low_memory=True, dtype=str ) #Use more memory to get a better feel for datatypes
+                upload_file_to_snowflake( args, df, file_path, table_name, None, None )
 
-
-def upload_file_to_snowflake(args, sfcon, df, file_path, table_name, year, slicer):
+def upload_file_to_snowflake(args, df, file_path, table_name, year, slicer):
+    con = connect_to_snowflake()
     tgt_schema = 'ES_BASE'
     print(f"  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for {table_name}")
     logging.info(f"  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for {table_name}")
 
-    file_format = """file_format = (type = csv field_delimiter = ',' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"')"""
+    file_format = """ FILE_FORMAT = (type = csv field_delimiter = ',' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"')"""
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     phys_table_parts = [table_name.replace('.', '_')]
-    table_schema,real_table_name = table_name.split('.')
+
+    if '.' in table_name:
+        table_schema,real_table_name = table_name.split('.')
+    else:
+        table_schema = ''
+        real_table_name = table_name
     stg = args.output if args.output else 'oracle_stage'
+    stg = stg.replace('\\', '').replace('/', '')
 
     if year:
         phys_table_parts.append(str(year))
@@ -169,7 +177,7 @@ def upload_file_to_snowflake(args, sfcon, df, file_path, table_name, year, slice
     print(f"\t\t{now} ==> Uploading {phys_table} to SF account: PLAYGROUND.{tgt_schema}")
     logging.info(f"\t\t{now} ==> Uploading {phys_table} to SF account: PLAYGROUND.{tgt_schema}")
     
-    with sfcon.cursor() as cur:
+    with con.cursor() as cur:
         cur.execute(f"USE SCHEMA {tgt_schema}")
         cur.execute("USE WAREHOUSE PLAYGROUND_WH")
         create_stg = f"CREATE STAGE IF NOT EXISTS {stg} {file_format};"
@@ -284,6 +292,8 @@ def process_extraction(args, schema, table_name, query_sql, filter, output_dir, 
     print(f" <<< PROCESS_EXTRACTION for {table_name} @{start_time}")
     logging.info(f" <<< PROCESS_EXTRACTION for {table_name} @{start_time}")
 
+    total_row_count = 0  # Initialize row count
+
     try:
         con = connect_to_oracle()
         cur = con.cursor()
@@ -300,13 +310,19 @@ def process_extraction(args, schema, table_name, query_sql, filter, output_dir, 
 
             # Convert records to a DataFrame
             df = pd.DataFrame(records, columns=[desc[0] for desc in cur.description])
+            total_row_count += len(df)  # Update row count
             
             # Write DataFrame to CSV file
             mode = 'a' if os.path.exists(csv_file_path) else 'w'
             header = not os.path.exists(csv_file_path)
-            df.to_csv(csv_file_path, mode=mode, header=header, index=False)
+            df.to_csv(csv_file_path, mode=mode, header=header, index=False, doublequote=True, escapechar='\\')
 
         cur.close()
+
+        if args.sf and total_row_count > 0:
+            con_snowflake = connect_to_snowflake()
+            upload_file_to_snowflake(args, con_snowflake, csv_file_path, full_table_name, filter if filter else None, None )
+
 
     except Exception as e:
         print(f"Error in process_extraction: {e}")
@@ -357,8 +373,7 @@ def main():
     init_oracle_client()
 
     if args.push:
-        con_snowflake = connect_to_snowflake()
-        push_csv_to_snowflake( args, con_snowflake)
+        push_csv_to_snowflake( args )
     else:
         tables = read_tables_from_csv(args.tables)
         con_snowflake = connect_to_snowflake() if args.sf else None
