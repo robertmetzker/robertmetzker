@@ -244,7 +244,8 @@ def extract_and_upload(args, table_details, output_dir, con_snowflake):
         base_clause = f""" where {filter_using} """
         filter_year = ''.join(c for c in filter_using if c.isdigit())
         where_clause = base_clause
-        print(f"\n\n\t==> Queueing job for {table_name} > {where_clause} ")
+        print(f"\n\n\t==> Queueing FILTERED job for {table_name} > {where_clause} ")
+        logging.info(f"\n\n\t==> Queueing FILTERED job for {table_name} > {where_clause} ")
         query_sql = f"{select_query} {where_clause}"
         process_extraction(args, schema, table_name, query_sql, filter_year, output_dir, table_details['schema_table'])
 
@@ -268,20 +269,14 @@ def extract_and_upload(args, table_details, output_dir, con_snowflake):
 
                 slicer_segment = ''
                 where_clause = build_where_clause(base_clause, slicer_segment)
-                print(f"\n\n\t==> Queueing job for {table_name} > {combination} > {where_clause} ")
-                logging.info(f"\n\n\t==> Queueing job for {table_name} > {combination} > {where_clause} ")
+                print(f"\n\n\t==> Queueing SLICED job for {table_name} > {combination} > {where_clause} ")
+                logging.info(f"\n\n\t==> Queueing SLICED job for {table_name} > {combination} > {where_clause} ")
         else:
             combination = ''
             #     process_extraction( args, schema, table_name, '', '', output_dir, table_details['schema_table'] )
 
-    if len(select_query.strip()) > 5:
         query_sql = f"{select_query} {where_clause}"
         process_extraction(args, schema, table_name, query_sql, f"{combination}", output_dir, table_details['schema_table'])
-    else:
-        print(f"Empty SELECT query for table {schema}.{table_name}. Skipping this table.\n\n")
-        logging.error(f"Empty SELECT query for table {schema}.{table_name}. Skipping this table.")
-        # Optionally, you can add 'continue' if this code is inside a loop to process the next table
-        pass
 
 
 def process_extraction(args, schema, table_name, query_sql, filter, output_dir, full_table_name):
