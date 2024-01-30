@@ -281,31 +281,32 @@ def extract_and_upload(args, table_details, output_dir, con_snowflake):
 
 def process_extraction(args, schema, table_name, query_sql, filter, output_dir, full_table_name):
     start_time = datetime.now()
-    print(f" <<< PROCESS_EXTRACTION for {table_name} @{start_time} > {str(filter)} > {query_sql[-80:]}")
-    logging.info(f" <<< PROCESS_extraction for {table_name} @{start_time} > {str(filter)} > {query_sql[-80:]}")
+    print(f" <<< PROCESS_EXTRACTION for {table_name} @{start_time}")
+    logging.info(f" <<< PROCESS_EXTRACTION for {table_name} @{start_time}")
 
     try:
         con = connect_to_oracle()
+        cur = con.cursor()
+        cur.execute(query_sql)
+
         csv_file_name = f"{table_name}_{filter}.csv" if filter else f"{table_name}.csv"
-        csv_file = os.path.join(output_dir, schema, csv_file_name)
+        csv_file_path = os.path.join(output_dir, schema, csv_file_name)
 
-        # print(f"\t Extracting {schema}.{table_name} for {csv_file_name} \n\t USING: {query_sql}")
-        print(f"\t Extracting {schema}.{table_name} for {csv_file_name} \n\t USING: {query_sql[:50]} ... {query_sql[-80:]}")
-        logging.info(f"\t Extracting {schema}.{table_name} for {csv_file_name} \n\t USING: {query_sql[:50]} ... {query_sql[-80:]}")
+        batch_size = 1000  # Adjust batch size as needed
+        while True:
+            records = cur.fetchmany(batch_size)
+            if not records:
+                break
 
-        df = pd.read_sql(query_sql, con)
+            # Convert records to a DataFrame
+            df = pd.DataFrame(records, columns=[desc[0] for desc in cur.description])
+            
+            # Write DataFrame to CSV file
+            mode = 'a' if os.path.exists(csv_file_path) else 'w'
+            header = not os.path.exists(csv_file_path)
+            df.to_csv(csv_file_path, mode=mode, header=header, index=False)
 
-        if not df.empty:
-            df.to_csv(csv_file, index=False, doublequote=True, escapechar='\\')
-            print(f"... {len(df)} rows written to {csv_file}\n")
-            logging.info(f"... {len(df)} rows written to {csv_file}")
-
-            if args.sf:
-                con_snowflake = connect_to_snowflake()
-                upload_file_to_snowflake(args, con_snowflake, df, csv_file, full_table_name, None, None)
-        else:
-            print(f":: NO rows generated for {table_name}_{filter}")
-            logging.info(f":: NO rows generated for {table_name}_{filter}")
+        cur.close()
 
     except Exception as e:
         print(f"Error in process_extraction: {e}")
@@ -313,11 +314,12 @@ def process_extraction(args, schema, table_name, query_sql, filter, output_dir, 
         return
 
     elapsed_time = datetime.now() - start_time
-    print(f"::: Completed {csv_file_name} with {len(df)} rows in {elapsed_time} from {start_time} to {datetime.now()}")
-    logging.info(f"::: Completed {csv_file_name} with {len(df)} rows in {elapsed_time} from {start_time} to {datetime.now()}")
+    print(f"::: Completed extraction of {table_name} in {elapsed_time}")
+    logging.info(f"::: Completed extraction of {table_name} in {elapsed_time}")
 
     # Finally, close the Oracle connection
     con.close()
+
 
 
 def generate_yearly_segments(start_year, end_year):
