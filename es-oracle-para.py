@@ -24,16 +24,15 @@ def decode_password(encoded_password):
 # trying to this and INIT_ORACLE_CLIENT call to thick client libraries:
 # https://python-oracledb.readthedocs.io/en/latest/user_guide/initialization.html#enablingthick
 def init_oracle_client():
-    d = None  # default suitable for Linux
+    d = None  # default suitable for Linux in case we move to an automated env.
 
     if platform.system() == "Darwin" and platform.machine() == "x86_64":   # macOS
         # d = os.environ.get("HOME")+("/Downloads/instantclient_19_21")
-        d = os.environ.get("HOME")+("/instantclient")
+        d = os.environ.get("HOME")+("/instantclient")   # Changed since I had to build a custom Oracle Client for Apple Silicon
     elif platform.system() == "Windows":
         d = r"C:\temp\instantclient_19_21"
     oracledb.init_oracle_client(lib_dir=d)
 
-# jdbc:oracle:thin:@//phxdevdb01.fbin.oci:1521/DEV
 
 def connect_to_oracle():
     # user = "RAC_ACCNT"
@@ -44,6 +43,7 @@ def connect_to_oracle():
     pw = 'U3dvcmRmaXNoIzEy'.encode("ascii") #moen
     dsn = "(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=phxdevdb01.fbin.oci)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=DEV)))"
     pw = decode_password(pw)
+    # jdbc:oracle:thin:@//phxdevdb01.fbin.oci:1521/DEV
 
     con = oracledb.connect(user=user, password=pw, dsn=dsn)
     print(f"\t- Connected to Oracle: {dsn}")
@@ -66,6 +66,19 @@ def connect_to_snowflake():
 
 
 def extract_table_ddl( schema, table_name ):
+    """Extract the DDL for the given schema and table from Oracle.
+    
+    Connects to the configured Oracle database, runs a query to get the 
+    DDL for the specified schema and table, writes the result to a DDL 
+    file, and returns the DDL string.
+    
+    Args:
+        schema (str): The schema name in Oracle.
+        table_name (str): The table name in Oracle.
+    
+    Returns:
+        str: The DDL string for the given schema and table.
+    """
     con = connect_to_oracle()
     ddl_sql = f"SELECT DBMS_METADATA.GET_DDL('TABLE', '{table_name}','{schema}') FROM DUAL"
     print(f"\t<< GENERATING DDL for {schema}.{table_name}:{ddl_sql}")
@@ -78,6 +91,10 @@ def extract_table_ddl( schema, table_name ):
     return str(ddl)
 
 def write_ddl_to_file( ddl, table_schema, ddl_folder ):
+    # Writes the provided DDL to a file in the specified output folder.
+    # ddl: The DDL string to write to file.
+    # table_schema: The schema name for the table.
+    # ddl_folder: The folder to write the DDL file to.
     if ddl is not None:
         fname = f"{table_schema.replace('.','_')}.sql"
         ddl_output = os.path.join( ddl_folder, fname )
@@ -91,6 +108,14 @@ def write_ddl_to_file( ddl, table_schema, ddl_folder ):
         logging.info(f"\t-- No DDL for {table_schema}")
 
 def get_column_data_types(schema, table_name):
+    """Gets the data types for columns in the given Oracle table.
+    
+    Connects to Oracle, runs a query to get column names and data types, 
+    and returns a dict mapping column name to data type.
+    
+    Used to determine DATE/TIMESTAMP columns and format those as strings.
+    This is to get past invalid dates from a Dataframe conversion standpoint.
+    """
     print(f"\t>> Getting Datatypes for {schema}.{table_name}")
     logging.info(f"\t>> Getting Datatypes for {schema}.{table_name}")
 
