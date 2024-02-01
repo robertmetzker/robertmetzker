@@ -107,17 +107,10 @@ def write_ddl_to_file( ddl, table_schema, ddl_folder ):
         print(f"\t-- No DDL for {table_schema}")
         logging.info(f"\t-- No DDL for {table_schema}")
 
-def get_column_data_types(schema, table_name):
-    """Gets the data types for columns in the given Oracle table.
-    
-    Connects to Oracle, runs a query to get column names and data types, 
-    and returns a dict mapping column name to data type.
-    
-    Used to determine DATE/TIMESTAMP columns and format those as strings.
-    This is to get past invalid dates from a Dataframe conversion standpoint.
-    """
-    print(f"\t>> Getting Datatypes for {schema}.{table_name}")
-    logging.info(f"\t>> Getting Datatypes for {schema}.{table_name}")
+def get_column_data_types(args, schema, table_name):
+    """Gets the data types for columns in the given Oracle table."""
+    print(f"\n\t>> Getting Datatypes for {schema}.{table_name}")
+    logging.info(f"\n\t>> Getting Datatypes for {schema}.{table_name}")
 
     con = connect_to_oracle()
     cursor = con.cursor()
@@ -129,13 +122,16 @@ def get_column_data_types(schema, table_name):
     ORDER BY COLUMN_ID
     """
     cursor.execute(query)
-    col_data_types = {row[0]: row[1] for row in cursor.fetchall()}
+    col_data_types = {f"{schema}.{table_name}": {row[0]: row[1] for row in cursor.fetchall()}}
     cursor.close()
     con.close()
-    
-    print(f"\t>> {col_data_types}")
-    logging.info(f"\t>> {col_data_types}")
+
+    if args.debug:
+        print(f"\t>> {col_data_types}")
+        logging.info(f"\t>> {col_data_types}")
+
     return col_data_types
+
 
 
 def generate_select_query(schema, table_name, columns_data_types):
@@ -154,43 +150,52 @@ def generate_select_query(schema, table_name, columns_data_types):
             # Wrap the column in the specified formatting
             pre = type_formatting[data_type]["pre"]
             post = type_formatting[data_type]["post"]
-            select_clauses.append(f"{pre}{column}{post}{column}")
+            select_clauses.append(f"{pre}\"{column}\"{post}{column}")
         else:
             # Add the column without any formatting
-            select_clauses.append(column)
+            select_clauses.append(f"\"{column}\"")
 
     select_statement = ", ".join(select_clauses)
-    query = f"select {select_statement} from {schema}.{table_name}"
+    query = f"SELECT {select_statement} FROM \"{schema}\".\"{table_name}\""
     return query
 
 
-def push_csv_to_snowflake( args ):
+def push_csv_to_snowflake(args):
     print(f">> PUSHING CSV FILES TO SNOWFLAKE")
     logging.info(f">> PUSHING CSV FILES TO SNOWFLAKE")
-    for root, dirs, files in os.walk( args.output ):
+    for root, dirs, files in os.walk(args.output):
         for file in files:
             if file.endswith('.csv'):
-                file_path = os.path.join( root, file )
+                file_path = os.path.join(root, file)
                 table_name = os.path.splitext(file)[0]
                 print(f"\n... Trying to PUSH {file_path} to {table_name} ...")
-                df = pd.read_csv( file_path, low_memory=True, dtype=str ) #Use more memory to get a better feel for datatypes
-                upload_file_to_snowflake( args, df, file_path, table_name, None, None )
 
-def upload_file_to_snowflake(args, df, file_path, table_name, year, slicer):
+                # Open the file and read just the first line to get the headers
+                with open(file_path, 'r') as f:
+                    headers_line = next(f)  # Read the first line directly
+                headers = headers_line.strip().split('~')  # Split headers based on the tilde (~) delimiter
+                
+                upload_file_to_snowflake(args, headers, file_path, table_name, None, None, None)
+
+
+
+def upload_file_to_snowflake(args, headers, file_path, table_name, year, slicer, columns_data_types):
     con = connect_to_snowflake()
     tgt_schema = 'ES_BASE'
     print(f"  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for {table_name}")
     logging.info(f"  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for {table_name}")
 
-    file_format = """ FILE_FORMAT = (type = csv field_delimiter = ',' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"')"""
+    file_format = "FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '\"')"
+
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     phys_table_parts = [table_name.replace('.', '_')]
 
     if '.' in table_name:
-        table_schema,real_table_name = table_name.split('.')
+        table_schema, real_table_name = table_name.split('.')
     else:
         table_schema = ''
         real_table_name = table_name
+
     stg = args.output if args.output else 'oracle_stage'
     stg = stg.replace('\\', '').replace('/', '')
 
@@ -206,29 +211,46 @@ def upload_file_to_snowflake(args, df, file_path, table_name, year, slicer):
         cur.execute(f"USE SCHEMA {tgt_schema}")
         cur.execute("USE WAREHOUSE PLAYGROUND_WH")
         create_stg = f"CREATE STAGE IF NOT EXISTS {stg} {file_format};"
-        cur.execute( create_stg ); print(create_stg); logging.info(create_stg)
+        cur.execute(create_stg); print(create_stg); logging.info(create_stg)
 
         put_file = f"PUT file://{file_path} @~/{stg} auto_compress=true;"
-        cur.execute( put_file ); print(f"\t\t{put_file}"); logging.info(f"\t\t{put_file}")
+        cur.execute(put_file)
+        print(f"\t\t{put_file}")
+        logging.info(f"\t\t{put_file}")
 
-        if args.ddl:
-            columns = ', '.join([f"{''.join(c for c in col if c.isalnum() or c=='_')} TEXT" for col in df.columns])
+        oracle_to_snowflake_type_mapping = {
+            'NUMBER': 'NUMBER(38,10)',
+            'VARCHAR2': 'TEXT',
+            'DATE': 'TIMESTAMP_NTZ',
+            'SDO_GEOMETRY': 'TEXT',
+            'MDS': 'TEXT',           # not sure how MDS.SDO_GEOMETRY comes across 
+            # Add more mappings as necessary
+        }
+
+        if columns_data_types:
+            # If column data types are provided, map them to Snowflake data types
+            columns = ', '.join([
+                f"{col.replace('#', '_')} {oracle_to_snowflake_type_mapping.get(columns_data_types[col], 'TEXT')}"
+                for col in headers
+            ])
         else:
-            type_mapping = {'object': 'text', 'int64': 'number', 'float64': 'float', 'datetime64[ns]': 'timestamp'}
-            # columns = ', '.join([f"{col} {type_mapping[str(df[col].dtype)]}" for col in df.columns])
-            columns = ', '.join([f"{''.join(c for c in col if c.isalnum() or c=='_')} {type_mapping[str(df[col].dtype)]}" for col in df.columns])
-            
+            # Directly use headers to construct the columns string, assuming TEXT data type for all
+            columns = ', '.join([f"{col.replace('#', '_')} TEXT" for col in headers])
+
+        if args.debug:
+            print(f"\n\n\t\t*** COLS: {columns} \n\n")
+        
         create_sql = f"CREATE OR REPLACE TABLE {phys_table} ({columns});"
-        print(f"\t\t--> {create_sql[0:120]}...")
+        print(f"\t\t--> {create_sql[:120]}...")  # No need to assign create_sql again
         logging.info(f"\t--> {create_sql}")
         cur.execute(create_sql)
 
-        # sql = f"""COPY INTO PLAYGROUND.{tgt_schema}.{phys_table} from @~/{stg}/{phys_table} {file_format} on_error='continue'; """
         sql = f"""COPY INTO PLAYGROUND.{tgt_schema}.{phys_table} from @~/{stg}/{real_table_name} {file_format} on_error='continue'; """
-        print(f'\t\t--> {sql[0:120]}...')
+        print(f'\t\t--> {sql[:120]}...')
         logging.info(f'\t\t--> {sql}')
         cur.execute(sql)
-    print(f"... copied into {phys_table}: {sql[0:120]}...")
+    
+    print(f"... copied into {phys_table}: {sql[:120]}...")
     logging.info(f"... copied into {phys_table}")
 
 
@@ -258,14 +280,14 @@ def read_tables_from_csv(file_path):
     return tables
 
 
-def extract_and_upload(args, table_details, output_dir, con_snowflake):
+def extract_and_upload(args, table_details, output_dir, con_snowflake, table_column_data_types):
     print(f"\n>> STARTING EXTRACT AND UPLOAD:\n   {table_details}")
     logging.info(f"\n>> STARTING EXTRACT AND UPLOAD:\n   {table_details}")
 
     schema, table_name = table_details['schema_table'].split(".")
-    columns_data_types = get_column_data_types(schema, table_name)
+    columns_data_types = table_column_data_types  # Use the passed column data types
     select_query = generate_select_query(schema, table_name, columns_data_types)
-    combination = ''
+    combination, where_clause = '', ''
 
     date_column = table_details['date_column']
     slicer_column = table_details['slicer_column']
@@ -280,7 +302,7 @@ def extract_and_upload(args, table_details, output_dir, con_snowflake):
         print(f"\n\n\t==> Queueing FILTERED job for {table_name} > {where_clause} ")
         logging.info(f"\n\n\t==> Queueing FILTERED job for {table_name} > {where_clause} ")
         query_sql = f"{select_query} {where_clause}"
-        process_extraction(args, schema, table_name, query_sql, filter_year, output_dir, table_details['schema_table'])
+        process_extraction(args, schema, table_name, query_sql, filter_year, output_dir, table_details['schema_table'], columns_data_types)
 
     else:
         current_year = datetime.now().year
@@ -309,10 +331,9 @@ def extract_and_upload(args, table_details, output_dir, con_snowflake):
             #     process_extraction( args, schema, table_name, '', '', output_dir, table_details['schema_table'] )
 
         query_sql = f"{select_query} {where_clause}"
-        process_extraction(args, schema, table_name, query_sql, f"{combination}", output_dir, table_details['schema_table'])
+        process_extraction(args, schema, table_name, query_sql, combination, output_dir, table_details['schema_table'], columns_data_types)
 
-
-def process_extraction(args, schema, table_name, query_sql, filter, output_dir, full_table_name):
+def process_extraction(args, schema, table_name, query_sql, filter, output_dir, full_table_name, columns_data_types):
     start_time = datetime.now()
     print(f" <<< PROCESS_EXTRACTION for {table_name} @{start_time}")
     logging.info(f" <<< PROCESS_EXTRACTION for {table_name} @{start_time}")
@@ -328,6 +349,8 @@ def process_extraction(args, schema, table_name, query_sql, filter, output_dir, 
         csv_file_path = os.path.join(output_dir, schema, csv_file_name)
 
         batch_size = 1000  # Adjust batch size as needed
+        first_batch = True
+ 
         while True:
             records = cur.fetchmany(batch_size)
             if not records:
@@ -340,13 +363,18 @@ def process_extraction(args, schema, table_name, query_sql, filter, output_dir, 
             # Write DataFrame to CSV file
             mode = 'a' if os.path.exists(csv_file_path) else 'w'
             header = not os.path.exists(csv_file_path)
-            df.to_csv(csv_file_path, mode=mode, header=header, index=False, doublequote=True, escapechar='\\')
+            df.to_csv(csv_file_path, mode=mode, header=header, index=False, sep='~', doublequote=True, escapechar='\\')
+
+            if first_batch:
+                headers = df.columns.tolist()  # Capture headers from the first batch
+                first_batch = False
 
         cur.close()
 
-        if args.sf and total_row_count > 0:
+        if args.sf and os.path.exists(csv_file_path) and not first_batch:  # Ensure there was at least one batch
             con_snowflake = connect_to_snowflake()
-            upload_file_to_snowflake(args, con_snowflake, csv_file_path, full_table_name, filter if filter else None, None )
+            # Now call upload function with headers
+            upload_file_to_snowflake(args, headers, csv_file_path, full_table_name, None, None, columns_data_types)
 
 
     except Exception as e:
@@ -354,9 +382,10 @@ def process_extraction(args, schema, table_name, query_sql, filter, output_dir, 
         logging.error(f"Error in process_extraction: {e}")
         return
 
-    elapsed_time = datetime.now() - start_time
-    print(f"::: Completed extraction of {table_name} in {elapsed_time}")
-    logging.info(f"::: Completed extraction of {table_name} in {elapsed_time}")
+    end_time = datetime.now()
+    elapsed_time = end_time - start_time
+    print(f"::: Completed extraction of {table_name} in {elapsed_time}: from {start_time} to {end_time}")
+    logging.info(f"::: Completed extraction of {table_name} in {elapsed_time}: from {start_time} to {end_time}")
 
     # Finally, close the Oracle connection
     con.close()
@@ -381,6 +410,7 @@ def process_args():
     parser.add_argument('-t','--tables', help='Comma separated list of tables to extract', required=False)
     parser.add_argument('--sf', action='store_true', help='If set, load tables into SF')
     parser.add_argument('--ddl', action='store_true', help='If set, generate table DDL from oracle into ddl folder')
+    parser.add_argument('--debug', action='store_true', help='If set, display additional data to help with troubleshooting')
     parser.add_argument('--push', action='store_true', help='If set, push CSV files from output directory into SF')
     args = parser.parse_args()
 
@@ -392,31 +422,56 @@ def main():
     print(":: STARTING MAIN")
     logging.info(":: STARTING MAIN")
     args = process_args()
-    ddl_folder = os.path.join( args.output, 'ddl')
-    if not os.path.exists( ddl_folder ):
-        os.makedirs( ddl_folder )
+    ddl_folder = os.path.join(args.output, 'ddl')
+    if not os.path.exists(ddl_folder):
+        os.makedirs(ddl_folder)
     init_oracle_client()
 
     if args.push:
-        push_csv_to_snowflake( args )
+        push_csv_to_snowflake(args)
     else:
+        # Step 1: Read Tables from CSV
         tables = read_tables_from_csv(args.tables)
+
+        # Initialize dictionary to store column data types for all tables
+        all_table_data_types = {}
+
+        # Connect to Snowflake outside the loop to use the same connection for all uploads
         con_snowflake = connect_to_snowflake() if args.sf else None
 
+        # Step 2 & 3: Loop through each table for DDL generation and fetching column data types
         for table_details in tables:
-            logging.info(f"--- PROCESSING: {table_details}")
-            if not args.ddl:
-                extract_and_upload(args, table_details, args.output, con_snowflake)
-                logging.info(f"--- COMPLETED: {table_details}")
+            schema_table = table_details['schema_table']
+            schema, table_name = schema_table.split(".")
+            full_table_name = f"{schema}.{table_name}"
+
+            logging.info(f"--- PROCESSING: {schema_table}")
+
+            # Generate DDL if requested
+            if args.ddl:
+                ddl = extract_table_ddl(schema, table_name)
+                write_ddl_to_file(ddl, full_table_name, ddl_folder)
+
+            # Fetch and store column data types
+            all_table_data_types[full_table_name] = get_column_data_types(args, schema, table_name)
+
+        # Step 4: Extract data and upload for each table
+        for table_details in tables:
+            schema_table = table_details['schema_table']
+            schema, table_name = schema_table.split(".")
+            full_table_name = f"{schema}.{table_name}"
+
+            # Ensure column data types for the table are already fetched
+            if full_table_name in all_table_data_types:
+                table_column_data_types = all_table_data_types[full_table_name]
+                extract_and_upload(args, table_details, args.output, con_snowflake, table_column_data_types[full_table_name])
             else:
-                sch_name, tbl_name = table_details['schema_table'].split(".")
-                ddl = extract_table_ddl( sch_name, tbl_name )
-                write_ddl_to_file(ddl, f"{sch_name}.{tbl_name}", ddl_folder )
-                extract_and_upload(args, table_details, args.output, con_snowflake)
-                logging.info(f"--- COMPLETED: {table_details}")
+                logging.error(f"Column data types for {full_table_name} were not fetched.")
+        logging.info(f"--- COMPLETED: {table_details}")
 
 if __name__ == "__main__":
     main()
+
 
 """
 hq8627osx:DEVOPS_INF>intel  
@@ -430,4 +485,4 @@ hq8627osx:DEVOPS_INF>pyenv activate ora_envx86                                  
 # python es-oracle-para.py -t missed.csv -o moen -p 4 --sf
 # python es-oracle-para.py -o moen --sf --push
 # python es-oracle-para.py -t moen-tables.csv -o moen --ddl --sf
-# python es-oracle-para.py -t moen3.csv -o moen --ddl --sf
+# python es-oracle-para.py -t moen3.csv -o moen --sf --ddl
