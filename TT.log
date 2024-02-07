@@ -1,0 +1,650 @@
+(ora_envx86) hq8627osx:DEVOPS_INF>python tt-oracle-para.py -t TT.csv -o TT --sf                                                                                                                                   main
+:: STARTING MAIN
+<<< READING TABLES FROM CSV
+<-- Reading tables from csv: TT.csv 
+... found 28 tables
+
+        >> Getting Datatypes for E21TRUBIS.PARTMSTR
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.WHSPRMSTR
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPHEAD
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPHEAD
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPHEAD
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPHEAD
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.PARTMSTR', 'filter_using': '', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.PARTMSTR
+ <<< PROCESS_EXTRACTION for PARTMSTR @2024-02-06 18:29:45.583262
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.PARTMSTR
+                2024-02-06 18:35:15 ==> Uploading E21TRUBIS_PARTMSTR to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+ERROR:snowflake.connector.ocsp_snowflake:WARNING!!! Using fail-open to connect. Driver is connecting to an HTTPS endpoint without OCSP based Certificate Revocation checking as it could not obtain a valid OCSP Response to use from the CA OCSP responder. Details: 
+ {'driver': 'PythonConnector', 'version': '3.6.0', 'eventType': 'RevocationCheckFailure', 'eventSubType': 'OCSPResponseAttachedCertInvalid', 'sfcPeerHost': 'jwympesfcb1stg.blob.core.windows.net', 'certId': 'MEowBwYFKw4DAhoEFHI5veg+lwndcdmDEkJ/H65lsL9sBBTHspx/HOO4Wu/paBqoXZTBJlJqaAITMwDhnhuxOxj1+nHCzwAAAOGeGw==', 'ocspRequestBase64': <asn1crypto.ocsp.OCSPRequest 5006832736 b'0R0P0N0L0J0\x07\x06\x05+\x0e\x03\x02\x1a\x04\x14r9\xbd\xe8>\x97\t\xddq\xd9\x83\x12B\x7f\x1f\xaee\xb0\xbfl\x04\x14\xc7\xb2\x9c\x7f\x1c\xe3\xb8Z\xef\xe9h\x1a\xa8]\x94\xc1&Rjh\x02\x133\x00\xe1\x9e\x1b\xb1;\x18\xf5\xfaq\xc2\xcf\x00\x00\x00\xe1\x9e\x1b'>, 'ocspResponderURL': 'http://oneocsp.microsoft.com/ocsp', 'errorMessage': '254009: Failed to verify the signature', 'insecureMode': False, 'failOpen': True, 'cacheEnabled': True, 'cacheHit': True}
+                PUT file://TT/E21TRUBIS/PARTMSTR.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_PARTMSTR (PART_CODE TEXT, PART_DESC TEXT, UOM TEXT, PUOM TEXT, SHIPUOM TEXT, ORDUOM TE...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_PARTMSTR from @~/TT/PARTMSTR FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_PARTMSTR: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_PARTMSTR from @~/TT/PARTMSTR FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of PARTMSTR in 0:06:40.448275: from 2024-02-06 18:29:45.583262 - 2024-02-06 18:36:26.031537
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.WHSPRMSTR', 'filter_using': '', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.WHSPRMSTR
+ <<< PROCESS_EXTRACTION for WHSPRMSTR @2024-02-06 18:36:26.077254
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.WHSPRMSTR
+                2024-02-06 18:47:10 ==> Uploading E21TRUBIS_WHSPRMSTR to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/WHSPRMSTR.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_WHSPRMSTR (COST_CTR TEXT, PART_CODE TEXT, PART_DESC TEXT, UOM TEXT, PUOM TEXT, SHIPUOM...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_WHSPRMSTR from @~/TT/WHSPRMSTR FILE_FORMAT = (type = csv field_delimiter = '~' sk...
+... copied into E21TRUBIS_WHSPRMSTR: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_WHSPRMSTR from @~/TT/WHSPRMSTR FILE_FORMAT = (type = csv field_delimiter = '~' sk...
+::: Completed extraction of WHSPRMSTR in 0:12:37.822844: from 2024-02-06 18:36:26.077254 - 2024-02-06 18:49:03.900098
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPHEAD', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') BETWEEN 2001 AND 2012", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPHEAD
+
+
+        ==> Queueing FILTERED job for SHIPHEAD >  where TO_CHAR(DUEDATE,'YYYY') BETWEEN 2001 AND 2012  
+ <<< PROCESS_EXTRACTION for SHIPHEAD @2024-02-06 18:49:03.945963
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPHEAD
+                2024-02-06 18:57:16 ==> Uploading E21TRUBIS_SHIPHEAD to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPHEAD_20012012.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPHEAD (PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORDER_TYPE TEXT, ORDER_DATE ...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPHEAD from @~/TT/SHIPHEAD FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPHEAD: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPHEAD from @~/TT/SHIPHEAD FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPHEAD in 0:09:08.111057: from 2024-02-06 18:49:03.945963 - 2024-02-06 18:58:12.057020
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPHEAD', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') BETWEEN 2013 AND 2017", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPHEAD
+
+
+        ==> Queueing FILTERED job for SHIPHEAD >  where TO_CHAR(DUEDATE,'YYYY') BETWEEN 2013 AND 2017  
+ <<< PROCESS_EXTRACTION for SHIPHEAD @2024-02-06 18:58:12.102804
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPHEAD
+                2024-02-06 19:08:16 ==> Uploading E21TRUBIS_SHIPHEAD to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPHEAD_20132017.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPHEAD (PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORDER_TYPE TEXT, ORDER_DATE ...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPHEAD from @~/TT/SHIPHEAD FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPHEAD: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPHEAD from @~/TT/SHIPHEAD FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPHEAD in 0:11:12.114809: from 2024-02-06 18:58:12.102804 - 2024-02-06 19:09:24.217613
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPHEAD', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') BETWEEN 2018 AND 2022", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPHEAD
+
+
+        ==> Queueing FILTERED job for SHIPHEAD >  where TO_CHAR(DUEDATE,'YYYY') BETWEEN 2018 AND 2022  
+ <<< PROCESS_EXTRACTION for SHIPHEAD @2024-02-06 19:09:24.267206
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPHEAD
+                2024-02-06 19:20:09 ==> Uploading E21TRUBIS_SHIPHEAD to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPHEAD_20182022.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPHEAD (PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORDER_TYPE TEXT, ORDER_DATE ...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPHEAD from @~/TT/SHIPHEAD FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPHEAD: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPHEAD from @~/TT/SHIPHEAD FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPHEAD in 0:11:55.817217: from 2024-02-06 19:09:24.267206 - 2024-02-06 19:21:20.084423
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPHEAD', 'filter_using': "TO_CHAR(NVL(DUEDATE,SYSDATE),'YYYY') >= 2023", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPHEAD
+
+
+        ==> Queueing FILTERED job for SHIPHEAD >  where TO_CHAR(NVL(DUEDATE,SYSDATE),'YYYY') >= 2023  
+ <<< PROCESS_EXTRACTION for SHIPHEAD @2024-02-06 19:21:20.134402
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPHEAD
+                2024-02-06 19:23:21 ==> Uploading E21TRUBIS_SHIPHEAD to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPHEAD_2023.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPHEAD (PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORDER_TYPE TEXT, ORDER_DATE ...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPHEAD from @~/TT/SHIPHEAD FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPHEAD: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPHEAD from @~/TT/SHIPHEAD FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPHEAD in 0:02:42.870236: from 2024-02-06 19:21:20.134402 - 2024-02-06 19:24:03.004638
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPITEM', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') <=2003", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPITEM
+
+
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') <=2003  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-06 19:24:03.049412
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPITEM
+                2024-02-06 19:47:38 ==> Uploading E21TRUBIS_SHIPITEM to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPITEM_2003.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPITEM (CONSOL_NUMB TEXT, PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORD_ITEM N...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPITEM: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPITEM in 0:24:53.351701: from 2024-02-06 19:24:03.049412 - 2024-02-06 19:48:56.401113
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPITEM', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') = 2004", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPITEM
+
+
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') = 2004  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-06 19:48:56.450276
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPITEM
+                2024-02-06 20:14:21 ==> Uploading E21TRUBIS_SHIPITEM to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPITEM_2004.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPITEM (CONSOL_NUMB TEXT, PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORD_ITEM N...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPITEM: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPITEM in 0:26:43.230382: from 2024-02-06 19:48:56.450276 - 2024-02-06 20:15:39.680658
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPITEM', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') = 2005", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPITEM
+
+
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') = 2005  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-06 20:15:39.732804
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPITEM
+                2024-02-06 20:43:49 ==> Uploading E21TRUBIS_SHIPITEM to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPITEM_2005.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPITEM (CONSOL_NUMB TEXT, PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORD_ITEM N...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPITEM: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPITEM in 0:29:37.530586: from 2024-02-06 20:15:39.732804 - 2024-02-06 20:45:17.263390
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPITEM', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') = 2006", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPITEM
+
+
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') = 2006  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-06 20:45:17.308968
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPITEM
+                2024-02-06 21:11:12 ==> Uploading E21TRUBIS_SHIPITEM to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPITEM_2006.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPITEM (CONSOL_NUMB TEXT, PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORD_ITEM N...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPITEM: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPITEM in 0:27:39.346679: from 2024-02-06 20:45:17.308968 - 2024-02-06 21:12:56.655647
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPITEM', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') = 2007", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPITEM
+
+
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') = 2007  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-06 21:12:56.705902
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPITEM
+                2024-02-06 21:37:47 ==> Uploading E21TRUBIS_SHIPITEM to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPITEM_2007.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPITEM (CONSOL_NUMB TEXT, PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORD_ITEM N...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPITEM: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPITEM in 0:26:26.551581: from 2024-02-06 21:12:56.705902 - 2024-02-06 21:39:23.257483
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPITEM', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') = 2008", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPITEM
+
+
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') = 2008  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-06 21:39:23.302412
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPITEM
+                2024-02-06 21:56:15 ==> Uploading E21TRUBIS_SHIPITEM to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPITEM_2008.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPITEM (CONSOL_NUMB TEXT, PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORD_ITEM N...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPITEM: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPITEM in 0:17:57.107546: from 2024-02-06 21:39:23.302412 - 2024-02-06 21:57:20.409958
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPITEM', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') = 2009", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPITEM
+
+
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') = 2009  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-06 21:57:20.458629
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPITEM
+                2024-02-06 22:09:49 ==> Uploading E21TRUBIS_SHIPITEM to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPITEM_2009.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPITEM (CONSOL_NUMB TEXT, PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORD_ITEM N...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPITEM: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPITEM in 0:13:32.982825: from 2024-02-06 21:57:20.458629 - 2024-02-06 22:10:53.441454
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPITEM', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') = 2010", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPITEM
+
+
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') = 2010  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-06 22:10:53.487326
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPITEM
+                2024-02-06 22:23:43 ==> Uploading E21TRUBIS_SHIPITEM to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPITEM_2010.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPITEM (CONSOL_NUMB TEXT, PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORD_ITEM N...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPITEM: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPITEM in 0:13:56.359120: from 2024-02-06 22:10:53.487326 - 2024-02-06 22:24:49.846446
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPITEM', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') = 2011", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPITEM
+
+
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') = 2011  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-06 22:24:49.891627
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPITEM
+                2024-02-06 22:37:26 ==> Uploading E21TRUBIS_SHIPITEM to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPITEM_2011.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPITEM (CONSOL_NUMB TEXT, PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORD_ITEM N...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPITEM: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPITEM in 0:13:42.520055: from 2024-02-06 22:24:49.891627 - 2024-02-06 22:38:32.411682
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPITEM', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') = 2012", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPITEM
+
+
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') = 2012  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-06 22:38:32.456890
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPITEM
+                2024-02-06 22:55:09 ==> Uploading E21TRUBIS_SHIPITEM to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPITEM_2012.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPITEM (CONSOL_NUMB TEXT, PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORD_ITEM N...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPITEM: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPITEM in 0:17:44.650763: from 2024-02-06 22:38:32.456890 - 2024-02-06 22:56:17.107653
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPITEM', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') = 2013", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPITEM
+
+
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') = 2013  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-06 22:56:17.156973
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPITEM
+                2024-02-06 23:16:40 ==> Uploading E21TRUBIS_SHIPITEM to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPITEM_2013.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPITEM (CONSOL_NUMB TEXT, PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORD_ITEM N...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPITEM: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPITEM in 0:21:47.981866: from 2024-02-06 22:56:17.156973 - 2024-02-06 23:18:05.138839
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPITEM', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') = 2014", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPITEM
+
+
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') = 2014  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-06 23:18:05.185171
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPITEM
+                2024-02-06 23:39:42 ==> Uploading E21TRUBIS_SHIPITEM to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPITEM_2014.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPITEM (CONSOL_NUMB TEXT, PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORD_ITEM N...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPITEM: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPITEM in 0:23:18.735858: from 2024-02-06 23:18:05.185171 - 2024-02-06 23:41:23.921029
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPITEM', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') = 2015", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPITEM
+
+
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') = 2015  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-06 23:41:23.970664
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPITEM
+                2024-02-07 00:04:00 ==> Uploading E21TRUBIS_SHIPITEM to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPITEM_2015.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPITEM (CONSOL_NUMB TEXT, PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORD_ITEM N...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPITEM: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPITEM in 0:24:27.043175: from 2024-02-06 23:41:23.970664 - 2024-02-07 00:05:51.013839
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPITEM', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') = 2016", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPITEM
+
+
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') = 2016  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-07 00:05:51.058998
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+Error in process_extraction: DPY-4011: the database or network closed the connection
+DPI-1080: connection was closed by ORA-3113
+ERROR:root:Error in process_extraction: DPY-4011: the database or network closed the connection
+DPI-1080: connection was closed by ORA-3113
+...
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') <= 2024  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-07 00:20:05.789621
+Error in process_extraction: ORA-12545: Connect failed because target host or object does not exist
+ERROR:root:Error in process_extraction: ORA-12545: Connect failed because target host or object does not exist
+
+
+
+
+
+
+(ora_envx86) hq8627osx:DEVOPS_INF>python tt-oracle-para.py -t TT.csv -o TT --sf                                                                                                                                   main
+:: STARTING MAIN
+<<< READING TABLES FROM CSV
+<-- Reading tables from csv: TT.csv 
+... found 9 tables
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.SHIPITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPITEM', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') = 2016", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPITEM
+
+
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') = 2016  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-07 08:30:20.869808
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPITEM
+                2024-02-07 08:56:08 ==> Uploading E21TRUBIS_SHIPITEM to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPITEM_2016.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPITEM (CONSOL_NUMB TEXT, PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORD_ITEM N...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPITEM: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPITEM in 0:27:42.509382: from 2024-02-07 08:30:20.869808 - 2024-02-07 08:58:03.379190
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPITEM', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') = 2017", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPITEM
+
+
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') = 2017  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-07 08:58:03.426287
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPITEM
+                2024-02-07 09:25:19 ==> Uploading E21TRUBIS_SHIPITEM to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPITEM_2017.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPITEM (CONSOL_NUMB TEXT, PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORD_ITEM N...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPITEM: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPITEM in 0:29:24.600924: from 2024-02-07 08:58:03.426287 - 2024-02-07 09:27:28.027211
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPITEM', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') = 2018", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPITEM
+
+
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') = 2018  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-07 09:27:28.070427
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPITEM
+                2024-02-07 09:57:20 ==> Uploading E21TRUBIS_SHIPITEM to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPITEM_2018.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPITEM (CONSOL_NUMB TEXT, PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORD_ITEM N...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPITEM: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPITEM in 0:31:57.738393: from 2024-02-07 09:27:28.070427 - 2024-02-07 09:59:25.808820
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPITEM', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') = 2019", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPITEM
+
+
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') = 2019  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-07 09:59:25.853999
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPITEM
+                2024-02-07 10:29:15 ==> Uploading E21TRUBIS_SHIPITEM to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPITEM_2019.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPITEM (CONSOL_NUMB TEXT, PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORD_ITEM N...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPITEM: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPITEM in 0:31:57.834168: from 2024-02-07 09:59:25.853999 - 2024-02-07 10:31:23.688167
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPITEM', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') = 2020", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPITEM
+
+
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') = 2020  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-07 10:31:23.746046
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPITEM
+                2024-02-07 11:02:12 ==> Uploading E21TRUBIS_SHIPITEM to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPITEM_2020.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPITEM (CONSOL_NUMB TEXT, PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORD_ITEM N...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPITEM: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPITEM in 0:33:27.962536: from 2024-02-07 10:31:23.746046 - 2024-02-07 11:04:51.708582
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPITEM', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') = 2021", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPITEM
+
+
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') = 2021  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-07 11:04:51.753287
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPITEM
+                2024-02-07 11:35:02 ==> Uploading E21TRUBIS_SHIPITEM to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPITEM_2021.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPITEM (CONSOL_NUMB TEXT, PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORD_ITEM N...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPITEM: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPITEM in 0:32:43.748986: from 2024-02-07 11:04:51.753287 - 2024-02-07 11:37:35.502273
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPITEM', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') = 2022", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPITEM
+
+
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') = 2022  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-07 11:37:35.549391
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPITEM
+                2024-02-07 12:01:00 ==> Uploading E21TRUBIS_SHIPITEM to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPITEM_2022.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPITEM (CONSOL_NUMB TEXT, PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORD_ITEM N...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPITEM: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPITEM in 0:25:56.826033: from 2024-02-07 11:37:35.549391 - 2024-02-07 12:03:32.375424
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPITEM', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') = 2023", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPITEM
+
+
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') = 2023  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-07 12:03:32.419500
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPITEM
+                2024-02-07 12:24:20 ==> Uploading E21TRUBIS_SHIPITEM to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPITEM_2023.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPITEM (CONSOL_NUMB TEXT, PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORD_ITEM N...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPITEM: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPITEM in 0:22:50.573848: from 2024-02-07 12:03:32.419500 - 2024-02-07 12:26:22.993348
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.SHIPITEM', 'filter_using': "TO_CHAR(DUEDATE,'YYYY') >= 2024", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.SHIPITEM
+
+
+        ==> Queueing FILTERED job for SHIPITEM >  where TO_CHAR(DUEDATE,'YYYY') >= 2024  
+ <<< PROCESS_EXTRACTION for SHIPITEM @2024-02-07 14:13:48.530809
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.SHIPITEM
+                2024-02-07 14:17:25 ==> Uploading E21TRUBIS_SHIPITEM to SF account: PLAYGROUND.ES_BASE
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/SHIPITEM_2024.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_SHIPITEM (CONSOL_NUMB TEXT, PICK_NUMB TEXT, ORDER_NUMB TEXT, REL_NUMB TEXT, ORD_ITEM N...
+                --> COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+... copied into E21TRUBIS_SHIPITEM: COPY INTO PLAYGROUND.ES_BASE.E21TRUBIS_SHIPITEM from @~/TT/SHIPITEM FILE_FORMAT = (type = csv field_delimiter = '~' skip...
+::: Completed extraction of SHIPITEM in 0:05:14.820999: from 2024-02-07 14:13:48.530809 - 2024-02-07 14:19:03.351808
+
+
+hq8627osx:DEVOPS_INF>./sizes.sh ./TT/E21TRUBIS                                                                                                                                         main
+Using Directory: ./TT/E21TRUBIS
+./TT/E21TRUBIS/PARTMSTR.csv                         384.71 MB     506442 lines
+./TT/E21TRUBIS/SHIPHEAD_20012012.csv                317.96 MB     788073 lines
+./TT/E21TRUBIS/SHIPHEAD_20132017.csv                384.66 MB     951474 lines
+./TT/E21TRUBIS/SHIPHEAD_20182022.csv                409.60 MB    1013658 lines
+./TT/E21TRUBIS/SHIPHEAD_2023.csv                     71.89 MB     178474 lines
+./TT/E21TRUBIS/SHIPITEM_2003.csv                    445.64 MB    2434563 lines
+./TT/E21TRUBIS/SHIPITEM_2004.csv                    489.95 MB    2613956 lines
+./TT/E21TRUBIS/SHIPITEM_2005.csv                    567.57 MB    2861751 lines
+./TT/E21TRUBIS/SHIPITEM_2006.csv                    518.03 MB    2600371 lines
+./TT/E21TRUBIS/SHIPITEM_2007.csv                    468.18 MB    2331511 lines
+./TT/E21TRUBIS/SHIPITEM_2008.csv                    324.01 MB    1596927 lines
+./TT/E21TRUBIS/SHIPITEM_2009.csv                    233.38 MB    1141378 lines
+./TT/E21TRUBIS/SHIPITEM_2010.csv                    245.26 MB    1198614 lines
+./TT/E21TRUBIS/SHIPITEM_2011.csv                    231.71 MB    1144007 lines
+./TT/E21TRUBIS/SHIPITEM_2012.csv                    329.46 MB    1596314 lines
+./TT/E21TRUBIS/SHIPITEM_2013.csv                    424.61 MB    2046089 lines
+./TT/E21TRUBIS/SHIPITEM_2014.csv                    472.21 MB    2266250 lines
+./TT/E21TRUBIS/SHIPITEM_2015.csv                    515.90 MB    2400684 lines
+./TT/E21TRUBIS/SHIPITEM_2016.csv                    528.42 MB    2487599 lines
+./TT/E21TRUBIS/SHIPITEM_2017.csv                    549.70 MB    2584945 lines
+./TT/E21TRUBIS/SHIPITEM_2018.csv                    592.70 MB    2787210 lines
+./TT/E21TRUBIS/SHIPITEM_2019.csv                    584.88 MB    2772898 lines
+./TT/E21TRUBIS/SHIPITEM_2020.csv                    579.04 MB    2738349 lines
+./TT/E21TRUBIS/SHIPITEM_2021.csv                    591.43 MB    2793765 lines
+./TT/E21TRUBIS/SHIPITEM_2022.csv                    526.60 MB    2467997 lines
+./TT/E21TRUBIS/SHIPITEM_2023.csv                    469.41 MB    2203316 lines
+./TT/E21TRUBIS/SHIPITEM_2024.csv                     52.17 MB     245502 lines
+./TT/E21TRUBIS/WHSPRMSTR.csv                        709.98 MB    1001129 lines
+hq8627osx:DEVOPS_INF>              

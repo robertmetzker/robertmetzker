@@ -1,0 +1,383 @@
+(ora_envx86) hq8627osx:DEVOPS_INF>python tt-oracle-para.py -t TT2.csv -o TT --sf                                                                                                                                  main
+:: STARTING MAIN
+<<< READING TABLES FROM CSV
+<-- Reading tables from csv: TT2.csv 
+... found 70 tables
+
+        >> Getting Datatypes for E21TRUBIS.ARSALESMAN
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.BRANCH
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.BUSAREA_REGION
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.BUSAREA
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.REGION
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.GLMOACCTS
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.GLPERMSTR
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.GLCHART
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.INVHEAD
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.ORDHEAD
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.OESRCJRNL
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.INVITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+        >> Getting Datatypes for E21TRUBIS.ORDITEM
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.ARSALESMAN', 'filter_using': '', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.ARSALESMAN
+ <<< PROCESS_EXTRACTION for ARSALESMAN @2024-02-07 14:39:40.097322
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.ARSALESMAN
+                2024-02-07 14:39:42 ==> Uploading E21TRUBIS_ARSALESMAN to SF account: PLAYGROUND.E21_RAW
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/ARSALESMAN.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_ARSALESMAN (SLS_REP TEXT, SLS_TYPE TEXT, SLS_NAME TEXT, ADDRESS1 TEXT, ADDRESS2 TEXT, ...
+                --> COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_ARSALESMAN from @~/TT/ARSALESMAN FILE_FORMAT = (type = csv field_delimiter = '~' ...
+... copied into E21TRUBIS_ARSALESMAN: COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_ARSALESMAN from @~/TT/ARSALESMAN FILE_FORMAT = (type = csv field_delimiter = '~' ...
+::: Completed extraction of ARSALESMAN in 0:00:04.391212: from 2024-02-07 14:39:40.097322 - 2024-02-07 14:39:44.488534
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.BRANCH', 'filter_using': '', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.BRANCH
+ <<< PROCESS_EXTRACTION for BRANCH @2024-02-07 14:39:44.539650
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.BRANCH
+                2024-02-07 14:39:46 ==> Uploading E21TRUBIS_BRANCH to SF account: PLAYGROUND.E21_RAW
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/BRANCH.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_BRANCH (BRANCH TEXT, BRANCH_DESC TEXT);...
+                --> COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_BRANCH from @~/TT/BRANCH FILE_FORMAT = (type = csv field_delimiter = '~' skip_hea...
+... copied into E21TRUBIS_BRANCH: COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_BRANCH from @~/TT/BRANCH FILE_FORMAT = (type = csv field_delimiter = '~' skip_hea...
+::: Completed extraction of BRANCH in 0:00:04.130909: from 2024-02-07 14:39:44.539650 - 2024-02-07 14:39:48.670559
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.BUSAREA_REGION', 'filter_using': '', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.BUSAREA_REGION
+ <<< PROCESS_EXTRACTION for BUSAREA_REGION @2024-02-07 14:39:48.717480
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.BUSAREA_REGION
+                2024-02-07 14:39:50 ==> Uploading E21TRUBIS_BUSAREA_REGION to SF account: PLAYGROUND.E21_RAW
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/BUSAREA_REGION.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_BUSAREA_REGION (BUS_AREA TEXT, REGION TEXT);...
+                --> COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_BUSAREA_REGION from @~/TT/BUSAREA_REGION FILE_FORMAT = (type = csv field_delimite...
+... copied into E21TRUBIS_BUSAREA_REGION: COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_BUSAREA_REGION from @~/TT/BUSAREA_REGION FILE_FORMAT = (type = csv field_delimite...
+::: Completed extraction of BUSAREA_REGION in 0:00:03.332497: from 2024-02-07 14:39:48.717480 - 2024-02-07 14:39:52.049977
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.BUSAREA', 'filter_using': '', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.BUSAREA
+ <<< PROCESS_EXTRACTION for BUSAREA @2024-02-07 14:39:52.096107
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.BUSAREA
+                2024-02-07 14:39:53 ==> Uploading E21TRUBIS_BUSAREA to SF account: PLAYGROUND.E21_RAW
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/BUSAREA.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_BUSAREA (BUS_AREA TEXT, BUS_AREA_DESC TEXT);...
+                --> COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_BUSAREA from @~/TT/BUSAREA FILE_FORMAT = (type = csv field_delimiter = '~' skip_h...
+... copied into E21TRUBIS_BUSAREA: COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_BUSAREA from @~/TT/BUSAREA FILE_FORMAT = (type = csv field_delimiter = '~' skip_h...
+::: Completed extraction of BUSAREA in 0:00:03.330480: from 2024-02-07 14:39:52.096107 - 2024-02-07 14:39:55.426587
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.REGION', 'filter_using': '', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.REGION
+ <<< PROCESS_EXTRACTION for REGION @2024-02-07 14:39:55.475544
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.REGION
+                2024-02-07 14:39:56 ==> Uploading E21TRUBIS_REGION to SF account: PLAYGROUND.E21_RAW
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/REGION.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_REGION (REGION TEXT, REGION_DESC TEXT);...
+                --> COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_REGION from @~/TT/REGION FILE_FORMAT = (type = csv field_delimiter = '~' skip_hea...
+... copied into E21TRUBIS_REGION: COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_REGION from @~/TT/REGION FILE_FORMAT = (type = csv field_delimiter = '~' skip_hea...
+::: Completed extraction of REGION in 0:00:03.023974: from 2024-02-07 14:39:55.475544 - 2024-02-07 14:39:58.499518
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.GLMOACCTS', 'filter_using': '', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.GLMOACCTS
+ <<< PROCESS_EXTRACTION for GLMOACCTS @2024-02-07 14:39:58.554007
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.GLMOACCTS
+                2024-02-07 14:39:59 ==> Uploading E21TRUBIS_GLMOACCTS to SF account: PLAYGROUND.E21_RAW
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/GLMOACCTS.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_GLMOACCTS (MOACCT_TYPE TEXT, ACCOUNT_NUMB TEXT, SERIAL_KEY NUMBER(38,10));...
+                --> COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_GLMOACCTS from @~/TT/GLMOACCTS FILE_FORMAT = (type = csv field_delimiter = '~' sk...
+... copied into E21TRUBIS_GLMOACCTS: COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_GLMOACCTS from @~/TT/GLMOACCTS FILE_FORMAT = (type = csv field_delimiter = '~' sk...
+::: Completed extraction of GLMOACCTS in 0:00:05.681251: from 2024-02-07 14:39:58.554007 - 2024-02-07 14:40:04.235258
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.GLPERMSTR', 'filter_using': '', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.GLPERMSTR
+ <<< PROCESS_EXTRACTION for GLPERMSTR @2024-02-07 14:40:04.283747
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.GLPERMSTR
+                2024-02-07 14:40:06 ==> Uploading E21TRUBIS_GLPERMSTR to SF account: PLAYGROUND.E21_RAW
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/GLPERMSTR.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_GLPERMSTR (SOURCE_MOD TEXT, GL_PERIOD TEXT, GL_YEAR TEXT, BEG_DATE TIMESTAMP_NTZ, END_...
+                --> COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_GLPERMSTR from @~/TT/GLPERMSTR FILE_FORMAT = (type = csv field_delimiter = '~' sk...
+... copied into E21TRUBIS_GLPERMSTR: COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_GLPERMSTR from @~/TT/GLPERMSTR FILE_FORMAT = (type = csv field_delimiter = '~' sk...
+::: Completed extraction of GLPERMSTR in 0:00:04.661616: from 2024-02-07 14:40:04.283747 - 2024-02-07 14:40:08.945363
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.GLCHART', 'filter_using': '', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.GLCHART
+ <<< PROCESS_EXTRACTION for GLCHART @2024-02-07 14:40:08.993979
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.GLCHART
+                2024-02-07 14:50:42 ==> Uploading E21TRUBIS_GLCHART to SF account: PLAYGROUND.E21_RAW
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/GLCHART.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_GLCHART (CHART_ACCT TEXT, CHART_DESC TEXT, TRANS_YEAR TEXT, DFLT_CURNCY TEXT, ACCT_GRO...
+                --> COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_GLCHART from @~/TT/GLCHART FILE_FORMAT = (type = csv field_delimiter = '~' skip_h...
+... copied into E21TRUBIS_GLCHART: COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_GLCHART from @~/TT/GLCHART FILE_FORMAT = (type = csv field_delimiter = '~' skip_h...
+::: Completed extraction of GLCHART in 0:10:58.799927: from 2024-02-07 14:40:08.993979 - 2024-02-07 14:51:07.793906
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.INVHEAD', 'filter_using': '', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.INVHEAD
+ <<< PROCESS_EXTRACTION for INVHEAD @2024-02-07 14:51:07.842391
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.INVHEAD
+                2024-02-07 15:25:49 ==> Uploading E21TRUBIS_INVHEAD to SF account: PLAYGROUND.E21_RAW
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/INVHEAD.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_INVHEAD (INVOICE_NUMB TEXT, MSTR_INV_NUMB TEXT, CONSOL_NUMB TEXT, ORDER_NUMB TEXT, REL...
+                --> COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_INVHEAD from @~/TT/INVHEAD FILE_FORMAT = (type = csv field_delimiter = '~' skip_h...
+... copied into E21TRUBIS_INVHEAD: COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_INVHEAD from @~/TT/INVHEAD FILE_FORMAT = (type = csv field_delimiter = '~' skip_h...
+::: Completed extraction of INVHEAD in 0:38:02.136655: from 2024-02-07 14:51:07.842391 - 2024-02-07 15:29:09.979046
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.ORDHEAD', 'filter_using': "TO_CHAR(order_date,'YYYY') <=2004", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.ORDHEAD
+
+
+        ==> Queueing FILTERED job for ORDHEAD >  where TO_CHAR(order_date,'YYYY') <=2004  
+ <<< PROCESS_EXTRACTION for ORDHEAD @2024-02-07 15:29:10.032360
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.ORDHEAD
+                2024-02-07 15:32:54 ==> Uploading E21TRUBIS_ORDHEAD to SF account: PLAYGROUND.E21_RAW
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/ORDHEAD_2004.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_ORDHEAD (ORDER_NUMB TEXT, REL_NUMB TEXT, ORDER_TYPE TEXT, ORDER_DATE TIMESTAMP_NTZ, DI...
+                --> COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_ORDHEAD from @~/TT/ORDHEAD FILE_FORMAT = (type = csv field_delimiter = '~' skip_h...
+... copied into E21TRUBIS_ORDHEAD: COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_ORDHEAD from @~/TT/ORDHEAD FILE_FORMAT = (type = csv field_delimiter = '~' skip_h...
+::: Completed extraction of ORDHEAD in 0:04:16.868845: from 2024-02-07 15:29:10.032360 - 2024-02-07 15:33:26.901205
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.ORDHEAD', 'filter_using': "TO_CHAR(order_date,'YYYY') between 2005 and 2010", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.ORDHEAD
+
+
+        ==> Queueing FILTERED job for ORDHEAD >  where TO_CHAR(order_date,'YYYY') between 2005 and 2010  
+ <<< PROCESS_EXTRACTION for ORDHEAD @2024-02-07 15:33:26.956050
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.ORDHEAD
+                2024-02-07 15:45:27 ==> Uploading E21TRUBIS_ORDHEAD to SF account: PLAYGROUND.E21_RAW
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/ORDHEAD_20052010.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_ORDHEAD (ORDER_NUMB TEXT, REL_NUMB TEXT, ORDER_TYPE TEXT, ORDER_DATE TIMESTAMP_NTZ, DI...
+                --> COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_ORDHEAD from @~/TT/ORDHEAD FILE_FORMAT = (type = csv field_delimiter = '~' skip_h...
+... copied into E21TRUBIS_ORDHEAD: COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_ORDHEAD from @~/TT/ORDHEAD FILE_FORMAT = (type = csv field_delimiter = '~' skip_h...
+::: Completed extraction of ORDHEAD in 0:13:47.398440: from 2024-02-07 15:33:26.956050 - 2024-02-07 15:47:14.354490
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.ORDHEAD', 'filter_using': "TO_CHAR(order_date,'YYYY') between 2011 and 2014", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.ORDHEAD
+
+
+        ==> Queueing FILTERED job for ORDHEAD >  where TO_CHAR(order_date,'YYYY') between 2011 and 2014  
+ <<< PROCESS_EXTRACTION for ORDHEAD @2024-02-07 15:47:14.405025
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.ORDHEAD
+                2024-02-07 15:57:16 ==> Uploading E21TRUBIS_ORDHEAD to SF account: PLAYGROUND.E21_RAW
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/ORDHEAD_20112014.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_ORDHEAD (ORDER_NUMB TEXT, REL_NUMB TEXT, ORDER_TYPE TEXT, ORDER_DATE TIMESTAMP_NTZ, DI...
+                --> COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_ORDHEAD from @~/TT/ORDHEAD FILE_FORMAT = (type = csv field_delimiter = '~' skip_h...
+... copied into E21TRUBIS_ORDHEAD: COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_ORDHEAD from @~/TT/ORDHEAD FILE_FORMAT = (type = csv field_delimiter = '~' skip_h...
+::: Completed extraction of ORDHEAD in 0:11:59.921917: from 2024-02-07 15:47:14.405025 - 2024-02-07 15:59:14.326942
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.ORDHEAD', 'filter_using': "TO_CHAR(order_date,'YYYY') between 2015 and 2017", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.ORDHEAD
+
+
+        ==> Queueing FILTERED job for ORDHEAD >  where TO_CHAR(order_date,'YYYY') between 2015 and 2017  
+ <<< PROCESS_EXTRACTION for ORDHEAD @2024-02-07 15:59:14.385827
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.ORDHEAD
+                2024-02-07 16:10:25 ==> Uploading E21TRUBIS_ORDHEAD to SF account: PLAYGROUND.E21_RAW
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/ORDHEAD_20152017.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_ORDHEAD (ORDER_NUMB TEXT, REL_NUMB TEXT, ORDER_TYPE TEXT, ORDER_DATE TIMESTAMP_NTZ, DI...
+                --> COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_ORDHEAD from @~/TT/ORDHEAD FILE_FORMAT = (type = csv field_delimiter = '~' skip_h...
+... copied into E21TRUBIS_ORDHEAD: COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_ORDHEAD from @~/TT/ORDHEAD FILE_FORMAT = (type = csv field_delimiter = '~' skip_h...
+::: Completed extraction of ORDHEAD in 0:12:54.185622: from 2024-02-07 15:59:14.385827 - 2024-02-07 16:12:08.571449
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.ORDHEAD', 'filter_using': "TO_CHAR(order_date,'YYYY') between 2018 and 2021", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.ORDHEAD
+
+
+        ==> Queueing FILTERED job for ORDHEAD >  where TO_CHAR(order_date,'YYYY') between 2018 and 2021  
+ <<< PROCESS_EXTRACTION for ORDHEAD @2024-02-07 16:12:08.627917
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.ORDHEAD
+                2024-02-07 16:29:17 ==> Uploading E21TRUBIS_ORDHEAD to SF account: PLAYGROUND.E21_RAW
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/ORDHEAD_20182021.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_ORDHEAD (ORDER_NUMB TEXT, REL_NUMB TEXT, ORDER_TYPE TEXT, ORDER_DATE TIMESTAMP_NTZ, DI...
+                --> COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_ORDHEAD from @~/TT/ORDHEAD FILE_FORMAT = (type = csv field_delimiter = '~' skip_h...
+... copied into E21TRUBIS_ORDHEAD: COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_ORDHEAD from @~/TT/ORDHEAD FILE_FORMAT = (type = csv field_delimiter = '~' skip_h...
+::: Completed extraction of ORDHEAD in 0:19:32.908009: from 2024-02-07 16:12:08.627917 - 2024-02-07 16:31:41.535926
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.ORDHEAD', 'filter_using': "TO_CHAR(order_date,'YYYY') >= 2022", 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.ORDHEAD
+
+
+        ==> Queueing FILTERED job for ORDHEAD >  where TO_CHAR(order_date,'YYYY') >= 2022  
+ <<< PROCESS_EXTRACTION for ORDHEAD @2024-02-07 16:31:41.595106
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.ORDHEAD
+                2024-02-07 16:39:18 ==> Uploading E21TRUBIS_ORDHEAD to SF account: PLAYGROUND.E21_RAW
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/ORDHEAD_2022.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_ORDHEAD (ORDER_NUMB TEXT, REL_NUMB TEXT, ORDER_TYPE TEXT, ORDER_DATE TIMESTAMP_NTZ, DI...
+                --> COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_ORDHEAD from @~/TT/ORDHEAD FILE_FORMAT = (type = csv field_delimiter = '~' skip_h...
+... copied into E21TRUBIS_ORDHEAD: COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_ORDHEAD from @~/TT/ORDHEAD FILE_FORMAT = (type = csv field_delimiter = '~' skip_h...
+::: Completed extraction of ORDHEAD in 0:09:09.156556: from 2024-02-07 16:31:41.595106 - 2024-02-07 16:40:50.751662
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.OESRCJRNL', 'filter_using': 'GL_YEAR between 2007 and 2009', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.OESRCJRNL
+
+
+        ==> Queueing FILTERED job for OESRCJRNL >  where GL_YEAR between 2007 and 2009  
+ <<< PROCESS_EXTRACTION for OESRCJRNL @2024-02-07 16:40:50.801854
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.OESRCJRNL
+                2024-02-07 16:51:10 ==> Uploading E21TRUBIS_OESRCJRNL to SF account: PLAYGROUND.E21_RAW
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/OESRCJRNL_20072009.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_OESRCJRNL (SERIAL_KEY NUMBER(38,10), SOURCE_MOD TEXT, SOURCE_TYPE TEXT, BATCH_NO NUMBE...
+                --> COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_OESRCJRNL from @~/TT/OESRCJRNL FILE_FORMAT = (type = csv field_delimiter = '~' sk...
+... copied into E21TRUBIS_OESRCJRNL: COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_OESRCJRNL from @~/TT/OESRCJRNL FILE_FORMAT = (type = csv field_delimiter = '~' sk...
+::: Completed extraction of OESRCJRNL in 0:10:42.110071: from 2024-02-07 16:40:50.801854 - 2024-02-07 16:51:32.911925
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.OESRCJRNL', 'filter_using': 'GL_YEAR between 2010 and 2012', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.OESRCJRNL
+
+
+        ==> Queueing FILTERED job for OESRCJRNL >  where GL_YEAR between 2010 and 2012  
+ <<< PROCESS_EXTRACTION for OESRCJRNL @2024-02-07 16:51:32.964128
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+ >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.OESRCJRNL
+                2024-02-07 17:00:24 ==> Uploading E21TRUBIS_OESRCJRNL to SF account: PLAYGROUND.E21_RAW
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/OESRCJRNL_20102012.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_OESRCJRNL (SERIAL_KEY NUMBER(38,10), SOURCE_MOD TEXT, SOURCE_TYPE TEXT, BATCH_NO NUMBE...
+                --> COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_OESRCJRNL from @~/TT/OESRCJRNL FILE_FORMAT = (type = csv field_delimiter = '~' sk...
+... copied into E21TRUBIS_OESRCJRNL: COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_OESRCJRNL from @~/TT/OESRCJRNL FILE_FORMAT = (type = csv field_delimiter = '~' sk...
+::: Completed extraction of OESRCJRNL in 0:09:15.371377: from 2024-02-07 16:51:32.964128 - 2024-02-07 17:00:48.335505
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.OESRCJRNL', 'filter_using': 'GL_YEAR between 2013 and 2014', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.OESRCJRNL
+
+
+        ==> Queueing FILTERED job for OESRCJRNL >  where GL_YEAR between 2013 and 2014  
+ <<< PROCESS_EXTRACTION for OESRCJRNL @2024-02-07 17:00:48.383238
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.OESRCJRNL
+                2024-02-07 17:12:42 ==> Uploading E21TRUBIS_OESRCJRNL to SF account: PLAYGROUND.E21_RAW
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/OESRCJRNL_20132014.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_OESRCJRNL (SERIAL_KEY NUMBER(38,10), SOURCE_MOD TEXT, SOURCE_TYPE TEXT, BATCH_NO NUMBE...
+                --> COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_OESRCJRNL from @~/TT/OESRCJRNL FILE_FORMAT = (type = csv field_delimiter = '~' sk...
+... copied into E21TRUBIS_OESRCJRNL: COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_OESRCJRNL from @~/TT/OESRCJRNL FILE_FORMAT = (type = csv field_delimiter = '~' sk...
+::: Completed extraction of OESRCJRNL in 0:12:19.000102: from 2024-02-07 17:00:48.383238 - 2024-02-07 17:13:07.383340
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.OESRCJRNL', 'filter_using': 'GL_YEAR = 2015', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.OESRCJRNL
+
+
+        ==> Queueing FILTERED job for OESRCJRNL >  where GL_YEAR = 2015  
+ <<< PROCESS_EXTRACTION for OESRCJRNL @2024-02-07 17:13:07.433981
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.OESRCJRNL
+                2024-02-07 17:19:55 ==> Uploading E21TRUBIS_OESRCJRNL to SF account: PLAYGROUND.E21_RAW
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/OESRCJRNL_2015.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_OESRCJRNL (SERIAL_KEY NUMBER(38,10), SOURCE_MOD TEXT, SOURCE_TYPE TEXT, BATCH_NO NUMBE...
+                --> COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_OESRCJRNL from @~/TT/OESRCJRNL FILE_FORMAT = (type = csv field_delimiter = '~' sk...
+... copied into E21TRUBIS_OESRCJRNL: COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_OESRCJRNL from @~/TT/OESRCJRNL FILE_FORMAT = (type = csv field_delimiter = '~' sk...
+::: Completed extraction of OESRCJRNL in 0:07:07.679396: from 2024-02-07 17:13:07.433981 - 2024-02-07 17:20:15.113377
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.OESRCJRNL', 'filter_using': 'GL_YEAR = 2016', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.OESRCJRNL
+
+
+        ==> Queueing FILTERED job for OESRCJRNL >  where GL_YEAR = 2016  
+ <<< PROCESS_EXTRACTION for OESRCJRNL @2024-02-07 17:20:15.165376
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.OESRCJRNL
+                2024-02-07 17:27:26 ==> Uploading E21TRUBIS_OESRCJRNL to SF account: PLAYGROUND.E21_RAW
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/OESRCJRNL_2016.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_OESRCJRNL (SERIAL_KEY NUMBER(38,10), SOURCE_MOD TEXT, SOURCE_TYPE TEXT, BATCH_NO NUMBE...
+                --> COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_OESRCJRNL from @~/TT/OESRCJRNL FILE_FORMAT = (type = csv field_delimiter = '~' sk...
+... copied into E21TRUBIS_OESRCJRNL: COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_OESRCJRNL from @~/TT/OESRCJRNL FILE_FORMAT = (type = csv field_delimiter = '~' sk...
+::: Completed extraction of OESRCJRNL in 0:07:33.688746: from 2024-02-07 17:20:15.165376 - 2024-02-07 17:27:48.854122
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.OESRCJRNL', 'filter_using': 'GL_YEAR = 2017', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.OESRCJRNL
+
+
+        ==> Queueing FILTERED job for OESRCJRNL >  where GL_YEAR = 2017  
+ <<< PROCESS_EXTRACTION for OESRCJRNL @2024-02-07 17:27:48.902355
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for E21TRUBIS.OESRCJRNL
+                2024-02-07 17:35:20 ==> Uploading E21TRUBIS_OESRCJRNL to SF account: PLAYGROUND.E21_RAW
+CREATE STAGE IF NOT EXISTS TT FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://TT/E21TRUBIS/OESRCJRNL_2017.csv @~/TT auto_compress=true;
+                --> CREATE OR REPLACE TABLE E21TRUBIS_OESRCJRNL (SERIAL_KEY NUMBER(38,10), SOURCE_MOD TEXT, SOURCE_TYPE TEXT, BATCH_NO NUMBE...
+                --> COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_OESRCJRNL from @~/TT/OESRCJRNL FILE_FORMAT = (type = csv field_delimiter = '~' sk...
+... copied into E21TRUBIS_OESRCJRNL: COPY INTO PLAYGROUND.E21_RAW.E21TRUBIS_OESRCJRNL from @~/TT/OESRCJRNL FILE_FORMAT = (type = csv field_delimiter = '~' sk...
+::: Completed extraction of OESRCJRNL in 0:07:53.023678: from 2024-02-07 17:27:48.902355 - 2024-02-07 17:35:41.926033
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'E21TRUBIS.OESRCJRNL', 'filter_using': 'GL_YEAR = 2018', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for E21TRUBIS.OESRCJRNL
+
+
+        ==> Queueing FILTERED job for OESRCJRNL >  where GL_YEAR = 2018  
+ <<< PROCESS_EXTRACTION for OESRCJRNL @2024-02-07 17:35:41.975849
+        - Connected to Oracle: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))
