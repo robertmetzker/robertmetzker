@@ -1,0 +1,11 @@
+MainProcess - INFO - Snowflake Connector for Python Version: 3.6.0, Python Version: 3.10.11, Platform: macOS-13.6.4-arm64-arm-64bit
+MainProcess - INFO - This connection is in OCSP Fail Open Mode. TLS Certificates would be checked for validity and revocation status. Any other Certificate Revocation related exceptions or OCSP Responder failures would be disregarded in favor of connectivity.
+MainProcess - INFO - Connected to Snowflake.
+MainProcess - INFO - query: [select to_char(current_timestamp(),'YYYY-MM-DD HH24:MI:SS') as now]
+MainProcess - INFO - query execution done
+MainProcess - INFO - Number of results in first chunk: 1
+MainProcess - INFO - query: [select current_timestamp()]
+MainProcess - INFO - query execution done
+MainProcess - INFO - Number of results in first chunk: 1
+MainProcess - INFO - closed
+MainProcess - INFO - No async queries seem to be running, deleting session

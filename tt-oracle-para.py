@@ -1,23 +1,49 @@
-import getpass, platform, csv, os, argparse, base64, glob, logging, warnings
+import csv, platform, sys, os, argparse, base64, logging
 from datetime import datetime
-import concurrent.futures
-from concurrent.futures import ProcessPoolExecutor
 
 import pandas as pd             # pip install pandas
 import oracledb                 # pip install python-oracledb
 import snowflake.connector      # pip install snowflake-connector-python
+import snowflake.connector.errors
+
+from pathlib import Path
+prog_path = Path(os.path.abspath(__file__))
+root = prog_path.parent.parent                  # Back from Run folder to Root DEVOPS_INF
+lclsetup = root/f"lclsetup"
+sys.path.append(str(root))
+sys.path.append(str(lclsetup))
+
+# print( "Using paths:\n", root,'\n', lclsetup, '\n','-'*80 )
+from lclsetup import dbsetup ,inf 
 
 
 def setup_logging():
+    filename = f'logs/tests_conn_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
+    
+   # Ensure the directory for the log file exists
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+
     logging.basicConfig(
-        filemname = f'logs/run_extract_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log',
+        filename = filename,
         level = logging.INFO,
         format="%(processName)s - %(levelname)s - %(message)s",
-        handlers=[logging.StreamHandler()]
     )
 
 def decode_password(encoded_password):
-    return base64.b64decode(encoded_password).decode()
+    if isinstance(encoded_password, bytes):
+        encoded_password = encoded_password.decode()
+    # Add padding if necessary
+    missing_padding = len(encoded_password) % 4
+    if missing_padding:
+        encoded_password += '=' * (4 - missing_padding)
+    try:
+        decoded_password = base64.b64decode(encoded_password).decode('utf-8')
+    except UnicodeDecodeError:
+        try:
+            decoded_password = base64.b64decode(encoded_password).decode('iso-8859-1')
+        except UnicodeDecodeError:
+            raise ValueError(f"Invalid encoding for password: {encoded_password}")
+    return decoded_password
 
 # Internal Components for handling Oracle and Snowflake
 # Per Thick Client requirements: https://python-oracledb.readthedocs.io/en/latest/user_guide/troubleshooting.html#dpy-4011
@@ -34,34 +60,97 @@ def init_oracle_client():
     oracledb.init_oracle_client(lib_dir=d)
 
 
-def connect_to_oracle():
-    user = "FIVETRAN"
-    pw = 'b3VyODAyMGRlYWw='.encode("ascii") #moen
-    dsn = "(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))"
-    pw = decode_password(pw)
-    # jdbc:oracle:thin:@//phxdevdb01.fbin.oci:1521/DEV
+def init_oracle_client():
+    d = None  # default suitable for Linux in case we move to an automated env.
 
-    con = oracledb.connect(user=user, password=pw, dsn=dsn)
-    print(f"\t- Connected to Oracle: {dsn}")
-    logging.info(f"\t- Connected to Oracle: {dsn}")
+    if platform.system() == "Darwin" and platform.machine() == "x86_64":   # macOS
+        # d = os.environ.get("HOME")+("/Downloads/instantclient_19_21")
+        d = os.environ.get("HOME")+("/instantclient")   # Changed since I had to build a custom Oracle Client for Apple Silicon
+    elif platform.system() == "Windows":
+        d = r"C:\temp\instantclient_19_21"
+    try:
+        oracledb.init_oracle_client(lib_dir=d)
+    except oracledb.DatabaseError:
+        print("Oracle connections are currently disabled.")
+
+def connect_to_oracle( user, pw, host, port, service_name ):
+    # dsn = "(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=dmaslorcl01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=e21bse.masl10devsrv1)))"
+    pw = decode_password(pw)
+
+    # con = oracledb.connect(user=user, password=pw, dsn=dsn)
+    dsn = host+':'+port+'/'+service_name
+    print(f"\t- Connecting to Oracle: {dsn}")
+    logging.info(f"\t- Connecting to Oracle: {dsn}")
+    
+    con = None  # Initialize the 'con' variable
+    try:
+        con = oracledb.connect(user=user, password=pw, dsn=dsn)
+    except oracledb.DatabaseError as e:
+        error_code = e.args[0].code
+        if error_code == 12154:
+            logging.error("!!! TNS issue detected. Please check your VPN connection.")
+            print("TNS issue detected. Please check your VPN connection.")
+        else:
+            raise
+
     return con
 
-def connect_to_snowflake():
-    password = decode_password(b'NDI0N1hTMnNub3dmbGFrZSE=')
-    sfcon = snowflake.connector.connect(
-        user="DBFUNCT",
-        password=password,
-        account="fbhs_gpg.east-us-2.azure",
-        warehouse="DATALOAD_DEV",
-        database="PLAYGROUND",
-        authentication="snowflake"
-    ) 
 
-    logging.info("Connected to Snowflake.")
+def connect_to_snowflake(account, warehouse, database, user, password):
+    password = decode_password(password)
+    sfcon = None  # Initialize the 'sfcon' variable
+
+    try:
+        sfcon = snowflake.connector.connect(
+            user=user, 
+            password=password,
+            account=account,
+            warehouse=warehouse,
+            database="PLAYGROUND",
+            authentication="snowflake"
+        )
+        logging.info("Connected to Snowflake.")
+    except Exception as e:
+        logging.error(f"!!! SNOWFLAKE CONNECTION issue detected. Please check your Snowflake account URL. \n{e}")
+        print(f"SNOWFLAKE CONNECTION issue detected. Please check your Snowflake account URL. \n{e}")
+
     return sfcon
 
 
-def extract_table_ddl( schema, table_name ):
+def connect_to_db(srcdb):
+    print(f"==> Connecting to {srcdb.get('dbtype','???')}... \n\t{srcdb}")
+    cursor = None
+    if srcdb.get('dbtype', '') == 'oracle':
+        con = connect_to_oracle( srcdb.get('user', ''), srcdb.get('password', ''), srcdb.get('host', ''), srcdb.get('port', ''), srcdb.get('service_name', '') )
+        if con:
+            print(f" >> Connected to Oracle: {srcdb.get('dsn', '')}")
+            sql =  "select to_char(sysdate,'YYYY-MM-DD HH24:MI:SS') from dual"
+            cursor = con.cursor()
+            cursor.execute( sql )
+            results = cursor.fetchall()
+            print(f" >> Connected to Oracle @{results[0][0]}")
+        else:
+            print(f"### No Oracle Connection was made.")
+
+    elif srcdb.get('dbtype','') =='snowflake':
+        con = connect_to_snowflake( srcdb.get('account', ''), srcdb.get('warehouse', ''), srcdb.get('database', ''), srcdb.get('user', ''), srcdb.get('password', ''))
+        if con:
+            print(f" >> Connected to Snowflake: {srcdb.get('account', '')}")
+            print(f" >> Warehouse: {srcdb.get('warehouse', '')}")
+            sql =  "select to_char(current_timestamp(),'YYYY-MM-DD HH24:MI:SS') as now"
+            cursor = con.cursor()
+            cursor.execute( sql )
+            results = cursor.fetchall()
+            print(f" >> Connected to Snowflake @{results[0][0]}")
+        else:
+            print("### No Snowflake Connection was made.")
+    else:
+        print(f" >> Unknown database type: {srcdb.get('dbtype', '')}")
+        sys.exit(1)
+    return cursor
+
+
+def extract_table_ddl( args, schema, table_name ):
     """Extract the DDL for the given schema and table from Oracle.
     
     Connects to the configured Oracle database, runs a query to get the 
@@ -75,15 +164,25 @@ def extract_table_ddl( schema, table_name ):
     Returns:
         str: The DDL string for the given schema and table.
     """
-    con = connect_to_oracle()
-    ddl_sql = f"SELECT DBMS_METADATA.GET_DDL('TABLE', '{table_name}','{schema}') FROM DUAL"
-    print(f"\t<< GENERATING DDL for {schema}.{table_name}:{ddl_sql}")
-    logging.info(f"\t<< GENERATING DDL for {schema}.{table_name}:{ddl_sql}")
+    srcdb = get_arg_db_info(args,'src')
 
-    cursor = con.cursor()
-    cursor.execute( ddl_sql )
-    ddl = cursor.fetchone()[0]
-    cursor.close()
+    try:
+        cursor = connect_to_db(srcdb)
+        ddl_sql = f"SELECT DBMS_METADATA.GET_DDL('TABLE', '{table_name}','{schema}') FROM DUAL"
+        print(f"\t<< GENERATING DDL for {schema}.{table_name}:{ddl_sql}")
+        logging.info(f"\t<< GENERATING DDL for {schema}.{table_name}:{ddl_sql}")
+        cursor.execute(ddl_sql)
+        ddl = cursor.fetchone()[0]
+    except oracledb.DatabaseError as e:
+        print(f"\t-- Error occurred while generating DDL: {e}")
+        logging.error(f"\t-- Error occurred while generating DDL: {e}")
+        ddl = None
+        error, = e.args
+        if error.code == 6512:
+            ddl = None
+        else:
+            raise
+
     return str(ddl)
 
 def write_ddl_to_file( ddl, table_schema, ddl_folder ):
@@ -108,11 +207,13 @@ def write_ddl_to_file( ddl, table_schema, ddl_folder ):
 
 def get_column_data_types(args, schema, table_name):
     """Gets the data types for columns in the given Oracle table."""
+    srcdb = get_arg_db_info(args,'src')
+
     print(f"\n\t>> Getting Datatypes for {schema}.{table_name}")
+    logging.debug(f"\n\t>> Connecting to {srcdb}")
     logging.info(f"\n\t>> Getting Datatypes for {schema}.{table_name}")
 
-    con = connect_to_oracle()
-    cursor = con.cursor()
+    cursor = connect_to_db( srcdb )
     query = f"""
     SELECT COLUMN_NAME, DATA_TYPE
     FROM ALL_TAB_COLUMNS
@@ -122,8 +223,6 @@ def get_column_data_types(args, schema, table_name):
     """
     cursor.execute(query)
     col_data_types = {f"{schema}.{table_name}": {row[0]: row[1] for row in cursor.fetchall()}}
-    cursor.close()
-    con.close()
 
     if args.debug:
         print(f"\t>> {col_data_types}")
@@ -132,49 +231,57 @@ def get_column_data_types(args, schema, table_name):
     return col_data_types
 
 
-def generate_table_create_sql(schema, table_name):
+def generate_table_create_sql(args, schema, table_name):
     """Generates a CREATE TABLE statement for the given Oracle table."""
-    
+    srcdb = get_arg_db_info(args,'srcdb')
+
     print(f"\n\t>> Generating CREATE TABLE for {schema}.{table_name}")
     logging.info(f"\n\t>> Generating CREATE TABLE for {schema}.{table_name}")
-
-    con = connect_to_oracle()
-    cursor = con.cursor()
-    query = f"""
-    SELECT COLUMN_NAME, DATA_TYPE, DATA_PRECISION, DATA_SCALE, COLUMN_ID
-    FROM ALL_TAB_COLUMNS
-    WHERE TABLE_NAME = '{table_name.upper()}' 
-    AND OWNER = '{schema.upper()}'
-    ORDER BY COLUMN_ID
-    """
-    
-    cursor.execute(query)
-    rows = cursor.fetchall()
-    
-    columns = []
-    for row in rows:
-        column_name = row[0]
-        data_type = row[1]
-        precision = row[2]
-        scale = row[3]
         
-        if data_type == 'DATE':
-            data_type = 'TIMESTAMP'
+    try:
+        cursor = connect_to_db(srcdb)
+        query = f"""
+        SELECT column_name, data_type, data_length, data_precision, data_scale, column_id
+        FROM all_tab_columns
+        WHERE table_name = '{table_name.upper()}' 
+        AND owner = '{schema.upper()}'
+        ORDER BY column_id
+        """
         
-        if precision and scale:
-            data_type += f"({precision},{scale})"
+        cursor.execute(query)
+        rows = cursor.fetchall()
+                
+        create_stmt = f"""CREATE TABLE {schema}.{table_name} (\n"""
+    
+        for row in rows:
+            column_name = row[0]
+            data_type = row[1]
+            data_length = row[2]
+            data_precision = row[3]
+            data_scale = row[4]
             
-        columns.append(f"{column_name} {data_type}")
+            if data_type == 'DATE':
+                data_type = 'TIMESTAMP'
+            
+            if data_type in ('NUMBER','FLOAT','BINARY_FLOAT','BINARY_DOUBLE'):
+                if data_precision is not None and data_scale is not None:
+                    create_stmt += f"\t {column_name} {data_type}({data_precision},{data_scale}),\n"
+                elif data_precision is not None:
+                    create_stmt += f"\t{column_name} {data_type}({data_precision}),\n"
+                else:
+                    create_stmt += f"\t{column_name} {data_type},\n"
+            elif data_type in ('VARCHAR2','NVARCHAR2','CHAR','NCHAR'):
+                create_stmt += f"\t{column_name} {data_type}({data_length}),\n"
+            else:
+                create_stmt += f"\t{column_name} {data_type},\n"
+            
+        create_stmt = create_stmt.rstrip(",\n") + "\n);"
         
-    column_defs = ",\n".join(columns)
-    
-    create_stmt = f"""CREATE TABLE {schema}.{table_name} (
-{column_defs}
-);"""
-    
-    cursor.close()
-    con.close()
-    
+    except:
+        print(f"\t-- Error generating CREATE TABLE for {schema}.{table_name}")
+        logging.info(f"\t-- Error generating CREATE TABLE for {schema}.{table_name}")
+        create_stmt = None
+        
     return create_stmt
 
 
@@ -207,6 +314,8 @@ def generate_select_query(schema, table_name, columns_data_types):
 def push_csv_to_snowflake(args):
     print(f">> PUSHING CSV FILES TO SNOWFLAKE")
     logging.info(f">> PUSHING CSV FILES TO SNOWFLAKE")
+    tgtdb = get_arg_db_info(args,'tgt')
+
     for root, dirs, files in os.walk(args.output):
         for file in files:
             if file.endswith('.csv'):
@@ -224,7 +333,9 @@ def push_csv_to_snowflake(args):
 
 
 def upload_file_to_snowflake(args, headers, file_path, table_name, year, slicer, columns_data_types):
-    con = connect_to_snowflake()
+    tgtdb = get_arg_db_info(args,'tgt')
+    cur = connect_to_db(tgtdb)
+    tgt_db = args.tgt_db if args.tgt_db else 'PLAYGROUND'
     tgt_schema = 'E21_RAW'
     print(f"  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for {table_name}")
     logging.info(f"  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for {table_name}")
@@ -248,10 +359,10 @@ def upload_file_to_snowflake(args, headers, file_path, table_name, year, slicer,
     if slicer:
         phys_table_parts.append(slicer)
     phys_table = "_".join(phys_table_parts)
-    print(f"\t\t{now} ==> Uploading {phys_table} to SF account: PLAYGROUND.{tgt_schema}")
-    logging.info(f"\t\t{now} ==> Uploading {phys_table} to SF account: PLAYGROUND.{tgt_schema}")
+    print(f"\t\t{now} ==> Uploading {phys_table} to SF account: {tgt_db}.{tgt_schema}")
+    logging.info(f"\t\t{now} ==> Uploading {phys_table} to SF account: {tgt_db}.{tgt_schema}")
     
-    with con.cursor() as cur:
+    with cur:
         cur.execute(f"USE SCHEMA {tgt_schema}")
         cur.execute("USE WAREHOUSE PLAYGROUND_WH")
         create_stg = f"CREATE STAGE IF NOT EXISTS {stg} {file_format};"
@@ -293,7 +404,7 @@ def upload_file_to_snowflake(args, headers, file_path, table_name, year, slicer,
         logging.info(f"\t--> {create_sql}")
         cur.execute(create_sql)
 
-        sql = f"""COPY INTO PLAYGROUND.{tgt_schema}.{phys_table} from @~/{stg}/{real_table_name} {file_format} on_error='continue'; """
+        sql = f"""COPY INTO {tgt_db}.{tgt_schema}.{phys_table} from @~/{stg}/{real_table_name} {file_format} on_error='continue'; """
         if args.debug:
             print(f'\t\t--> {sql}...')
         else:
@@ -357,7 +468,7 @@ def extract_and_upload(args, table_details, output_dir, con_snowflake, table_col
         print(f"\n\n\t==> Queueing FILTERED job for {table_name} > {where_clause} ")
         logging.info(f"\n\n\t==> Queueing FILTERED job for {table_name} > {where_clause} ")
         query_sql = f"{select_query} {where_clause}"
-        process_extraction(args, schema, table_name, query_sql, filter_year, output_dir, table_details['schema_table'], columns_data_types)
+        process_extraction(args, srcdb, schema, table_name, query_sql, filter_year, output_dir, table_details['schema_table'], columns_data_types)
 
     else:
         current_year = datetime.now().year
@@ -392,12 +503,13 @@ def process_extraction(args, schema, table_name, query_sql, filter, output_dir, 
     start_time = datetime.now()
     print(f" <<< PROCESS_EXTRACTION for {table_name} @{start_time}")
     logging.info(f" <<< PROCESS_EXTRACTION for {table_name} @{start_time}")
+    srcdb = get_arg_db_info(args,'src')
+    tgtdb = get_arg_db_info(args,'tgt')
 
     total_row_count = 0  # Initialize row count
 
     try:
-        con = connect_to_oracle()
-        cur = con.cursor()
+        cur = connect_to_db( srcdb )
         cur.execute(query_sql)
 
         csv_file_name = f"{table_name}_{filter}.csv" if filter else f"{table_name}.csv"
@@ -429,7 +541,7 @@ def process_extraction(args, schema, table_name, query_sql, filter, output_dir, 
         cur.close()
 
         if args.sf and os.path.exists(csv_file_path) and not first_batch:  # Ensure there was at least one batch
-            con_snowflake = connect_to_snowflake()
+            con_snowflake = connect_to_db( tgtdb )
             # Now call upload function with headers
             upload_file_to_snowflake(args, headers, csv_file_path, full_table_name, None, None, columns_data_types)
 
@@ -443,9 +555,6 @@ def process_extraction(args, schema, table_name, query_sql, filter, output_dir, 
     elapsed_time = end_time - start_time
     print(f"::: Completed extraction of {table_name} in {elapsed_time}: from {start_time} - {end_time}")
     logging.info(f"::: Completed extraction of {table_name} in {elapsed_time}: from {start_time} - {end_time}")
-
-    # Finally, close the Oracle connection
-    con.close()
 
 
 
@@ -470,11 +579,45 @@ def process_args():
     parser.add_argument('--ddl_only', action='store_true', help='If true, only extract the DDL and do nothing else')
     parser.add_argument('--debug', action='store_true', help='If set, display additional data to help with troubleshooting')
     parser.add_argument('--push', action='store_true', help='If set, push CSV files from output directory into SF')
+
+    parser.add_argument('--src', help='Source Connection env/key (tt/E21BSE)')
+    parser.add_argument('--tgt', help='Target Connection env/key (dev/funct/playground)')
+    
+    
     args = parser.parse_args()
 
-    args.p = 1 if not args.p else int( args.p )
+    args.src = args.src.strip('/')
+    if args.src.count("/") == 3:
+        args.srcenv, args.srckey, args.src_db, args.src_schema  = args.src.split('/')
+    elif args.src.count('/') == 2:
+        args.srcenv, args.srckey, args.src_db = args.src.split('/')
+        args.src_schema = None
+    else:
+        args.src_db, args.src_schema = None, None
+        args.srcenv, args.srckey = args.src.split('/', 1 )
+
+    args.tgt = args.tgt.strip('/')
+    if args.tgt.count("/") == 3:
+        args.tgtenv, args.tgtkey, args.tgt_db, args.tgt_schema  = args.tgt.split('/')
+    elif args.tgt.count('/') == 2:
+        args.tgtenv, args.tgtkey, args.tgt_db = args.tgt.split('/')
+        args.tgt_schema = None
+    else:
+        args.tgt_db, args.tgt_schema = None, None
+        args.tgtenv, args.tgtkey = args.tgt.split('/', 1 )
 
     return args
+
+
+def get_arg_db_info(args, db_type):
+    if db_type == 'src':
+        env = args.srcenv
+        key = args.srckey
+    else:
+        env = args.tgtenv
+        key = args.tgtkey
+    return dbsetup.config['env'][env][key]
+
 
 def main():
     print(":: STARTING MAIN")
@@ -484,6 +627,23 @@ def main():
     if not os.path.exists(ddl_folder):
         os.makedirs(ddl_folder)
     init_oracle_client()
+
+    if args.src:
+        print(f"Determining SRC database type from dbsetup...")
+        srcdb = get_arg_db_info(args,'src')
+        print(f" >> SRC: {srcdb}")
+    else:
+        print(f"!!! No SRC database specified")
+        srbdb = None
+        
+    if args.tgt:
+        print(f"Determining TGT database type from dbsetup...")
+        tgtdb = get_arg_db_info(args,'tgt')
+        print(f" >> TGT: {tgtdb}")
+    else:
+        print(f"!!! No TGT database specified")
+        tgtdb = None
+
 
     if args.push:
         push_csv_to_snowflake(args)
@@ -495,7 +655,7 @@ def main():
         all_table_data_types = {}
 
         # Connect to Snowflake outside the loop to use the same connection for all uploads
-        con_snowflake = connect_to_snowflake() if args.sf else None
+        con_snowflake = connect_to_db( tgtdb ) if args.sf else None
 
         # Step 2 & 3: Loop through each table for DDL generation and fetching column data types
         for table_details in tables:
@@ -509,11 +669,11 @@ def main():
             # TODO: Try to get the DDL and if an exception, use a new function to create the DDL instead
             if args.ddl or args.ddl_only:
                 try:
-                    ddl = extract_table_ddl(schema, table_name)
+                    ddl = extract_table_ddl( args, schema, table_name)
                 except Exception as e:
                     print(f"!!! Error extracting DDL for {full_table_name}: {e}")
                     print(f"   -Attempting to generate CREATE SQL for {full_table_name}")
-                    ddl = generate_table_create_sql(schema, table_name) 
+                    ddl = generate_table_create_sql(args, schema, table_name) 
                 write_ddl_to_file(ddl, full_table_name, ddl_folder)
 
 
@@ -551,3 +711,6 @@ hq8627osx:DEVOPS_INF>pyenv activate ora_envx86                                  
 
 # python tt-oracle-para.py -t TT.csv -o TT --sf --ddl
 # python tt-oracle-para.py -t TT2.csv -o TT --sf --ddl
+
+# python tt-oracle-para.py -t TTest.csv -o TT --src tt/E21BSE --tgt dev/funct/PLAYGROUND --ddl_only
+# python tt-oracle-para.py -t TTest.csv -o TT --src tt/E21BSE --tgt dev/funct/PLAYGROUND --sf --ddl
