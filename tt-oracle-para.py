@@ -233,7 +233,7 @@ def get_column_data_types(args, schema, table_name):
 
 def generate_table_create_sql(args, schema, table_name):
     """Generates a CREATE TABLE statement for the given Oracle table."""
-    srcdb = get_arg_db_info(args,'srcdb')
+    srcdb = get_arg_db_info(args,'src')
 
     print(f"\n\t>> Generating CREATE TABLE for {schema}.{table_name}")
     logging.info(f"\n\t>> Generating CREATE TABLE for {schema}.{table_name}")
