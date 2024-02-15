@@ -1,0 +1,58 @@
+name: Copy Pre-release to QA branch
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    if: "contains(github.event.release.prerelease, 'true')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Fetch all history for all branches and tags
+
+      - name: Determine Target Commitish
+        id: set_target_commitish
+        run: |
+          if [ -z "${{ github.event.release.target_commitish }}" ]; then
+            echo "Target commitish is not set. Using default 'main'."
+            echo "::set-output name=TARGET_COMMITISH::main"
+          else
+            echo "Target commitish is set to ${{ github.event.release.target_commitish }}."
+            echo "::set-output name=TARGET_COMMITISH::${{ github.event.release.target_commitish }}"
+          fi
+
+      - name: Setup QA Branch
+        run: |
+          git fetch origin
+          TARGET_COMMITISH=${{ steps.set_target_commitish.outputs.TARGET_COMMITISH }}
+          echo "Using target commitish: $TARGET_COMMITISH"
+          
+          git fetch origin $TARGET_COMMITISH
+          
+          # Ensure the target commitish is valid
+          if ! git rev-parse --verify origin/$TARGET_COMMITISH > /dev/null 2>&1; then
+            echo "The target commitish 'origin/$TARGET_COMMITISH' does not exist."
+            exit 1
+          fi
+
+          # Check if qa-branch exists and switch to it, or create it if it doesn't exist
+          if git branch -r | grep -q "origin/qa-branch"; then
+            git checkout qa-branch
+          else
+            git checkout -b qa-branch
+          fi
+          
+          git reset --hard origin/$TARGET_COMMITISH
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          git push origin qa-branch --force
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
