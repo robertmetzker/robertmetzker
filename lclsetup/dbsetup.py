@@ -1,5 +1,16 @@
 config = {
     'env': {
+        'gpd': {
+            'dev': {
+                'dbtype': 'sqlserver',
+                'server': 'mant6sqlsrv3',
+                'port': '1433',
+                'database': 'TLI',
+                'schema':'dbo',
+                'user': 'fivetran',
+                'password': 'T3VyODAyMERlYWw=',
+                }
+            },
         'tt': {
             'E21BSE': {
                 'dbtype': 'oracle',
