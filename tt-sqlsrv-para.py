@@ -45,42 +45,6 @@ def decode_password(encoded_password):
             raise ValueError(f"Invalid encoding for password: {encoded_password}")
     return decoded_password
 
-def extract_table_ddl( args, schema, table_name ):
-    """Extract the DDL for the given schema and table from Oracle.
-    
-    Connects to the configured Oracle database, runs a query to get the 
-    DDL for the specified schema and table, writes the result to a DDL 
-    file, and returns the DDL string.
-    
-    Args:
-        schema (str): The schema name in Oracle.
-        table_name (str): The table name in Oracle.
-    
-    Returns:
-        str: The DDL string for the given schema and table.
-    """
-    srcdb = get_arg_db_info(args,'src')
-    ddl = ''
-
-    try:
-        cursor = inf.get_dbcon(srcdb)
-        ddl_sql = f"SELECT DBMS_METADATA.GET_DDL('TABLE', '{table_name}','{schema}') FROM DUAL"
-        print(f"\t<< GENERATING DDL for {schema}.{table_name}:{ddl_sql}")
-        logging.info(f"\t<< GENERATING DDL for {schema}.{table_name}:{ddl_sql}")
-        cursor.execute(ddl_sql)
-        ddl = cursor.fetchone()[0]
-    except Exception as e:
-        print(f"\t-- Error occurred while generating DDL: {e}")
-        logging.error(f"\t-- Error occurred while generating DDL: {e}")
-        ddl = None
-        error, = e.args
-        if error.code == 6512:
-            ddl = None
-        else:
-            raise
-
-    return str(ddl)
-
 def write_ddl_to_file( ddl, table_schema, ddl_folder ):
     # Writes the provided DDL to a file in the specified output folder.
     # ddl: The DDL string to write to file.
@@ -111,7 +75,8 @@ def get_column_data_types(args, schema, table_name):
 
     cursor = inf.get_dbcon( srcdb )
     query = f"""
-    SELECT COLUMN_NAME, DATA_TYPE
+    SELECT COLUMN_NAME
+         , upper(DATA_TYPE) as data_type
     FROM INFORMATION_SCHEMA.COLUMNS
     WHERE upper(TABLE_NAME) = '{table_name.upper()}'
     AND upper(TABLE_SCHEMA) = '{schema.upper()}'
@@ -135,11 +100,11 @@ def generate_table_create_sql(args, schema, table_name):
     logging.info(f"\n\t>> Generating CREATE TABLE for {schema}.{table_name}")
         
     try:
-        cursor = connect_to_db(srcdb)
+        cursor = inf.get_dbcon(srcdb)
         query = f"""
         SELECT 
-              column_name
-            , data_type
+              upper(column_name) as column_name
+            , upper(data_type) as data_type
             , character_maximum_length as data_length
             , numeric_precision as data_precision
             , numeric_scale as data_scale
@@ -154,6 +119,8 @@ def generate_table_create_sql(args, schema, table_name):
                 
         create_stmt = f"""CREATE TABLE {schema}.{table_name} (\n"""
     
+        # records = [tuple(record) for record in records]  # Ensure records are in the correct format
+
         for row in rows:
             column_name = row[0]
             data_type = row[1]
@@ -161,16 +128,18 @@ def generate_table_create_sql(args, schema, table_name):
             data_precision = row[3]
             data_scale = row[4]
             
-            if 'DATE' in data_type.upper():
+            if 'DATE' in data_type:
                 data_type = 'TIMESTAMP'
             
-            if data_type.upper() in ('BIGINT','DECIMAL','INT','MONEY','NUMERIC','REAL','SMALLINT','TINYINT'):
+            if data_type in ('BIGINT','DECIMAL','MONEY','NUMERIC','REAL'):
                 if data_precision is not None and data_scale is not None:
-                    create_stmt += f"\t {column_name} {data_type}({data_precision},{data_scale}),\n"
+                    create_stmt += f"\t{column_name} {data_type}({data_precision},{data_scale}),\n"
                 elif data_precision is not None:
                     create_stmt += f"\t{column_name} {data_type}({data_precision}),\n"
                 else:
                     create_stmt += f"\t{column_name} {data_type},\n"
+            elif data_type in ('INT','SMALLINT','TINYINT'):
+                create_stmt += f"\t{column_name} {data_type}({data_precision}),\n"
             elif data_type in ('VARCHAR','NVARCHAR','CHAR','NCHAR'):
                 create_stmt += f"\t{column_name} {data_type}({data_length}),\n"
             else:
@@ -192,12 +161,14 @@ def generate_select_query(schema, table_name, columns_data_types):
 
     # Define how different data types should be formatted
     type_formatting = {
-        "DATETIME": {"pre": "to_char(", "post": ", 'YYYY-MM-DD HH24:MI:SS') as "},
-        "TIMESTAMP": {"pre": "to_char(", "post": ", 'YYYY-MM-DD HH24:MI:SS') as "},
-        "CHAR": {"pre": "trim(", "post": ") as "},
-        "NCHAR": {"pre": "trim(", "post": ") as "},
-        "VARCHAR": {"pre": "trim(", "post": ") as "},
-        "TEXT": {"pre": "trim(", "post": ") as "}
+        # "DATETIME": {"pre": "to_char(", "post": ", 'YYYY-MM-DD HH24:MI:SS') as "},
+        # "TIMESTAMP": {"pre": "to_char(", "post": ", 'YYYY-MM-DD HH24:MI:SS') as "},
+        "CHAR": {"pre": "rtrim(", "post": ") as "},
+        "NCHAR": {"pre": "rtrim(", "post": ") as "},
+        "VARCHAR": {"pre": "rtrim(", "post": ") as "},
+        "NVARCHAR": {"pre": "rtrim(", "post": ") as "},
+        "TEXT": {"pre": "rtrim(", "post": ") as "},
+        "BINARY": {"pre": "cast(", "post": " as varchar(8000) ) as "},
     }
 
     select_clauses = []
@@ -241,7 +212,7 @@ def upload_file_to_snowflake(args, headers, file_path, table_name, year, slicer,
     tgtdb = get_arg_db_info(args,'tgt')
     cur = inf.get_dbcon(tgtdb)
     tgt_db = args.tgt_db if args.tgt_db else 'PLAYGROUND'
-    tgt_schema = 'E21_RAW'
+    tgt_schema = 'GPD'
     print(f"  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for {table_name}")
     logging.info(f"  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for {table_name}")
 
@@ -283,7 +254,12 @@ def upload_file_to_snowflake(args, headers, file_path, table_name, year, slicer,
             'VARCHAR': 'TEXT',
             'DATETIME': 'TIMESTAMP_NTZ',
             'SDO_GEOMETRY': 'TEXT',
-            'MDS': 'TEXT',           # not sure how MDS.SDO_GEOMETRY comes gacross 
+            'MDS': 'TEXT',           # not sure how MDS.SDO_GEOMETRY comes across 
+            'BINARY': 'TEXT',         
+            'INT': 'NUMBER',
+            'SMALLINT': 'NUMBER',
+            'TINYINT': 'NUMBER',
+            'BIGINT': 'NUMBER',
             # Add more mappings as necessary
         }
 
@@ -433,7 +409,10 @@ def process_extraction(args, schema, table_name, query_sql, filter, output_dir, 
                 break
 
             # Convert records to a DataFrame
-            df = pd.DataFrame(records, columns=[desc[0] for desc in cur.description])
+            records = [tuple(record) for record in records]  # Ensure records are in the correct format
+            columns = [desc[0] for desc in cur.description]  # Extract column names from cursor description
+
+            df = pd.DataFrame(records, columns=columns)
             total_row_count += len(df)  # Update row count
             
             # Write DataFrame to CSV file
@@ -576,11 +555,10 @@ def main():
             # TODO: Try to get the DDL and if an exception, use a new function to create the DDL instead
             if args.ddl or args.ddl_only:
                 try:
-                    ddl = extract_table_ddl( args, schema, table_name)
-                except Exception as e:
-                    print(f"!!! Error extracting DDL for {full_table_name}: {e}")
                     print(f"   -Attempting to generate CREATE SQL for {full_table_name}")
                     ddl = generate_table_create_sql(args, schema, table_name) 
+                except Exception as e:
+                    print(f"!!! Error generating CREATE SQL for {full_table_name}: {e}")
                 write_ddl_to_file(ddl, full_table_name, ddl_folder)
 
 
@@ -635,8 +613,6 @@ hq8627osx:DEVOPS_INF>pyenv activate ora_envx86                                  
 """
 
 # python tt-sqlsrv-para.py -t gpd.csv -o gpd --src gpd/dev --ddl
-# python tt-oracle-para.py -t TT2.csv -o TT --sf --ddl
-
-# python tt-oracle-para.py -t TTest.csv -o TT --src tt/E21BSE --tgt dev/funct/PLAYGROUND --ddl_only
-# python tt-oracle-para.py -t moen.csv -o moen --src moen/dev --tgt dev/funct/PLAYGROUND --sf --ddl
-# python tt-oracle-para.py -t TTest.csv -o TT --src tt/E21BSE --tgt dev/funct/PLAYGROUND --sf --ddl
+# python tt-sqlsrv-para.py -t gpd.csv -o gpd --src gpd/dev --ddl_only
+# python tt-sqlsrv-para.py -t gpd.csv -o gpd --src gpd/dev --tgt dev/funct/PLAYGROUND --sf --ddl
+# python tt-sqlsrv-para.py -t gpd.csv -o gpd --src gpd/dev --tgt dev/funct/PLAYGROUND --ddl --push
