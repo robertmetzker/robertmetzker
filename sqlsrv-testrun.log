@@ -1,0 +1,351 @@
+... Trying to PUSH gpd\dbo\SOP30200.csv to SOP30200 ...
+ >> Connected to Snowflake: fbhs_gpg.east-us-2.azure >> WH: WH_DATALOAD_DEV
+         >> Connected to Snowflake @2024-03-06 08:45:56
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for SOP30200
+                2024-03-06 08:45:56 ==> Uploading SOP30200 to SF account: PLAYGROUND.GPD
+CREATE STAGE IF NOT EXISTS gpd FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://gpd\dbo\SOP30200.csv @~/gpd auto_compress=true;
+                --> CREATE OR REPLACE TABLE SOP30200 (SOPTYPE TEXT, SOPNUMBE TEXT, ORIGTYPE TEXT, ORIGNUMB TEXT, DOCID TEXT, DOCDATE TEXT, G...
+                --> COPY INTO PLAYGROUND.GPD.SOP30200 from @~/gpd/SOP30200 FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 F...
+
+... Trying to PUSH gpd\dbo\SOP30300.csv to SOP30300 ...
+Traceback (most recent call last):
+  File "\\fiber-fs2\profiles\robert.metzker\Desktop\DataMigration\tt-sqlsrv-para.py", line 595, in <module>
+    main()
+  File "\\fiber-fs2\profiles\robert.metzker\Desktop\DataMigration\tt-sqlsrv-para.py", line 528, in main
+    push_csv_to_snowflake(args)
+  File "\\fiber-fs2\profiles\robert.metzker\Desktop\DataMigration\tt-sqlsrv-para.py", line 202, in push_csv_to_snowflake
+    headers_line = next(f)  # Read the first line directly
+  File "C:\Users\robert.metzker\AppData\Local\Programs\Python\Python310\lib\encodings\cp1252.py", line 23, in decode
+    return codecs.charmap_decode(input,self.errors,decoding_table)[0]
+UnicodeDecodeError: 'charmap' codec can't decode byte 0x9d in position 2756: character maps to <undefined>
+PS Microsoft.PowerShell.Core\FileSystem::\\fiber-fs2\profiles\robert.metzker\Desktop\DataMigration> python tt-sqlsrv-para.py -t gpd.csv -o gpd --src gpd/dev --tgt dev/funct/PLAYGROUND --sf --ddl
+:: STARTING MAIN
+Determining SRC database type from dbsetup...
+ >> SRC: {'dbtype': 'sqlserver', 'server': 'mant6sqlsrv3', 'port': '1433', 'database': 'TLI', 'schema': 'dbo', 'user': 'fivetran', 'password': 'T3VyODAyMERlYWw='}
+Determining TGT database type from dbsetup...
+ >> TGT: {'dbtype': 'snowflake', 'account': 'fbhs_gpg.east-us-2.azure', 'user': 'dbfunct', 'password': 'NDI0N1hTMnNub3dmbGFrZSE=', 'database': 'ROLLBACK', 'role': 'ACCOUNTADMIN', 'warehouse': 'WH_DATALOAD_DEV', 'authenticator': 'snowflake', 'CLIENT_SESSION_KEEP_ALIVE': True}
+<<< READING TABLES FROM CSV
+<-- Reading tables from csv: gpd.csv
+... found 1 tables
+ >> Connected to Snowflake: fbhs_gpg.east-us-2.azure >> WH: WH_DATALOAD_DEV
+         >> Connected to Snowflake @2024-03-06 09:00:20
+   -Attempting to generate CREATE SQL for dbo.IV00101
+
+        >> Generating CREATE TABLE for dbo.IV00101
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-06 09:00:21.850000
+        >> WROTE dbo.IV00101 DDL to file: gpd\ddl\dbo_IV00101.sql
+
+        >> Getting Datatypes for dbo.IV00101
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+         >> Connected to SqlServer @2024-03-06 09:00:22.103000
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'dbo.IV00101', 'filter_using': '', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for dbo.IV00101
+ <<< PROCESS_EXTRACTION for IV00101 @2024-03-06 09:00:21.715441
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-06 09:00:22.360000
+Error in process_extraction: ('42000', "[42000] [Microsoft][SQL Server Native Client 11.0][SQL Server]'trim' is not a recognized built-in function name. (195) (SQLExecDirectW)")     
+ERROR:root:Error in process_extraction: ('42000', "[42000] [Microsoft][SQL Server Native Client 11.0][SQL Server]'trim' is not a recognized built-in function name. (195) (SQLExecDirectW)")
+PS Microsoft.PowerShell.Core\FileSystem::\\fiber-fs2\profiles\robert.metzker\Desktop\DataMigration> python tt-sqlsrv-para.py -t gpd.csv -o gpd --src gpd/dev --tgt dev/funct/PLAYGROUND --sf --ddl
+:: STARTING MAIN
+Determining SRC database type from dbsetup...
+ >> SRC: {'dbtype': 'sqlserver', 'server': 'mant6sqlsrv3', 'port': '1433', 'database': 'TLI', 'schema': 'dbo', 'user': 'fivetran', 'password': 'T3VyODAyMERlYWw='}
+Determining TGT database type from dbsetup...
+ >> TGT: {'dbtype': 'snowflake', 'account': 'fbhs_gpg.east-us-2.azure', 'user': 'dbfunct', 'password': 'NDI0N1hTMnNub3dmbGFrZSE=', 'database': 'ROLLBACK', 'role': 'ACCOUNTADMIN', 'warehouse': 'WH_DATALOAD_DEV', 'authenticator': 'snowflake', 'CLIENT_SESSION_KEEP_ALIVE': True}
+<<< READING TABLES FROM CSV
+<-- Reading tables from csv: gpd.csv
+... found 1 tables
+ >> Connected to Snowflake: fbhs_gpg.east-us-2.azure >> WH: WH_DATALOAD_DEV
+         >> Connected to Snowflake @2024-03-06 09:07:42
+   -Attempting to generate CREATE SQL for dbo.IV00101
+
+        >> Generating CREATE TABLE for dbo.IV00101
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-06 09:07:43.263000
+        >> WROTE dbo.IV00101 DDL to file: gpd\ddl\dbo_IV00101.sql
+
+        >> Getting Datatypes for dbo.IV00101
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+         >> Connected to SqlServer @2024-03-06 09:07:43.523000
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'dbo.IV00101', 'filter_using': '', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for dbo.IV00101
+ <<< PROCESS_EXTRACTION for IV00101 @2024-03-06 09:07:43.113534
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-06 09:07:43.760000
+Error in process_extraction: ('42000', "[42000] [Microsoft][SQL Server Native Client 11.0][SQL Server]'to_char' is not a recognized built-in function name. (195) (SQLExecDirectW)")  
+ERROR:root:Error in process_extraction: ('42000', "[42000] [Microsoft][SQL Server Native Client 11.0][SQL Server]'to_char' is not a recognized built-in function name. (195) (SQLExecDirectW)")
+PS Microsoft.PowerShell.Core\FileSystem::\\fiber-fs2\profiles\robert.metzker\Desktop\DataMigration> python tt-sqlsrv-para.py -t gpd.csv -o gpd --src gpd/dev --tgt dev/funct/PLAYGROUND --sf --ddl
+:: STARTING MAIN
+Determining SRC database type from dbsetup...
+ >> SRC: {'dbtype': 'sqlserver', 'server': 'mant6sqlsrv3', 'port': '1433', 'database': 'TLI', 'schema': 'dbo', 'user': 'fivetran', 'password': 'T3VyODAyMERlYWw='}
+Determining TGT database type from dbsetup...
+ >> TGT: {'dbtype': 'snowflake', 'account': 'fbhs_gpg.east-us-2.azure', 'user': 'dbfunct', 'password': 'NDI0N1hTMnNub3dmbGFrZSE=', 'database': 'ROLLBACK', 'role': 'ACCOUNTADMIN', 'warehouse': 'WH_DATALOAD_DEV', 'authenticator': 'snowflake', 'CLIENT_SESSION_KEEP_ALIVE': True}
+<<< READING TABLES FROM CSV
+<-- Reading tables from csv: gpd.csv
+... found 1 tables
+ >> Connected to Snowflake: fbhs_gpg.east-us-2.azure >> WH: WH_DATALOAD_DEV
+         >> Connected to Snowflake @2024-03-06 09:08:56
+   -Attempting to generate CREATE SQL for dbo.IV00101
+
+        >> Generating CREATE TABLE for dbo.IV00101
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-06 09:08:57.360000
+        >> WROTE dbo.IV00101 DDL to file: gpd\ddl\dbo_IV00101.sql
+
+        >> Getting Datatypes for dbo.IV00101
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-06 09:08:57.613000
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'dbo.IV00101', 'filter_using': '', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for dbo.IV00101
+ <<< PROCESS_EXTRACTION for IV00101 @2024-03-06 09:08:57.203808
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+ >> Connected to Snowflake: fbhs_gpg.east-us-2.azure >> WH: WH_DATALOAD_DEV
+         >> Connected to Snowflake @2024-03-06 09:09:48
+ >> Connected to Snowflake: fbhs_gpg.east-us-2.azure >> WH: WH_DATALOAD_DEV
+         >> Connected to Snowflake @2024-03-06 09:09:50
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for dbo.IV00101
+                2024-03-06 09:09:49 ==> Uploading dbo_IV00101 to SF account: PLAYGROUND.GPD
+CREATE STAGE IF NOT EXISTS gpd FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://gpd\dbo\IV00101.csv @~/gpd auto_compress=true;
+                --> CREATE OR REPLACE TABLE dbo_IV00101 (ITEMNMBR TEXT, ITEMDESC TEXT, NOTEINDX TEXT, ITMSHNAM TEXT, ITEMTYPE NUMBER, ITMGED...
+                --> COPY INTO PLAYGROUND.GPD.dbo_IV00101 from @~/gpd/IV00101 FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1...
+... copied into dbo_IV00101: COPY INTO PLAYGROUND.GPD.dbo_IV00101 from @~/gpd/IV00101 FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1...
+::: Completed extraction of IV00101 in 0:01:00.117078: from 2024-03-06 09:08:57.203808 - 2024-03-06 09:09:57.320886
+PS Microsoft.PowerShell.Core\FileSystem::\\fiber-fs2\profiles\robert.metzker\Desktop\DataMigration> python tt-sqlsrv-para.py -t gpd.csv -o gpd --src gpd/dev --tgt dev/funct/PLAYGROUND --sf --ddl
+:: STARTING MAIN
+Determining SRC database type from dbsetup...
+ >> SRC: {'dbtype': 'sqlserver', 'server': 'mant6sqlsrv3', 'port': '1433', 'database': 'TLI', 'schema': 'dbo', 'user': 'fivetran', 'password': 'T3VyODAyMERlYWw='}
+Determining TGT database type from dbsetup...
+ >> TGT: {'dbtype': 'snowflake', 'account': 'fbhs_gpg.east-us-2.azure', 'user': 'dbfunct', 'password': 'NDI0N1hTMnNub3dmbGFrZSE=', 'database': 'ROLLBACK', 'role': 'ACCOUNTADMIN', 'warehouse': 'WH_DATALOAD_DEV', 'authenticator': 'snowflake', 'CLIENT_SESSION_KEEP_ALIVE': True}
+<<< READING TABLES FROM CSV
+<-- Reading tables from csv: gpd.csv
+... found 1 tables
+ >> Connected to Snowflake: fbhs_gpg.east-us-2.azure >> WH: WH_DATALOAD_DEV
+         >> Connected to Snowflake @2024-03-06 09:18:46
+   -Attempting to generate CREATE SQL for dbo.IV00101
+
+        >> Generating CREATE TABLE for dbo.IV00101
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-06 09:18:48.067000
+        >> WROTE dbo.IV00101 DDL to file: gpd\ddl\dbo_IV00101.sql
+
+        >> Getting Datatypes for dbo.IV00101
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-06 09:18:48.327000
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'dbo.IV00101', 'filter_using': '', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for dbo.IV00101
+ <<< PROCESS_EXTRACTION for IV00101 @2024-03-06 09:18:47.913100
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+ >> Connected to Snowflake: fbhs_gpg.east-us-2.azure >> WH: WH_DATALOAD_DEV
+         >> Connected to Snowflake @2024-03-06 09:19:38
+ >> Connected to Snowflake: fbhs_gpg.east-us-2.azure >> WH: WH_DATALOAD_DEV
+         >> Connected to Snowflake @2024-03-06 09:19:39
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for dbo.IV00101
+                2024-03-06 09:19:39 ==> Uploading dbo_IV00101 to SF account: PLAYGROUND.GPD
+CREATE STAGE IF NOT EXISTS gpd FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://gpd\dbo\IV00101.csv @~/gpd auto_compress=true;
+                --> CREATE OR REPLACE TABLE dbo_IV00101 (ITEMNMBR TEXT, ITEMDESC TEXT, NOTEINDX TEXT, ITMSHNAM TEXT, ITEMTYPE NUMBER, ITMGED...
+                --> COPY INTO PLAYGROUND.GPD.dbo_IV00101 from @~/gpd/IV00101 FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1...
+... copied into dbo_IV00101: COPY INTO PLAYGROUND.GPD.dbo_IV00101 from @~/gpd/IV00101 FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1...
+::: Completed extraction of IV00101 in 0:01:00.000945: from 2024-03-06 09:18:47.913100 - 2024-03-06 09:19:47.914045
+PS Microsoft.PowerShell.Core\FileSystem::\\fiber-fs2\profiles\robert.metzker\Desktop\DataMigration> python tt-sqlsrv-para.py -t gpd.csv -o gpd --src gpd/dev --tgt dev/funct/PLAYGROUND --sf --ddl
+:: STARTING MAIN
+Determining SRC database type from dbsetup...
+ >> SRC: {'dbtype': 'sqlserver', 'server': 'mant6sqlsrv3', 'port': '1433', 'database': 'TLI', 'schema': 'dbo', 'user': 'fivetran', 'password': 'T3VyODAyMERlYWw='}
+Determining TGT database type from dbsetup...
+ >> TGT: {'dbtype': 'snowflake', 'account': 'fbhs_gpg.east-us-2.azure', 'user': 'dbfunct', 'password': 'NDI0N1hTMnNub3dmbGFrZSE=', 'database': 'ROLLBACK', 'role': 'ACCOUNTADMIN', 'warehouse': 'WH_DATALOAD_DEV', 'authenticator': 'snowflake', 'CLIENT_SESSION_KEEP_ALIVE': True}
+<<< READING TABLES FROM CSV
+<-- Reading tables from csv: gpd.csv
+... found 1 tables
+ >> Connected to Snowflake: fbhs_gpg.east-us-2.azure >> WH: WH_DATALOAD_DEV
+         >> Connected to Snowflake @2024-03-06 09:21:11
+   -Attempting to generate CREATE SQL for dbo.IV00101
+
+        >> Generating CREATE TABLE for dbo.IV00101
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-06 09:21:12.580000
+        >> WROTE dbo.IV00101 DDL to file: gpd\ddl\dbo_IV00101.sql
+
+        >> Getting Datatypes for dbo.IV00101
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-06 09:21:12.827000
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'dbo.IV00101', 'filter_using': '', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for dbo.IV00101
+ <<< PROCESS_EXTRACTION for IV00101 @2024-03-06 09:21:12.409456
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+ >> Connected to Snowflake: fbhs_gpg.east-us-2.azure >> WH: WH_DATALOAD_DEV
+         >> Connected to Snowflake @2024-03-06 09:22:04
+ >> Connected to Snowflake: fbhs_gpg.east-us-2.azure >> WH: WH_DATALOAD_DEV
+         >> Connected to Snowflake @2024-03-06 09:22:05
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for dbo.IV00101
+                2024-03-06 09:22:05 ==> Uploading dbo_IV00101 to SF account: PLAYGROUND.GPD
+CREATE STAGE IF NOT EXISTS gpd FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://gpd\dbo\IV00101.csv @~/gpd auto_compress=true;
+                --> CREATE OR REPLACE TABLE dbo_IV00101 (ITEMNMBR TEXT, ITEMDESC TEXT, NOTEINDX TEXT, ITMSHNAM TEXT, ITEMTYPE NUMBER, ITMGED...
+                --> COPY INTO PLAYGROUND.GPD.dbo_IV00101 from @~/gpd/IV00101 FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1...
+... copied into dbo_IV00101: COPY INTO PLAYGROUND.GPD.dbo_IV00101 from @~/gpd/IV00101 FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1...
+::: Completed extraction of IV00101 in 0:00:58.334544: from 2024-03-06 09:21:12.409456 - 2024-03-06 09:22:10.744000
+PS Microsoft.PowerShell.Core\FileSystem::\\fiber-fs2\profiles\robert.metzker\Desktop\DataMigration> python tt-sqlsrv-para.py -t gpd.csv -o gpd --src gpd/dev --tgt dev/funct/PLAYGROUND --sf --ddl
+:: STARTING MAIN
+Determining SRC database type from dbsetup...
+ >> SRC: {'dbtype': 'sqlserver', 'server': 'mant6sqlsrv3', 'port': '1433', 'database': 'TLI', 'schema': 'dbo', 'user': 'fivetran', 'password': 'T3VyODAyMERlYWw='}
+Determining TGT database type from dbsetup...
+ >> TGT: {'dbtype': 'snowflake', 'account': 'fbhs_gpg.east-us-2.azure', 'user': 'dbfunct', 'password': 'NDI0N1hTMnNub3dmbGFrZSE=', 'database': 'ROLLBACK', 'role': 'ACCOUNTADMIN', 'warehouse': 'WH_DATALOAD_DEV', 'authenticator': 'snowflake', 'CLIENT_SESSION_KEEP_ALIVE': True}
+<<< READING TABLES FROM CSV
+<-- Reading tables from csv: gpd.csv
+... found 4 tables
+ >> Connected to Snowflake: fbhs_gpg.east-us-2.azure >> WH: WH_DATALOAD_DEV
+         >> Connected to Snowflake @2024-03-06 09:30:43
+   -Attempting to generate CREATE SQL for dbo.IV00101
+
+        >> Generating CREATE TABLE for dbo.IV00101
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-06 09:30:44.003000
+        >> WROTE dbo.IV00101 DDL to file: gpd\ddl\dbo_IV00101.sql
+
+        >> Getting Datatypes for dbo.IV00101
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-06 09:30:44.247000
+   -Attempting to generate CREATE SQL for dbo.IV00102
+
+        >> Generating CREATE TABLE for dbo.IV00102
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-06 09:30:44.483000
+        >> WROTE dbo.IV00102 DDL to file: gpd\ddl\dbo_IV00102.sql
+
+        >> Getting Datatypes for dbo.IV00102
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-06 09:30:44.730000
+   -Attempting to generate CREATE SQL for dbo.SOP30200
+
+        >> Generating CREATE TABLE for dbo.SOP30200
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-06 09:30:44.980000
+        >> WROTE dbo.SOP30200 DDL to file: gpd\ddl\dbo_SOP30200.sql
+
+        >> Getting Datatypes for dbo.SOP30200
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-06 09:30:45.230000
+   -Attempting to generate CREATE SQL for dbo.SOP30300
+
+        >> Generating CREATE TABLE for dbo.SOP30300
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-06 09:30:45.500000
+        >> WROTE dbo.SOP30300 DDL to file: gpd\ddl\dbo_SOP30300.sql
+
+        >> Getting Datatypes for dbo.SOP30300
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-06 09:30:45.757000
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'dbo.IV00101', 'filter_using': '', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for dbo.IV00101
+ <<< PROCESS_EXTRACTION for IV00101 @2024-03-06 09:30:45.347278
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-06 09:30:46.007000
+ >> Connected to Snowflake: fbhs_gpg.east-us-2.azure >> WH: WH_DATALOAD_DEV
+         >> Connected to Snowflake @2024-03-06 09:31:36
+ >> Connected to Snowflake: fbhs_gpg.east-us-2.azure >> WH: WH_DATALOAD_DEV
+         >> Connected to Snowflake @2024-03-06 09:31:37
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for dbo.IV00101
+                2024-03-06 09:31:37 ==> Uploading dbo_IV00101 to SF account: PLAYGROUND.GPD
+CREATE STAGE IF NOT EXISTS gpd FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://gpd\dbo\IV00101.csv @~/gpd auto_compress=true;
+                --> CREATE OR REPLACE TABLE dbo_IV00101 (ITEMNMBR TEXT, ITEMDESC TEXT, NOTEINDX TEXT, ITMSHNAM TEXT, ITEMTYPE NUMBER, ITMGED...
+                --> COPY INTO PLAYGROUND.GPD.dbo_IV00101 from @~/gpd/IV00101 FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1...
+... copied into dbo_IV00101: COPY INTO PLAYGROUND.GPD.dbo_IV00101 from @~/gpd/IV00101 FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1...
+::: Completed extraction of IV00101 in 0:00:58.157395: from 2024-03-06 09:30:45.347278 - 2024-03-06 09:31:43.504673
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'dbo.IV00102', 'filter_using': '', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for dbo.IV00102
+ <<< PROCESS_EXTRACTION for IV00102 @2024-03-06 09:31:43.507695
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-06 09:31:44.163000
+ >> Connected to Snowflake: fbhs_gpg.east-us-2.azure >> WH: WH_DATALOAD_DEV
+         >> Connected to Snowflake @2024-03-06 09:40:06
+ >> Connected to Snowflake: fbhs_gpg.east-us-2.azure >> WH: WH_DATALOAD_DEV
+         >> Connected to Snowflake @2024-03-06 09:40:07
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for dbo.IV00102
+                2024-03-06 09:40:07 ==> Uploading dbo_IV00102 to SF account: PLAYGROUND.GPD
+CREATE STAGE IF NOT EXISTS gpd FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://gpd\dbo\IV00102.csv @~/gpd auto_compress=true;
+                --> CREATE OR REPLACE TABLE dbo_IV00102 (ITEMNMBR TEXT, LOCNCODE TEXT, BINNMBR TEXT, RCRDTYPE NUMBER, PRIMVNDR TEXT, ITMFRFL...
+                --> COPY INTO PLAYGROUND.GPD.dbo_IV00102 from @~/gpd/IV00102 FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1...
+... copied into dbo_IV00102: COPY INTO PLAYGROUND.GPD.dbo_IV00102 from @~/gpd/IV00102 FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1...
+::: Completed extraction of IV00102 in 0:08:47.666391: from 2024-03-06 09:31:43.507695 - 2024-03-06 09:40:31.174086
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'dbo.SOP30200', 'filter_using': '', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for dbo.SOP30200
+ <<< PROCESS_EXTRACTION for SOP30200 @2024-03-06 09:40:31.177086
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-06 09:40:31.840000
+ >> Connected to Snowflake: fbhs_gpg.east-us-2.azure >> WH: WH_DATALOAD_DEV
+         >> Connected to Snowflake @2024-03-06 10:40:02
+ >> Connected to Snowflake: fbhs_gpg.east-us-2.azure >> WH: WH_DATALOAD_DEV
+         >> Connected to Snowflake @2024-03-06 10:40:04
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for dbo.SOP30200
+                2024-03-06 10:40:03 ==> Uploading dbo_SOP30200 to SF account: PLAYGROUND.GPD
+CREATE STAGE IF NOT EXISTS gpd FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://gpd\dbo\SOP30200.csv @~/gpd auto_compress=true;
+                --> CREATE OR REPLACE TABLE dbo_SOP30200 (SOPTYPE NUMBER, SOPNUMBE TEXT, ORIGTYPE NUMBER, ORIGNUMB TEXT, DOCID TEXT, DOCDATE...
+                --> COPY INTO PLAYGROUND.GPD.dbo_SOP30200 from @~/gpd/SOP30200 FILE_FORMAT = (type = csv field_delimiter = '~' skip_header =...
+... copied into dbo_SOP30200: COPY INTO PLAYGROUND.GPD.dbo_SOP30200 from @~/gpd/SOP30200 FILE_FORMAT = (type = csv field_delimiter = '~' skip_header =...
+::: Completed extraction of SOP30200 in 1:01:58.831687: from 2024-03-06 09:40:31.177086 - 2024-03-06 10:42:30.008773
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'dbo.SOP30300', 'filter_using': '', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for dbo.SOP30300
+ <<< PROCESS_EXTRACTION for SOP30300 @2024-03-06 10:42:30.023775
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-06 10:42:31.003000
+ >> Connected to Snowflake: fbhs_gpg.east-us-2.azure >> WH: WH_DATALOAD_DEV
+         >> Connected to Snowflake @2024-03-06 13:16:35
+ >> Connected to Snowflake: fbhs_gpg.east-us-2.azure >> WH: WH_DATALOAD_DEV
+         >> Connected to Snowflake @2024-03-06 13:16:37
+  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for dbo.SOP30300
+                2024-03-06 13:16:36 ==> Uploading dbo_SOP30300 to SF account: PLAYGROUND.GPD
+CREATE STAGE IF NOT EXISTS gpd FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+                PUT file://gpd\dbo\SOP30300.csv @~/gpd auto_compress=true;
+                --> CREATE OR REPLACE TABLE dbo_SOP30300 (SOPTYPE NUMBER, SOPNUMBE TEXT, LNITMSEQ NUMBER, CMPNTSEQ NUMBER, ITEMNMBR TEXT, IT...
+                --> COPY INTO PLAYGROUND.GPD.dbo_SOP30300 from @~/gpd/SOP30300 FILE_FORMAT = (type = csv field_delimiter = '~' skip_header =...
+... copied into dbo_SOP30300: COPY INTO PLAYGROUND.GPD.dbo_SOP30300 from @~/gpd/SOP30300 FILE_FORMAT = (type = csv field_delimiter = '~' skip_header =...
+::: Completed extraction of SOP30300 in 2:41:06.751417: from 2024-03-06 10:42:30.023775 - 2024-03-06 13:23:36.775192
+PS Microsoft.PowerShell.Core\FileSystem::\\fiber-fs2\profiles\robert.metzker\Desktop\DataMigration> 
