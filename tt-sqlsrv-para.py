@@ -79,7 +79,7 @@ def get_column_data_types(args, schema, table_name):
          , upper(DATA_TYPE) as data_type
     FROM INFORMATION_SCHEMA.COLUMNS
     WHERE upper(TABLE_NAME) = '{table_name.upper()}'
-    AND upper(TABLE_SCHEMA) = '{schema.upper()}'
+      AND upper(TABLE_SCHEMA) = '{schema.upper()}'
     ORDER BY ORDINAL_POSITION
     """
     cursor.execute(query)
@@ -101,6 +101,7 @@ def generate_table_create_sql(args, schema, table_name):
         
     try:
         cursor = inf.get_dbcon(srcdb)
+
         query = f"""
         SELECT 
               upper(column_name) as column_name
@@ -109,17 +110,17 @@ def generate_table_create_sql(args, schema, table_name):
             , numeric_precision as data_precision
             , numeric_scale as data_scale
         FROM information_schema.columns
-        WHERE upper(table_name) = '{table_name.upper()}' 
-        AND upper(table_schema) = '{schema.upper()}'
-        ORDER BY ordinal_position
+        WHERE 
+            upper(table_schema) = '{schema.upper()}'
+        AND upper(table_name) = '{table_name.upper()}' 
+        ORDER BY ordinal_position;
         """
-        
         cursor.execute(query)
         rows = cursor.fetchall()
                 
         create_stmt = f"""CREATE TABLE {schema}.{table_name} (\n"""
     
-        # records = [tuple(record) for record in records]  # Ensure records are in the correct format
+        # rows = [tuple(row) for row in rows]  # Ensure records are in the correct format
 
         for row in rows:
             column_name = row[0]
@@ -168,7 +169,7 @@ def generate_select_query(schema, table_name, columns_data_types):
         "VARCHAR": {"pre": "rtrim(", "post": ") as "},
         "NVARCHAR": {"pre": "rtrim(", "post": ") as "},
         "TEXT": {"pre": "rtrim(", "post": ") as "},
-        "BINARY": {"pre": "cast(", "post": " as varchar(8000) ) as "},
+        "BINARY": {"pre": "convert(varchar(8000), ", "post": ", 2) as "},
     }
 
     select_clauses = []
@@ -177,7 +178,7 @@ def generate_select_query(schema, table_name, columns_data_types):
             # Wrap the column in the specified formatting
             pre = type_formatting[data_type]["pre"]
             post = type_formatting[data_type]["post"]
-            select_clauses.append(f"{pre}\"{column}\"{post}{column}")
+            select_clauses.append(f"{pre}\"{column}\"{post}{column.replace(' ','_')}")
         else:
             # Add the column without any formatting
             select_clauses.append(f"\"{column}\"")
@@ -212,11 +213,14 @@ def upload_file_to_snowflake(args, headers, file_path, table_name, year, slicer,
     tgtdb = get_arg_db_info(args,'tgt')
     cur = inf.get_dbcon(tgtdb)
     tgt_db = args.tgt_db if args.tgt_db else 'PLAYGROUND'
-    tgt_schema = 'GPD'
+    if args.output:
+        tgt_schema = args.output.upper().replace('-','_')
+    else:
+        tgt_schema = 'TT_GPD'
     print(f"  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for {table_name}")
     logging.info(f"  >>> starting UPLOAD_FILE_TO_SNOWFLAKE for {table_name}")
 
-    file_format = "FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '\"')"
+    file_format = f"FILE_FORMAT = (type = csv field_delimiter = '~' skip_header = 1 SKIP_BLANK_LINES = true TRIM_SPACE = true EMPTY_FIELD_AS_NULL = true FIELD_OPTIONALLY_ENCLOSED_BY = '\"')"
 
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     phys_table_parts = [table_name.replace('.', '_')]
@@ -285,6 +289,10 @@ def upload_file_to_snowflake(args, headers, file_path, table_name, year, slicer,
         logging.info(f"\t--> {create_sql}")
         cur.execute(create_sql)
 
+        if args.purge:
+            print(f"\t\t--> TRUNCATING TABLE {tgt_db}.{tgt_schema}.{phys_table}")
+            cur.execute(f"TRUNCATE TABLE {tgt_db}.{tgt_schema}.{phys_table};")
+
         sql = f"""COPY INTO {tgt_db}.{tgt_schema}.{phys_table} from @~/{stg}/{real_table_name} {file_format} on_error='continue'; """
         if args.debug:
             print(f'\t\t--> {sql}...')
@@ -349,7 +357,7 @@ def extract_and_upload(args, table_details, output_dir, con_snowflake, table_col
         print(f"\n\n\t==> Queueing FILTERED job for {table_name} > {where_clause} ")
         logging.info(f"\n\n\t==> Queueing FILTERED job for {table_name} > {where_clause} ")
         query_sql = f"{select_query} {where_clause}"
-        process_extraction(args, srcdb, schema, table_name, query_sql, filter_year, output_dir, table_details['schema_table'], columns_data_types)
+        process_extraction(args, schema, table_name, query_sql, filter_year, output_dir, table_details['schema_table'], columns_data_types)
 
     else:
         current_year = datetime.now().year
@@ -400,7 +408,7 @@ def process_extraction(args, schema, table_name, query_sql, filter, output_dir, 
         os.makedirs(target_dir, exist_ok=True)
         csv_file_path = os.path.join(target_dir, csv_file_name)
 
-        batch_size = 1000  # Adjust batch size as needed
+        batch_size = 10000  # Adjust batch size as needed
         first_batch = True
  
         while True:
@@ -465,6 +473,7 @@ def process_args():
     parser.add_argument('--ddl_only', action='store_true', help='If true, only extract the DDL and do nothing else')
     parser.add_argument('--debug', action='store_true', help='If set, display additional data to help with troubleshooting')
     parser.add_argument('--push', action='store_true', help='If set, push CSV files from output directory into SF')
+    parser.add_argument('--purge', action='store_true', help='If set, purge target tables when loading into SF')
 
     parser.add_argument('--src', help='Source Connection env/key (tt/E21BSE)')
     parser.add_argument('--tgt', help='Target Connection env/key (dev/funct/playground)')
@@ -561,7 +570,6 @@ def main():
                     print(f"!!! Error generating CREATE SQL for {full_table_name}: {e}")
                 write_ddl_to_file(ddl, full_table_name, ddl_folder)
 
-
             # Fetch and store column data types, but only if not already captured
             if full_table_name not in all_table_data_types:
                 all_table_data_types[full_table_name] = get_column_data_types(args, schema, table_name)
@@ -607,12 +615,16 @@ if __name__ == "__main__":
 hq8627osx:DEVOPS_INF>intel  
 hq8627osx:DEVOPS_INF>arch  
 i386
-hq8627osx:DEVOPS_INF>pyenv activate ora_envx86                                                                                                                       main
+hq8627osx:DEVOPS_INF>pyenv activate ora_envx86                                                                                                                       
 
 (ora_envx86) hq8627osx:DEVOPS_INF>python test-ora.py  
 """
 
 # python tt-sqlsrv-para.py -t gpd.csv -o gpd --src gpd/dev --ddl
-# python tt-sqlsrv-para.py -t gpd.csv -o gpd --src gpd/dev --ddl_only
+# python tt-sqlsrv-para.py -t gpd.csv -o gpd2 --src gpd/dev --ddl_only
 # python tt-sqlsrv-para.py -t gpd.csv -o gpd --src gpd/dev --tgt dev/funct/PLAYGROUND --sf --ddl
 # python tt-sqlsrv-para.py -t gpd.csv -o gpd --src gpd/dev --tgt dev/funct/PLAYGROUND --ddl --push
+
+# python tt-sqlsrv-para.py -t mds.csv -o mds --src mds/dev --ddl
+# python tt-sqlsrv-para.py -t gpd.csv -o tt_gpd --src gpd/dev  --tgt dev/funct/PLAYGROUND --sf --purge
+# python tt-sqlsrv-para.py -t gpd_inc.csv -o tt_gpd --src gpd/dev  --tgt dev/funct/PLAYGROUND --sf --purge
