@@ -292,8 +292,9 @@ def upload_file_to_snowflake(args, headers, file_path, table_name, year, slicer,
         if args.purge:
             print(f"\t\t--> TRUNCATING TABLE {tgt_db}.{tgt_schema}.{phys_table}")
             cur.execute(f"TRUNCATE TABLE {tgt_db}.{tgt_schema}.{phys_table};")
+        purge = 'PURGE = TRUE' if args.purge else ''
 
-        sql = f"""COPY INTO {tgt_db}.{tgt_schema}.{phys_table} from @~/{stg}/{real_table_name} {file_format} on_error='continue'; """
+        sql = f"""COPY INTO {tgt_db}.{tgt_schema}.{phys_table} from @~/{stg}/{real_table_name} {file_format} {purge} on_error='continue'; """
         if args.debug:
             print(f'\t\t--> {sql}...')
         else:
@@ -628,3 +629,4 @@ hq8627osx:DEVOPS_INF>pyenv activate ora_envx86
 # python tt-sqlsrv-para.py -t mds.csv -o mds --src mds/dev --ddl
 # python tt-sqlsrv-para.py -t gpd.csv -o tt_gpd --src gpd/dev  --tgt dev/funct/PLAYGROUND --sf --purge
 # python tt-sqlsrv-para.py -t gpd_inc.csv -o tt_gpd --src gpd/dev  --tgt dev/funct/PLAYGROUND --sf --purge
+# python tt-sqlsrv-para.py -t gpd_inc.csv -o tt_gpd --src gpd/prd  --tgt dev/funct/PLAYGROUND --sf --purge

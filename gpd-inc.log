@@ -1,0 +1,45 @@
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'dbo.IV00101', 'filter_using': '', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for dbo.IV00101
+ <<< PROCESS_EXTRACTION for IV00101 @2024-03-08 11:19:18.622550
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-08 11:19:19.250000
+::: Completed extraction of IV00101 in 0:00:53.582474: from 2024-03-08 11:19:18.622550 - 2024-03-08 11:20:12.205024
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'dbo.IV00102', 'filter_using': ' LSTORDDT>= dateadd(MONTH,-3, getdate()) or LSTCNTDT>= dateadd(MONTH,-3, getdate())', 'date_column': '', 'slicer_column': '', 'granularity': ''}    
+        >> Generating SELECT SQL for dbo.IV00102
+
+
+        ==> Queueing FILTERED job for IV00102 >  where  LSTORDDT>= dateadd(MONTH,-3, getdate()) or LSTCNTDT>= dateadd(MONTH,-3, getdate())
+ <<< PROCESS_EXTRACTION for IV00102 @2024-03-08 11:20:12.211054
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-08 11:20:12.843000
+::: Completed extraction of IV00102 in 0:00:03.835475: from 2024-03-08 11:20:12.211054 - 2024-03-08 11:20:16.046529
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'dbo.SOP30200', 'filter_using': ' creatddt >= dateadd(MONTH,-3, getdate()) ', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for dbo.SOP30200
+
+
+        ==> Queueing FILTERED job for SOP30200 >  where  creatddt >= dateadd(MONTH,-3, getdate())
+ <<< PROCESS_EXTRACTION for SOP30200 @2024-03-08 11:20:16.052628
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-08 11:20:16.770000
+::: Completed extraction of SOP30200 in 0:00:18.647803: from 2024-03-08 11:20:16.052628 - 2024-03-08 11:20:34.700431
+
+>> STARTING EXTRACT AND UPLOAD:
+   {'schema_table': 'dbo.SOP30300', 'filter_using': ' ReqShipDate >= dateadd(MONTH,-3, getdate()) ', 'date_column': '', 'slicer_column': '', 'granularity': ''}
+        >> Generating SELECT SQL for dbo.SOP30300
+
+
+        ==> Queueing FILTERED job for SOP30300 >  where  ReqShipDate >= dateadd(MONTH,-3, getdate())
+ <<< PROCESS_EXTRACTION for SOP30300 @2024-03-08 11:20:34.731751
+** Attempting to connect to: mant6sqlsrv3, using: fivetran:T3VyODAyMERlYWw=
+ >> Connected to SQLServer:  >> db: TLI
+         >> Connected to SqlServer @2024-03-08 11:20:35.360000
+::: Completed extraction of SOP30300 in 0:00:48.336616: from 2024-03-08 11:20:34.731751 - 2024-03-08 11:21:23.068367
+PS Microsoft.PowerShell.Core\FileSystem::\\fiber-fs2\profiles\robert.metzker\Desktop\DataMigration>

@@ -1,0 +1,5 @@
+"SCHEMA_TABLE","FILTER_USING","DATE_COLUMN","SLICER_COLUMN","GRANULARITY"
+dbo.IV00101,,,,
+dbo.IV00102," LSTORDDT>= dateadd(MONTH,-3, getdate()) or LSTCNTDT>= dateadd(MONTH,-3, getdate())",,,
+dbo.SOP30200," creatddt >= dateadd(MONTH,-3, getdate()) ",,,
+dbo.SOP30300," ReqShipDate >= dateadd(MONTH,-3, getdate()) ",,,
