@@ -1,4 +1,4 @@
-import sys, os, datetime, argparse, re
+import sys, os, datetime, argparse, re, csv
 from pathlib import Path
 prog_path = Path(os.path.abspath(__file__))
 root = prog_path.parent.parent
@@ -16,15 +16,16 @@ def process_args():
     parser = argparse.ArgumentParser(description='command line args',epilog="Example:python run_incremental.py --prev prd/etl_validation/prev_dev_source --curr prd/etl_validation/dev_source",add_help=True)
 
     #required
-    parser.add_argument('--prev', required=True, help='previous env/key/database for comparison (from dbsetup)')
-    parser.add_argument('--curr', required=True, help='current env/key/database (from dbsetup)')
+    parser.add_argument('--src', required=True, help='Source env/key/database for incoming comparison (from dbsetup)')
+    parser.add_argument('--tgt', required=True, help='Target env/key/database for receiving changed data (from dbsetup)')
     
     #optional
     parser.add_argument('--debug', required=False, default=False, action='store_true', help='add this to have all output enabled for the console')
     parser.add_argument('--init', required=False, default=False, action='store_true', help='include noinit to skip adding FB_DW_LAST_SEEN to target tables')
     parser.add_argument('--output', required=False, default=incdir,help='output directory if saving xls results is desired (uses OPENPYXL)')
     parser.add_argument('--schema', required=False, help='schema name to limit incremental comparison')
-    
+    parser.add_argument('--match-keys-csv', required=False, help='Path to CSV file containing match key configurations')
+
     args = parser.parse_args()
 
     # Added to simplify copying into Snowflake
@@ -39,28 +40,40 @@ def process_args():
     # print(f"Processing Args: {args}")
 
     # env/db/schema <- dev/bronze/rollback or dev/ROLLBACK/ROLLBACK
-    args.prev = args.prev.strip('/')
-    if args.prev.count('/') == 3:
-        args.srcenv, args.srckey, args.src_db, args.src_schema  = args.prev.split('/')
-    elif args.prev.count('/') == 2:
-        args.srcenv, args.srckey, args.src_db = args.prev.split('/')
+    args.src = args.src.strip('/')
+    if args.src.count('/') == 3:
+        args.srcenv, args.srckey, args.src_db, args.src_schema  = args.src.split('/')
+    elif args.src.count('/') == 2:
+        args.srcenv, args.srckey, args.src_db = args.src.split('/')
         args.src_schema = None
     else:
-        Exception("Not enough arguments in PREV connection.  Need env/key/database")
+        Exception("Not enough arguments in SRC connection.  Need env/key/database")
 
-    args.curr = args.curr.strip('/')
-    if args.curr.count('/') == 3:
-        args.tgtenv, args.tgtkey, args.tgt_db, args.tgt_schema  = args.curr.split('/')
-    elif args.curr.count('/') == 2:
-        args.tgtenv, args.tgtkey, args.tgt_db = args.curr.split('/')
+    args.tgt = args.tgt.strip('/')
+    if args.tgt.count('/') == 3:
+        args.tgtenv, args.tgtkey, args.tgt_db, args.tgt_schema  = args.tgt.split('/')
+    elif args.tgt.count('/') == 2:
+        args.tgtenv, args.tgtkey, args.tgt_db = args.tgt.split('/')
         args.tgt_schema = None
     else:
-        Exception("Not enough arguments in CURR connection.  Need env/key/database")
+        Exception("Not enough arguments in TGT connection.  Need env/key/database")
 
     print( f'=== Using ETLDIR: {args.etldir}' )
 
     return args
 
+
+
+def load_match_keys_from_csv(filepath):
+    match_keys = {}
+    with open(filepath, mode='r', encoding='utf-8-sig') as csvfile:
+        csvreader = csv.reader(csvfile)
+        for row in csvreader:
+            schema_table, fields = row[0], row[1]
+            match_keys[schema_table] = [field.strip() for field in fields.split(',')]
+    return match_keys
+
+    
 def get_arg_db_info(args, db_type):
     if db_type == 'src':
         env = args.srcenv
@@ -143,22 +156,31 @@ values (src.REF_DGN, src.REF_DLM, src.REF_ENT_DTE, src.REF_IDN, src.REF_DSC, src
     print( f'\n== GENERATING DELTA QUERIES for {len(inc_tbls)} tables')
     now = datetime.datetime.now()
     run_dt_str = now.strftime('%Y-%m-%d')
-    prev_db = args.src_db.strip() if args.src_db else 'INC_DEV_SOURCE' 
+    src_db = args.src_db.strip() if args.src_db else 'INC_DEV_SOURCE' 
 
     # Connect to Connection1 for generating the List of Table/Columns to turn in SQL statements.
     
     if args.debug:
         print(f'\nConnection ::PREV:: (SNOWFLAKE) <== Generating SQL for columns via generate_queries')
 
-
     for rowdata in inc_tbls :
-        db, schema, table_name, include_cols, ignore_cols= rowdata
+        # db, schema, table_name, include_cols, ignore_cols = rowdata
         sql, append_sql = '',''
-        tbl = f'"{schema}"."{table_name}"'
         cols = f"{include_cols}"
         lcl_cols = f"{ignore_cols}"
         src_lcl_str, tgt_lcl_str = "",""
+        # tbl = f'"{schema}"."{table_name}"'
 
+        schema, table_name = rowdata['table_schema'], rowdata['table_name']
+        full_table_name = f"{schema}.{table_name}"
+        match_keys = args.match_keys.get(full_table_name, [])
+
+        if not match_keys:
+            print(f"No match keys specified for {full_table_name}, skipping.")
+            continue
+
+        # Generate hash expressions for match keys
+        match_keys_expr = ', '.join([f"nvl(src.\"{field}\", 'null_value_placeholder')" for field in match_keys])
         # Maybe not needed, but determine (for each table) the supplemental lcl column info:
         new_cols = []
 
@@ -177,11 +199,10 @@ values (src.REF_DGN, src.REF_DLM, src.REF_ENT_DTE, src.REF_IDN, src.REF_DSC, src
             tgt_lcl_str = ", ".join(tgt_lcl)
 
         sql = f'''
-MERGE into   {prev_db}.{tbl}   tgt 
-USING        (select distinct * from {args.tgt_db}.{tbl} )   src
-ON ( hash( {tgt_cols_str} ) =
-     hash( {src_cols_str} ) )
-WHEN MATCHED then UPDATE set   tgt.FB_DW_LAST_SEEN = CURRENT_DATE()
+MERGE INTO {args.tgt_db}.{full_table_name} tgt 
+USING (SELECT * FROM {args.src_db}.{full_table_name}) src
+ON ( hash( {match_keys_expr} ) = hash({match_keys_expr.replace('src.', 'tgt.')}))
+WHEN MATCHED THEN UPDATE SET  tgt.FB_DW_LAST_SEEN = CURRENT_DATE()
 WHEN NOT MATCHED then 
 INSERT ( {tgt_cols_str}, tgt.FB_DW_LAST_SEEN, tgt.FB_DW_DATE_ADDED )
 values ( {src_cols_str}, CURRENT_DATE(), CURRENT_DATE()  )
@@ -264,11 +285,11 @@ def replace_prev( all_args ):
     cursor.execute( 'use role ACCOUNTADMIN' )
 
     if args.schema:
-        print( '-'*20, f'\nCLONING Current SCHEMA ( {args.curr_db}.{args.schema} ) => Previous ( {args.prev_db}.{args.schema} )\n', '-'*20 )
-        sql = f'''CREATE OR REPLACE SCHEMA {args.prev_db}.{args.schema} clone {args.curr_db}.{args.schema}'''
+        print( '-'*20, f'\nCLONING Current SCHEMA ( {args.curr_db}.{args.schema} ) => Previous ( {args.src_db}.{args.schema} )\n', '-'*20 )
+        sql = f'''CREATE OR REPLACE SCHEMA {args.src_db}.{args.schema} clone {args.curr_db}.{args.schema}'''
     else:
-        print( '-'*20, f'CLONING Current DATABASE ( {args.curr_db} ) => Previous ( {args.prev_db} )')
-        sql = f'''CREATE OR REPLACE DATABASE {args.prev_db} clone {args.curr_db}'''
+        print( '-'*20, f'CLONING Current DATABASE ( {args.curr_db} ) => Previous ( {args.src_db} )')
+        sql = f'''CREATE OR REPLACE DATABASE {args.src_db} clone {args.curr_db}'''
 
     if args.debug:
         print( sql )
@@ -306,11 +327,17 @@ def parse_merge_results ( results ):
 
 def main():
     """
-    # --prev dev/bronze/INC_DEV_SOURCE --curr prd/bronze/EDP_BRONZE_PROD  --schema SHOPIFY_FIBERON --init --debug 
+    # --src dev/bronze/INC_DEV_SOURCE --tgt prd/bronze/EDP_BRONZE_PROD  --schema SHOPIFY_FIBERON --init --debug 
     """
     print('STARTING  >>>>')
     args = process_args()
-    if args.prev:
+    
+    if args.match_keys_csv:
+        args.match_keys = load_match_keys_from_csv( args.match_keys_csv )
+    else:
+        args.match_keys = {}
+
+    if args.src:
         print(f"Determining SRC database type from dbsetup...")
         srcdb = get_arg_db_info(args,'src')
         print(f" >> SRC: {srcdb}")
@@ -318,7 +345,7 @@ def main():
         print(f"!!! No SRC database specified")
         srbdb = None
         
-    if args.curr:
+    if args.tgt:
         print(f"Determining TGT database type from dbsetup...")
         tgtdb = get_arg_db_info(args,'tgt')
         print(f" >> TGT: {tgtdb}")
@@ -327,12 +354,12 @@ def main():
         tgtdb = None
             
     # Create a pkg to send to inf.get_dbcon to pick the env,db connection
-    # prev_db = config['env'][args.prev_env][args.prev].get('database','')
-    prev_db = srcdb['database']
-    print(f" >> PREV: {prev_db}")
+    # src_db = config['env'][args.prev_env][args.prev].get('database','')
+    src_db = srcdb['database']
+    print(f" >> PREV: {src_db}")
 
     # Test establishing a connection
-    print("\n","="*60,f"\n Generating Column Info for {prev_db} ...\n","="*60)
+    print("\n","="*60,f"\n Generating Column Info for {src_db} ...\n","="*60)
     _run_sql, tables =  generate_columns(args, srcdb )
     if not tables:
         print( f'## No tables found in the Connection specified'); exit()
@@ -351,10 +378,10 @@ def main():
     if args.init:
         now = datetime.datetime.now()
         print( f"\n++++ Adding FB_DW_LAST_SEEN, FB_DW_DATE_ADDED to all tables @ {now.strftime('%Y-%m-%d %H:%M:%S')}...")
-        prev_db = args.src_db if args.src_db else 'INC_DEV_SOURCE'
+        src_db = args.src_db if args.src_db else 'INC_DEV_SOURCE'
 
         # print( f"For the following tables:\n {tables}", '\n','='*80 )
-        alter_sql = [ f"""ALTER TABLE "{prev_db}".{tbl} add column FB_DW_LAST_SEEN text, FB_DW_DATE_ADDED date """ for tbl in table_list if ignores =='' ]
+        alter_sql = [ f"""ALTER TABLE "{src_db}".{tbl} add column FB_DW_LAST_SEEN text, FB_DW_DATE_ADDED date """ for tbl in table_list if ignores =='' ]
         all_args = [ (args, sql, idx) for idx, sql in enumerate( alter_sql ) ]
         all_args = ('ALTER TABLE',srcdb, alter_sql)
         if len(alter_sql) > 0 :
