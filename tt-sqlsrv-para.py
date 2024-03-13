@@ -425,8 +425,11 @@ def process_extraction(args, schema, table_name, query_sql, filter, output_dir, 
             total_row_count += len(df)  # Update row count
             
             # Write DataFrame to CSV file
-            mode = 'a' if os.path.exists(csv_file_path) else 'w'
-            header = not os.path.exists(csv_file_path)
+            if args.purge and first_batch:
+                mode = 'w'
+            else:
+                mode = 'a'
+            header = not os.path.exists(csv_file_path) or (args.purge and first_batch)
             df.to_csv(csv_file_path, mode=mode, header=header, index=False, sep='~', doublequote=True, escapechar='\\')
 
             if first_batch:
