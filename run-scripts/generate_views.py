@@ -115,8 +115,8 @@ def fetch_view_definitions(srcdb, args):
 def redirect_views(views_dict, args):
     src_db, src_schema, from_schema, tgt_db, tgt_schema, to_schema = args.src, args.src_schema, args.from_schema, args.tgt, args.tgt_schema, args.to_schema
     new_views = {}
-    src_db_ref = src_db.split('/')[-1]
-    tgt_db_ref = tgt_db.split('/')[-1]
+    src_db_ref = src_db.split('/')[-2]
+    tgt_db_ref = tgt_db.split('/')[-2]
     if src_db_ref != tgt_db_ref:
         print( f'Replacing {src_db_ref} with {tgt_db_ref} in view DATABASE references...')
     if src_schema != tgt_schema:
@@ -330,6 +330,7 @@ python generate_views.py --src dev/fbronze/EDP_GOLD_DEV --src_schema CONTROL_TOW
 python generate_views.py --src dev/playground/PLAYGROUND --src_schema ROBERT_METZKER  --tgt dev/playground/PG  --tgt_schema RM  --redirect
 
 python generate_views.py --src dev/fbronze/EDP_BRONZE_DEV/EMTEK_EBS_A_VIEWS --from_schema EMTEK_EBS_SB_  --tgt dev/fbronze/EDP_BRONZE_DEV/EMTEK_EBS_A_VIEWS  --to_schema EMTK_EBS_DEV_   --redirect
+python generate_views.py --src dev/fbronze/PLAYGROUND/ES_EBS__VIEWS --from_schema ES_EBS_  --tgt dev/fbronze/EDP_BRONZE_DEV/EMTEK_EBS_A_VIEWS  --to_schema EMTK_EBS_DEV_   --redirect
 
 python generate_views.py --src dev/fbronze/EDP_BRONZE_PROD_PREV  --inc
 
