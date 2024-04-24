@@ -1,7 +1,7 @@
 import sys, os, datetime, argparse, re
 from pathlib import Path
 prog_path = Path(os.path.abspath(__file__))
-root = prog_path.parent.parent                  # Back from Run folder to Root DEVOPS_INF
+root = prog_path.parent.parent
 lclsetup = root/f"lclsetup"
 sys.path.append(str(root))
 sys.path.append(str(lclsetup))
@@ -16,14 +16,14 @@ def process_args():
     parser = argparse.ArgumentParser(description='command line args',epilog="Example:python run_incremental.py --prev prd/etl_validation/prev_dev_source --curr prd/etl_validation/dev_source",add_help=True)
 
     #required
-    parser.add_argument('--curr', required=True, help='current env/key/database (from dbsetup)')
+    parser.add_argument('--src', required=True, help='previous (source) env/key/database/schema for comparison (from dbsetup)')
+    parser.add_argument('--tgt', required=True, help='current (target) env/key/database/schema (from dbsetup)')
     
     #optional
     parser.add_argument('--debug', required=False, default=False, action='store_true', help='add this to have all output enabled for the console')
     parser.add_argument('--init', required=False, default=False, action='store_true', help='include noinit to skip adding FB_DW_LAST_SEEN to target tables')
     parser.add_argument('--output', required=False, default=incdir,help='output directory if saving xls results is desired (uses OPENPYXL)')
-    parser.add_argument('--prev', required=False, help='previous env/key/database for comparison (from dbsetup)')
-    parser.add_argument('--schema', required=False, help='schema name to limit incremental comparison')
+    parser.add_argument('--rules', required=False, help='rules file for processing merges (table_name, matchcols)')
     
     args = parser.parse_args()
 
@@ -36,44 +36,50 @@ def process_args():
 
     # Use the same directory for the Output as the Source SQL file, if possible.
     # args.output = Path( args.output.strip() ) if args.output else Path( args.etldir.strip() )
-    
-    args.prev=args.prev.strip('/')
-    # env/db/schema <- dev/bronze/rollback or dev/ROLLBACK/ROLLBACK
-    if args.prev.count('/') == 2:
-        args.prev_env, args.prev, args.prev_db = args.prev.split('/')
-    else:
-        Exception("Not enough arguments in PREV connection.  Need env/key/database")
+    # print(f"Processing Args: {args}")
 
-    if args.curr:
-        args.curr=args.curr.strip('/')
-        if args.curr.count('/') == 2:
-            args.curr_env, args.curr, args.curr_db = args.curr.split('/')
-        else:
-            Exception("Not enough arguments in CURR connection.  Need env/key/database")
-            
+    # env/db/schema <- dev/bronze/rollback or dev/ROLLBACK/ROLLBACK
+    args.src = args.src.strip('/')
+    if args.src.count('/') == 3:
+        args.srcenv, args.srckey, args.src_db, args.src_schema  = args.src.split('/')
+    else:
+        Exception("Not enough arguments in PREV connection.  Need env/key/database/schema")
+
+    args.tgt = args.tgt.strip('/')
+    if args.tgt.count('/') == 3:
+        args.tgtenv, args.tgtkey, args.tgt_db, args.tgt_schema  = args.tgt.split('/')
+    else:
+        Exception("Not enough arguments in CURR connection.  Need env/key/database/schema")
+
     print( f'=== Using ETLDIR: {args.etldir}' )
 
     return args
 
+def get_arg_db_info(args, db_type):
+    if db_type == 'src':
+        env = args.srcenv
+        key = args.srckey
+    else:
+        env = args.tgtenv
+        key = args.tgtkey
+    return dbsetup.config['env'][env][key]
 
-def generate_columns( args, prev_pkg ):
+
+def generate_columns( args, srcdb ):
     '''
     Generate the SQL by looping through the available numeric columns, ignoring certain column_name endings and selecting metrics.
     e.g.
 
-    with tbls as ( select table_catalog, table_schema, table_name from information_schema.tables 
-        where table_type !='VIEW' and table_schema not in ('PUBLIC','INFORMATION_SCHEMA')),
-    cols as (
-        select src.table_catalog, src.table_schema, src.table_name, 
-            listagg( (case when src.column_name not like 'FB_DW%' then src.column_name end) , ', ') as sel_cols,
-            listagg( (case when src.column_name like 'FB_DW%' then src.column_name end) , ', ') as ignore_cols                   
-        from information_schema.columns src
-        join tbls on (src.table_catalog = tbls.table_catalog
-                and   src.table_schema = tbls.table_schema
-                and   src.table_name = tbls.table_name )
-        group by src.table_catalog, src.table_schema, src.table_name
-        )
-    select table_catalog, table_schema, table_name, sel_cols from cols;     
+        with cols as (
+        select table_catalog, table_schema, table_name, 
+            listagg( (case when column_name not like 'FB_DW%' then column_name end) , ', ') as sel_cols,
+            listagg( (case when column_name like 'FB_DW%' then column_name end) , ', ') as ignore_cols                   
+        from PREV_DEV_SOURCE.information_schema.columns
+        where table_schema not in ('PUBLIC','INFORMATION_SCHEMA')
+        group by table_catalog, table_schema, table_name
+    )
+        select table_catalog, table_schema, table_name, sel_cols from cols;
+            
     '''
     sql = ''
     #     prev_pkg = {'config':config, 'env':args.prev_env, 'db':args.prev, 'schema':args.schema } 
@@ -81,24 +87,19 @@ def generate_columns( args, prev_pkg ):
     if args.schema:
         print( f"\tRESTRICTED to schema: {args.schema}\n","-"*60  )
 
-    sql = f'''
-       with tbls as ( select table_catalog, table_schema, table_name from {args.prev_db}.information_schema.tables 
-        where table_type !='VIEW' and table_schema not in ('PUBLIC','INFORMATION_SCHEMA')),
-    cols as (
-        select src.table_catalog, src.table_schema, src.table_name, 
-            listagg( (case when src.column_name not like 'FB_DW%' then src.column_name end) , ', ') as sel_cols,
-            listagg( (case when src.column_name like 'FB_DW%' then src.column_name end) , ', ') as ignore_cols                   
-        from {args.prev_db}.information_schema.columns src
-        join tbls on (src.table_catalog = tbls.table_catalog
-                and   src.table_schema = tbls.table_schema
-                and   src.table_name = tbls.table_name )
-        WHERE 1=1 and '''
+    sql = f'''with cols as (
+        SELECT table_catalog, table_schema, table_name, 
+            listagg( (case when column_name not like 'FB_DW%' then column_name end) , ', ') as sel_cols,
+            listagg( (case when column_name like 'FB_DW%' then column_name end) , ', ') as ignore_cols  
+        FROM {args.src_db}.information_schema.columns 
+        WHERE '''
     if args.schema:
         # either_or = f'%{args.schema}'
-        sql += f''' src.table_schema = {args.schema!r} '''
+        sql += f''' table_schema = {args.schema!r} '''
     else:
-        sql += '''  src.table_schema not in ('PUBLIC','INFORMATION_SCHEMA') '''
-    sql += " group by src.table_catalog, src.table_schema, src.table_name ) "        
+        sql += '''  table_schema not in ('PUBLIC','INFORMATION_SCHEMA') '''
+        
+    sql += f"\n\tGROUP BY table_catalog, table_schema, table_name ) " 
     sql += "select table_catalog, table_schema, table_name, sel_cols, ignore_cols from cols "
     sql += "where not rlike (table_name, '.*(_lcl)[0-9]+')"
 
@@ -106,8 +107,8 @@ def generate_columns( args, prev_pkg ):
     print(f'::: Generating Column Lists for Schema: {schema} :::')   
     print(f'\n-----\n{sql}\n-----') 
 
-    inf.run_sql( (prev_pkg, "use secondary roles all") )
-    all_args = (prev_pkg, sql)
+    inf.run_sql( (srcdb, "use secondary roles all") )
+    all_args = (srcdb, sql)
     results = inf.run_sql( all_args )
 
     print( f'\n\t===> {len(results)} table column lists generated  <===\n')
@@ -136,7 +137,7 @@ values (src.REF_DGN, src.REF_DLM, src.REF_ENT_DTE, src.REF_IDN, src.REF_DSC, src
     print( f'\n== GENERATING DELTA QUERIES for {len(inc_tbls)} tables')
     now = datetime.datetime.now()
     run_dt_str = now.strftime('%Y-%m-%d')
-    prev_db = args.prev_db.strip() if args.prev_db else 'INC_DEV_SOURCE' 
+    prev_db = args.src_db.strip() if args.src_db else 'INC_DEV_SOURCE' 
 
     # Connect to Connection1 for generating the List of Table/Columns to turn in SQL statements.
     
@@ -171,7 +172,7 @@ values (src.REF_DGN, src.REF_DLM, src.REF_ENT_DTE, src.REF_IDN, src.REF_DSC, src
 
         sql = f'''
 MERGE into   {prev_db}.{tbl}   tgt 
-USING        (select distinct * from {args.curr_db}.{tbl} )   src
+USING        (select distinct * from {args.tgt_db}.{tbl} )   src
 ON ( hash( {tgt_cols_str} ) =
      hash( {src_cols_str} ) )
 WHEN MATCHED then UPDATE set   tgt.FB_DW_LAST_SEEN = CURRENT_DATE()
@@ -303,15 +304,34 @@ def main():
     """
     print('STARTING  >>>>')
     args = process_args()
-    config = dbsetup.config[0]
-
+    if args.src:
+        print(f"Determining SRC database type from dbsetup...")
+        srcdb = get_arg_db_info(args,'src')
+        print(f" >> SRC: {srcdb}")
+    else:
+        print(f"!!! No SRC database specified")
+        srbdb = None
+        
+    if args.tgt:
+        print(f"Determining TGT database type from dbsetup...")
+        tgtdb = get_arg_db_info(args,'tgt')
+        print(f" >> TGT: {tgtdb}")
+    else:
+        print(f"!!! No TGT database specified")
+        tgtdb = None
+            
     # Create a pkg to send to inf.get_dbcon to pick the env,db connection
-    prev_db = config['env'][args.prev_env][args.prev].get('database','')
-    prev_pkg = {'config':config, 'env':args.prev_env, 'db':args.prev, 'schema':args.schema, 'database':prev_db } 
+    # prev_db = config['env'][args.prev_env][args.prev].get('database','')
+    prev_db = srcdb['database']
+    print(f" >> PREV: {prev_db}")
+
+
+    # TODO:  Add component here to check to see if there is a args.rules.  If so, use it to determine tables to process.
+    # We should only build out column lists for those in the rules file.  In addition, ignore hashing our match field
 
     # Test establishing a connection
     print("\n","="*60,f"\n Generating Column Info for {prev_db} ...\n","="*60)
-    _run_sql, tables =  generate_columns(args, prev_pkg )
+    _run_sql, tables =  generate_columns(args, srcdb )
     if not tables:
         print( f'## No tables found in the Connection specified'); exit()
     else:
@@ -324,19 +344,18 @@ def main():
     for table in tables:
         db, schema, table_name, cols, ignores = table
         table_list.append(f'"{schema}"."{table_name}"')
+    
 
     # If set to Initialize, build SQL and run_sql_parallel
-
-
     if args.init:
         now = datetime.datetime.now()
         print( f"\n++++ Adding FB_DW_LAST_SEEN, FB_DW_DATE_ADDED to all tables @ {now.strftime('%Y-%m-%d %H:%M:%S')}...")
-        prev_db = args.prev_db if args.prev_db else 'INC_DEV_SOURCE'
+        prev_db = args.src_db if args.src_db else 'INC_DEV_SOURCE'
 
         # print( f"For the following tables:\n {tables}", '\n','='*80 )
         alter_sql = [ f"""ALTER TABLE "{prev_db}".{tbl} add column FB_DW_LAST_SEEN text, FB_DW_DATE_ADDED date """ for tbl in table_list if ignores =='' ]
         all_args = [ (args, sql, idx) for idx, sql in enumerate( alter_sql ) ]
-        all_args = ('ALTER TABLE',prev_pkg, alter_sql)
+        all_args = ('ALTER TABLE',srcdb, alter_sql)
         if len(alter_sql) > 0 :
             print(f'ALTER SQLs:\n{alter_sql}')
             if not args.debug:
@@ -365,7 +384,7 @@ def main():
         now = datetime.datetime.now()
         print( f"\n===> STARTING MERGE PROCESS @ {now.strftime('%Y-%m-%d %H:%M:%S')}...")
 
-        all_args = ('MERGE QUERIES', prev_pkg, all_merge_sql )
+        all_args = ('MERGE QUERIES', srcdb, all_merge_sql )
         # parallel_results = inf.run_sql_parallel( all_args )
         results = inf.run_sql_parallel( all_args )
         output = parse_merge_results( results )
@@ -389,11 +408,13 @@ def main():
 if __name__ == '__main__':
     main()
 
+# PREV is our TGT for the MERGE, using CURR as the SRC
 # python incremental.py --prev dev/fbronze/INC_DEV_SOURCE --curr prd/bronze/EDP_BRONZE_PROD  --schema SHOPIFY_FIBERON --init --debug 
-# python incremental.py --prev dev/fbronze/INC_DEV_SOURCE --curr prd/bronze/EDP_BRONZE_PROD  --schema SHOPIFY_FIBERON --init --debug --output ../outputs/
-# python incremental.py --prev dev/fbronze/INC_DEV_SOURCE --curr prd/bronze/EDP_BRONZE_PROD  --schema SHOPIFY_FIBERON --init --output ../outputs/
-# python incremental.py --prev dev/fbronze/EDP_BRONZE_PROD_PREV --curr prd/bronze/EDP_BRONZE_PROD  --init --output ../inc_outputs/
-# python incremental.py --prev dev/fbronze/INC_DEV_SOURCE --curr prd/bronze/EDP_BRONZE_PROD  --schema SHOPIFY_FIBERON --output ../outputs/
+# python incremental.py --prev dev/fbronze/INC_DEV_SOURCE --curr prd/bronze/EDP_BRONZE_PROD  --schema SHOPIFY_FIBERON --init --debug --output ./outputs/
+# python incremental.py --prev dev/fbronze/INC_DEV_SOURCE --curr prd/bronze/EDP_BRONZE_PROD  --schema SHOPIFY_FIBERON --init --output ./outputs/
+# python incremental.py --prev dev/fbronze/INC_DEV_SOURCE --curr prd/bronze/EDP_BRONZE_PROD  --schema SHOPIFY_FIBERON --output ./outputs/
 
-# python incremental.py --prev dev/fbronze/EDP_BRONZE_PROD_PREV --curr prd/bronze/EDP_BRONZE_PROD  --schema SAP_ECC_PRD --output ../inc_outputs/
-# python incremental.py --prev dev/fbronze/EDP_BRONZE_PROD_PREV --curr prd/bronze/EDP_BRONZE_PROD  --output ../inc_outputs/
+# python incremental.py --prev dev/fbronze/EDP_BRONZE_PROD_PREV --curr prd/bronze/EDP_BRONZE_PROD  --init --output ./inc_outputs/
+# python incremental.py --prev dev/fbronze/INC_DEV_SOURCE --curr prd/bronze/EDP_BRONZE_PROD  --schema SHOPIFY_FIBERON --output ./outputs/
+ 
+# python incremental.py --tgt dev/funct/ROLLBACK/TT_GPD --src dev/gpd/PLAYGROUND/TT_GPD --rules ./tt_gpd_rules.csv --init --output ./gpd_outputs/

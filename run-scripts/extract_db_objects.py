@@ -15,18 +15,33 @@ from lclsetup import dbsetup, inf
 
 def process_args( ):
     parser = argparse.ArgumentParser( description="Convert csv to sources.yml")
-    parser.add_argument( '-d','--database', help='Database Name', required= False)
+    parser.add_argument( '--src', required=True, help='Source env/key/database (from dbsetup)')
     parser.add_argument( '-s','--schema', help='Partial Schema name to filter on', required= False)
     parser.add_argument( '-o','--output', help='Output folder to store the extracted information', required= False)
 
     args = parser.parse_args()
-    # Default file for testing
-    if args.database:
-        args.database = args.database.upper()
-    else:
-        args.database = None
+
+    if args.src:
+        #  dev/fbronze/INC_DEV_SOURCE <- env/key/DATABASE
+        args.src=args.src.strip('/')
+        if args.src.count('/') == 2:
+            args.srcenv, args.srckey, args.src_db = args.src.split('/')
+        elif args.src.count('/') == 1:
+            args.srcenv, args.srckey = args.src.split('/')
+            args.src_db = None
+        else:
+            Exception("Not enough arguments in SRC connection.  Need env/key/database, e.g. dev/fbronze/INC_DEV_SOURCE")
 
     return args
+
+def get_arg_db_info(args, db_type):
+    if db_type == 'src':
+        env = args.srcenv
+        key = args.srckey
+    else:
+        env = args.tgtenv
+        key = args.tgtkey
+    return dbsetup.config['env'][env][key]
 
 def get_databases( cursor, database ):
     sql = f"""select database_name from information_schema.databases """
@@ -87,16 +102,15 @@ def get_ftype_ddl( cursor, db_name, schema, ftype, proc_name ):
 
 
 def main():
-    config = dbsetup.config[0]
     args= process_args()
-    database = args.database 
+
+    srcdb = get_arg_db_info(args,'src')
+    database = args.src_db 
     schema = args.schema
     output_dir = args.output if args.output else 'extracted'
 
     # Make an initial connection to use to grab information about the database.
-    pkg = {'config':config, 'env':'dev', 'db':'bronze', 'schema':schema, 'database':database } 
-    conn = inf.get_dbcon( pkg )
-    cursor = conn.cursor()
+    cursor = inf.get_dbcon( srcdb )
     cursor.execute(f"use secondary roles all")
 
     object_type_dict = {
@@ -114,7 +128,7 @@ def main():
     database_structure = {}
     database_list = []
 
-    if not args.database:
+    if not args.src_db:
         print(f">>>>> Fetching DATABASE names")
         databases = get_databases( cursor, database )
         database_list = [db[0] for db in databases ]
@@ -219,4 +233,4 @@ if __name__ == "__main__":
     main()
 
 # python extract_db_objects.py -d EDP_BRONZE_DEV -s ABHINAV_KODANDA    
-# python extract_db_objects.py -d PLAYGROUND -s ROBERT_METZKER    
+# python extract_db_objects.py --src dev/fbronze/PLAYGROUND -s ROBERT_METZKER    
