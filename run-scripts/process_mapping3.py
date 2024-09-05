@@ -74,31 +74,6 @@ def sheet2list(sheet):
             continue
         yield row
 
-def parse_index_tab(wb):
-    tab_mapping = {}
-    
-    # Check if 'INDEX' sheet exists (case-insensitive)
-    index_sheet_name = next((sheet for sheet in wb.sheetnames if sheet.upper() == 'INDEX'), None)
-    
-    if index_sheet_name:
-        index_sheet = wb[index_sheet_name]
-        
-        for row_idx, row in enumerate(index_sheet.iter_rows(min_row=2), start=2):
-            if row[0].value:  # Check if the cell in column A is not empty
-                cell = index_sheet.cell(row=row_idx, column=1)
-                if cell.hyperlink:
-                    tab_name = cell.hyperlink.location.split('!')[0].replace("'", "")
-                    derived_name = cell.value.replace(' Tables', '').replace(' Columns', '')
-                    tab_mapping[tab_name.lower()] = derived_name.lower()
-    
-    # If no mapping was created (either no INDEX sheet or no valid entries),
-    # create a mapping using the existing sheet names
-    if not tab_mapping:
-        for sheet_name in wb.sheetnames:
-            tab_mapping[sheet_name.lower()] = sheet_name.lower()
-    
-    return tab_mapping
-
 
 def debug_print(*args, **kwargs):
     if DEBUG:
@@ -241,8 +216,7 @@ def process_unified(args, xls):
     schemas = {'HUB':'RAW_VAULT', 'SAT':'RAW_VAULT', 'LNK':'RAW_VAULT', 'REF':'RAW_VAULT', 'BASE':'STAGING', 'STG':'STAGING', 'PIT':'BUSINESS_VAULT', 'BRIDGE':'BUSINESS_VAULT'}
 
     wb = openpyxl.load_workbook(xls)
-    found_sheets = wb.sheetnames    
-    tab_mapping = parse_index_tab(wb)
+    found_sheets = wb.sheetnames
 
     # Group sheets by layer type and table name
     layer_groups = {}
@@ -259,6 +233,10 @@ def process_unified(args, xls):
                 layer_groups[layer][table_name] = {'Tables': None, 'Columns': None, 'Alter': None}
             
             layer_groups[layer][table_name][sheet_type] = sheet
+        else:
+            if 'Other' not in layer_groups:
+                layer_groups['Other'] = {}
+            layer_groups['Other'][sheet] = {'sheet': sheet}
 
     # Print grouped sheets
     print(f"Sheets found in {xls.name}:")
@@ -267,8 +245,7 @@ def process_unified(args, xls):
         for table, sheets in tables.items():
             for sheet_type, sheet in sheets.items():
                 if sheet:
-                    derived_name = tab_mapping.get(sheet.lower(), sheet.lower())
-                    print(f"  - {sheet} (Derived: {derived_name})")
+                    print(f"  - {sheet}")
 
     print("\nProcessing layers:")
     for this_layer in layers:
@@ -287,17 +264,16 @@ def process_unified(args, xls):
                 print(f'\t\t-- Skipping {this_layer} {table_name} due to missing Tables or Columns sheet.')
                 continue
 
-            derived_table_name = tab_mapping.get(tables_tab.lower(), table_name.lower())
-            print(f'\t\t-- Processing {this_layer} {derived_table_name} in: {xls.name}')
+            print(f'\t\t-- Processing {this_layer} {table_name} in: {xls.name}')
             
             tables = process_tables(args, wb, tables_tab)
             columns = process_columns(args, wb, columns_tab)
 
-            print(f'\t\t-- Validating Table and Column aliases for {this_layer} {derived_table_name}')
-            is_valid = validate_tables_columns(xls, tables, columns, this_layer, derived_table_name)
+            print(f'\t\t-- Validating Table and Column aliases for {this_layer} {table_name}')
+            is_valid = validate_tables_columns(xls, tables, columns, this_layer, table_name)
 
             if not is_valid:
-                print(f'\t## WARNING: Table and Column aliases are not valid in: {xls.name} for {this_layer} {derived_table_name}. Continuing processing...\n')
+                print(f'\t## WARNING: Table and Column aliases are not valid in: {xls.name} for {this_layer} {table_name}. Continuing processing...\n')
 
             alter_sql = ''
             if alter_tab:
@@ -410,7 +386,7 @@ def build_scd6 ( schema, table, keycol, scd1_cols = [], scd2_cols = [], scd3_col
     scd_str = ' '.join( scd_all )
     scd_str = scd_str.strip(',')
 
-    scd_str = scd_str + end_sql + '\n'+"     \n\tFROM {{ ref('" + table + "_SCDALL_STEP2') }})\n\n"
+    scd_str = scd_str + end_sql + '\n'+"     \n\tFROM {{ ref('" + table.lower() + "_SCDALL_STEP2') }})\n\n"
     scd_str += 'select * from SCD\n'
 
     return scd_str
@@ -481,8 +457,9 @@ def process_columns(args, wb, columns_tab):
     print(f'\t\t-- Processing {columns_tab} ...')
     
     # read the tables tab and convert to a dictionary
-    expected_cols = ['SOURCE SCHEMA', 'SOURCE TABLE', 'SOURCE COLUMN', 'DATATYPE', 'AUTOMATED LOGIC', 'MANUAL LOGIC' , 'ORDER#', 'STAGING LAYER COLUMN NAME', 'STAGING LAYER DATATYPE', 'HASHDIFF', 'SCD', 'STG INCREMENTAL STRATEGY', 'PK', 'UNIQUE','SET DEFAULT', 'NOT NULL', 'REMOVE COLUMN', 'TEST EXPRESSION', 'ACCEPTED VALUES', 'RELATIONSHIP', 'MAPPING NOTES']
+    expected_cols = ['SOURCE SCHEMA', 'SOURCE TABLE', 'SOURCE COLUMN', 'DATATYPE', 'AUTOMATED LOGIC', 'MANUAL LOGIC' , 'ORDER#', 'STAGING LAYER COLUMN NAME', 'STAGING LAYER DATATYPE', 'HASHDIFF', 'UNIQUE','SET DEFAULT', 'NOT NULL', 'REMOVE COLUMN', 'TEST EXPRESSION', 'ACCEPTED VALUES', 'RELATIONSHIP', 'MAPPING NOTES', 'PK','SCD']
     dim_cols = ['MODEL EQUALITY', 'MODEL EQUAL ROWCOUNT', 'SCD']
+    dbt_cols_list = ['DBT_SCD_ID', 'DBT_VALID_FROM', 'DBT_VALID_TO', 'DBT_UPDATED_AT']
     cur_layer = columns_tab.split(' ')[0]
 
     if columns_tab.startswith('DIM'):
@@ -507,7 +484,8 @@ def process_columns(args, wb, columns_tab):
         print(f'\t\t\t-- Missing columns: {missing_cols}')
         
     for idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True)):
-        if row[found_cols.index('STAGING LAYER COLUMN NAME')] is not None:
+        staging_col_name = row[found_cols.index('STAGING LAYER COLUMN NAME')]
+        if staging_col_name is not None and staging_col_name not in dbt_cols_list:
             columns_dict[idx] = {}
             for i, col in enumerate(found_cols):
                 if col:  # Only process non-None column names
@@ -650,7 +628,7 @@ def get_model_tests(row):
             row[atest] = {
                 'dbt_utils.equality': 
                 {
-                    'compare_model': f"ref( {row[ 'STAGING LAYER COLUMN NAME' ].lower()} )",
+                    'compare_model': f"ref( {row[ 'STAGING LAYER COLUMN NAME' ]} )",
                     'compare_columns': [each.strip() for each in test.split(',')]                    
                     # 'compare_columns': [ f'ref({row[ atest ]!r})' ]
                 }
@@ -835,7 +813,7 @@ def get_source_sql(target_table, cols, tables):
             if src_col == '(DERIVED)':
                 # src_sql = manual_logic.strip() if manual_logic else staging_col_name
                 # row['LOGIC_NAME'] = staging_col_name
-                manual_logic_upper = manual_logic.upper() if manual_logic else ''
+                manual_logic_upper =  manual_logic.upper() if manual_logic else ''
                 if 'HASH' in manual_logic_upper or 'COMPOSITE' in manual_logic_upper:
                     hashcol = manual_logic_upper.replace('HASH:', '').replace('COMPOSITE:', '').replace('\n', '').replace(' ', '').strip()
                     temp1 = hashcol.split(',')
@@ -859,15 +837,15 @@ def get_source_sql(target_table, cols, tables):
         else:
             if src_col == '(DERIVED)':
                 if manual_logic:
-                    if 'HASH' in manual_logic_upper or 'COMPOSITE' in manual_logic_upper:
-                        hashcol = manual_logic_upper.replace('HASH:', '').replace('COMPOSITE:', '').replace('\n', '').replace(' ', '').strip()
+                    if 'HASH' in manual_logic.upper() or 'COMPOSITE' in manual_logic.upper():
+                        hashcol = manual_logic.replace('HASH:', '').replace('COMPOSITE:', '').replace('\n', '').replace(' ', '').strip()
                         temp1 = hashcol.split(',')
                         joincol = (', ').join(temp1)
                         hashcol = ("','").join(temp1)
                         col1 = f"{{ dbt_utils.generate_surrogate_key ( [ '{hashcol}' ] ) }}"
                         src_sql = f"{{{col1}}}"
                     else:
-                        src_sql = manual_logic_upper.strip()
+                        src_sql = manual_logic.strip()
                 elif datatype == 'DATE':
                     src_sql = f"CASE WHEN {staging_col_name} is null then '-1' WHEN {staging_col_name} < '1901-01-01' then '-2' WHEN {staging_col_name} > '2099-12-31' then '-3' ELSE regexp_replace( {staging_col_name}, '[^0-9]+', '') END :: INTEGER"
                 else:
@@ -1341,7 +1319,7 @@ def build_final_layer(tables, columns, current_layer, base_join_alias):
     for col in columns.values():
         colname = col.get('STAGING LAYER COLUMN NAME', '')
         remove_column = (col.get('REMOVE COLUMN') or '').strip().lower()
-        hashdiff = (col.get('HASHDIFF','n') or '').strip().lower()
+        hashdiff = (col.get('HASHDIFF') or '').strip().lower()
         src_col = col.get('SOURCE COLUMN', '')
         is_derived = src_col == '(DERIVED)'
         manual_logic = col.get('MANUAL LOGIC', '')
@@ -1374,8 +1352,7 @@ def build_final_layer(tables, columns, current_layer, base_join_alias):
                 select_columns.append(f"        , {col}")
     
     # Add HASHDIFF column if necessary
-    # print(f'==== Adding HASHDIFF column to final layer.\n{has_hashdiff} - {current_layer}\n')
-    if has_hashdiff and current_layer.upper() not in ['STG', 'BASE']:
+    if has_hashdiff and current_layer not in ['STG', 'BASE']:
         hashdiff_str = '\n            || '.join(hashdiff_cols)
         select_columns.append(f"""        , SHA2(
               {hashdiff_str}
