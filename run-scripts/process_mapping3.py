@@ -74,6 +74,23 @@ def sheet2list(sheet):
             continue
         yield row
 
+def get_derived_names(wb):
+    derived_names = {}
+    index_sheet = wb['Index']
+    
+    for row_index, row in enumerate(index_sheet.iter_rows(min_row=2, values_only=True), start=2):
+        if row[0] and isinstance(row[0], str):
+            cell = index_sheet.cell(row=row_index, column=1)
+            if cell.hyperlink:
+                tab_name = cell.hyperlink.location.split('!')[0].replace("'", "")
+                # derived_name = row[0].lower().rstrip('tables').strip()
+                derived_name = cell.hyperlink.display.lower().rstrip('tables').strip()
+                derived_names[tab_name] = derived_name
+    
+    return derived_names
+
+def get_output_name(tab_name, derived_names):
+    return derived_names.get(tab_name, tab_name)
 
 def debug_print(*args, **kwargs):
     if DEBUG:
@@ -158,49 +175,42 @@ def process_std_map(args, xls):
         for sheet in sheets:
             print(f"  - {sheet}")
 
-    # Rest of the function remains the same
-    base_layers = {}
-    for sheet in found_sheets:
-        parts = sheet.split()
-        if len(parts) >= 2:
-            layer = parts[0]
-            sheet_type = parts[-1]
-            name = ' '.join(parts[1:-1])
-            
-            if layer not in base_layers:
-                base_layers[layer] = {}
-            if name not in base_layers[layer]:
-                base_layers[layer][name] = {'Tables': None, 'Columns': None, 'Alter': None}
-            
-            base_layers[layer][name][sheet_type] = sheet
-
     # Process each base layer
-    for layer, tables in base_layers.items():
-        for table_name, sheets in tables.items():
-            if sheets['Tables'] and sheets['Columns']:
+    for layer, sheets in layer_groups.items():
+        for sheet in sheets:
+            parts = sheet.split()
+            table_name = ' '.join(parts[1:-1])
+            sheet_type = parts[-1]
+            
+            if sheet_type == 'Tables':
                 print(f'\t\t-- Processing {layer} {table_name} in: {xls.name}')
-                tables_data = process_tables(args, wb, tables_tab=sheets['Tables'])
-                columns_data = process_columns(args, wb, columns_tab=sheets['Columns'])
+                tables_data = process_tables(args, wb, sheet)
+                columns_sheet = f"{layer} {table_name} Columns"
+                if columns_sheet in found_sheets:
+                    columns_data = process_columns(args, wb, columns_sheet)
 
-                print(f'\t\t-- Validating Table and Column aliases for {layer} {table_name}')
-                is_valid = validate_tables_columns(xls, tables_data, columns_data, layer, table_name)
+                    print(f'\t\t-- Validating Table and Column aliases for {layer} {table_name}')
+                    is_valid = validate_tables_columns(xls, tables_data, columns_data, layer, table_name)
 
-                if not is_valid:
-                    print(f'\t## ERROR: Table and Column aliases are not valid in: {xls.name} for {layer} {table_name}\n\n')
-                    continue
+                    if not is_valid:
+                        print(f'\t## ERROR: Table and Column aliases are not valid in: {xls.name} for {layer} {table_name}\n\n')
+                        continue
 
-                print(f'\n{layer} table: {layer}_{table_name}')
+                    print(f'\n{layer} table: {layer}_{table_name}')
 
-                alter_sql = ''
-                if sheets['Alter']:
-                    alter_sql = process_alter(args, wb, sheets['Alter'])
+                    alter_sql = ''
+                    alter_sheet = f"{layer} {table_name} Alter"
+                    if alter_sheet in found_sheets:
+                        alter_sql = process_alter(args, wb, alter_sheet)
 
-                if layer in ['SAT', 'HUB']:
-                    schema = schemas.get(layer, 'UNKNOWN')
-                    config = get_config(cur_layer=f"{layer}_{table_name}", alter_sql=alter_sql)
-                    build(args, args.modeldir, f"{layer}_{table_name}", tables_data, columns_data, wb, alter_sql=alter_sql, config_sql=config)
-                else:
-                    build(args, args.modeldir, f"{layer}_{table_name}", tables_data, columns_data, wb)
+                    # Generate SCD dictionary
+                    scd_dict = get_scdinfo(schemas[layer], f"{layer}_{table_name}", columns_data)
+
+                    # Generate config block
+                    config = get_config(f"{layer}_{table_name}", alter_sql=alter_sql, scd_dict=scd_dict)
+
+                    # build(args, args.modeldir, f"{layer}_{table_name}", tables_data, columns_data, wb, alter_sql=alter_sql, config_sql=config)
+                    build(args, args.modeldir, f"{layer}_{table_name}", tables_data, columns_data, wb, alter_sql=alter_sql, scd_dict=config)
 
     # Process DML if present
     if 'DML' in found_sheets:
@@ -216,6 +226,7 @@ def process_unified(args, xls):
     schemas = {'HUB':'RAW_VAULT', 'SAT':'RAW_VAULT', 'LNK':'RAW_VAULT', 'REF':'RAW_VAULT', 'BASE':'STAGING', 'STG':'STAGING', 'PIT':'BUSINESS_VAULT', 'BRIDGE':'BUSINESS_VAULT'}
 
     wb = openpyxl.load_workbook(xls)
+    derived_names = get_derived_names(wb)
     found_sheets = wb.sheetnames
 
     # Group sheets by layer type and table name
@@ -279,11 +290,16 @@ def process_unified(args, xls):
             if alter_tab:
                 alter_sql = process_alter(args, wb, alter_tab)
 
-            # BUILD EACH LAYER
-            full_table_name = f"{this_layer}_{table_name.replace(' ', '_')}"
+            # Generate SCD dictionary
+            scd_dict = get_scdinfo(schemas[this_layer], table_name, columns)
+
+            # Use the derived name for the output file
+            output_name = get_output_name(f"{this_layer} {table_name}", derived_names)
+            full_table_name = output_name.replace(' ', '_')
             print(f'{this_layer} table: {full_table_name}')
-            config = get_config(full_table_name, alter_sql=alter_sql)
-            build(args, args.modeldir, full_table_name, tables, columns, wb, alter_sql=alter_sql, config_sql=config)
+            
+            # Call build with scd_dict instead of config_sql
+            build(args, args.modeldir, full_table_name, tables, columns, wb, alter_sql=alter_sql, scd_dict=scd_dict)
             print(f'\t\t-- Finished processing {this_layer} layer for {full_table_name}\n\n')
 
     # Process additional sheets if necessary
@@ -333,7 +349,7 @@ def build_scd6 ( schema, table, keycol, scd1_cols = [], scd2_cols = [], scd3_col
     'UPDATE_DATETIME', 'EFFECTIVE_TIMESTAMP', 'END_TIMESTAMP',
     'LOAD_BATCH_ID', 'UPDATE_BATCH_ID', 'PRIMARY_SOURCE_SYSTEM']
 
-    start_sql = f'''\n\n WITH  SCD AS ( \n\tSELECT  {keycol}'''
+    start_sql = f'''\n\n WITH  SCD as ( \n\tSELECT  {keycol}'''
 
     sql2 = []
     for col in scd2_cols:
@@ -370,14 +386,14 @@ def build_scd6 ( schema, table, keycol, scd1_cols = [], scd2_cols = [], scd3_col
             ) as {col}'''
         sql0.append( sql )
 
-    end_sql = f'''\n\t    , DBT_VALID_FROM AS EFFECTIVE_TIMESTAMP
-    \t, DBT_VALID_TO   AS END_TIMESTAMP
+    end_sql = f'''\n\t    , DBT_VALID_FROM as EFFECTIVE_TIMESTAMP
+    \t, DBT_VALID_TO   as END_TIMESTAMP
     \t,
-    \t  CASE WHEN CAST(DBT_VALID_FROM AS DATE) = '1901-01-01' then cast( DBT_VALID_FROM AS DATE )
-    \t    WHEN cast( DBT_VALID_FROM AS DATE ) <> '1901-01-01' THEN dateadd(day,1,CAST(DBT_VALID_FROM AS DATE))
-    \t  else cast( DBT_VALID_FROM AS DATE ) end as EFFECTIVE_DATE
-    \t, cast( DBT_VALID_TO AS DATE ) as END_DATE
-    \t, CASE WHEN DBT_VALID_TO IS NULL THEN 'Y' ELSE 'N' END AS CURRENT_INDICATOR'''
+    \t  CASE WHEN CAST(DBT_VALID_FROM as DATE) = '1901-01-01' then cast( DBT_VALID_FROM as DATE )
+    \t    WHEN cast( DBT_VALID_FROM as DATE ) <> '1901-01-01' THEN dateadd(day,1,CAST(DBT_VALID_FROM as DATE))
+    \t  else cast( DBT_VALID_FROM as DATE ) end as EFFECTIVE_DATE
+    \t, cast( DBT_VALID_TO as DATE ) as END_DATE
+    \t, CASE WHEN DBT_VALID_TO IS NULL THEN 'Y' ELSE 'N' END as CURRENT_INDICATOR'''
     #CAST(DBT_VALID_FROM AS DATE) as EFFECTIVE_DATE\n,
     sql1[ 0 ] = start_sql + sql1[ 0 ]
     scd_all = sql1 + sql2 + sql3 + sql0
@@ -421,13 +437,13 @@ def get_scdinfo( schema, table, cols_dict):
 
 def process_tables(args, wb, tables_tab):
     print(f'\t\t-- Processing {tables_tab} ...')
-    # read the tables tab and convert to a dictionary
-    # FILTER RESTRICTION RULE should be added as a comment to the filter layer for the appropriate table, after the condition
-    # Final Layer filter should be added as a comment to the final layer (after the from clause)
     expected_cols = ['SOURCE SCHEMA', 'SOURCE TABLE', 'ALIAS', 'FILTER CONDITIONS', 'FILTER RESTRICTION RULE','PARENT JOIN NUMBER', 'PARENT TABLE JOIN', 'CHILD TABLE JOIN','FINAL LAYER FILTER', 'JOIN TYPE']
 
     ws = wb[tables_tab]
     tables_dict = {}
+
+    # Get derived names
+    derived_names = get_derived_names(wb)
 
     # Convert found column names to uppercase
     found_cols = [cell.value.upper() if cell.value else None for cell in ws[1]]
@@ -446,6 +462,10 @@ def process_tables(args, wb, tables_tab):
             for i, col in enumerate(found_cols):
                 if col:  # Only process non-None column names
                     tables_dict[source_table][col] = row[i] if i < len(row) else ''
+            
+            # Add derived name to the table dictionary
+            derived_name = derived_names.get(tables_tab, tables_tab)
+            tables_dict[source_table]['DERIVED_NAME'] = derived_name
 
     # Debug: Print processed tables
     debug_print(f"DEBUG: Processed tables: {tables_dict}")
@@ -553,43 +573,119 @@ def process_dml( args, wb, dml_tab ):
 
     return dml_sql
 
-def get_config( cur_layer, alter_sql='', dml_block='' ):
-    '''
-    Builds the CONFIG dynamically based on the file name
-        # {{ config(   only if...:
-        # ADD: materialized = 'view' if the tgt_table starts with DSV
-        # ADD: tags = [ "fact" ]  if the tgt_table starts with FACT%
-        # Only add post_hook = (" if there are alter statements.
-        # ") <- close post_hook 
-        # }} <- close config
-    '''
-    print( '-- COMBINING ALTER/DML statements ')
-    concat_config = '' 
+def get_scdinfo(schema, table, cols_dict):
+    scd_dict = {
+        'table': table,
+        'schema': schema,
+        'KEY': [],
+        'scd1': [], 'scd2': [], 'scd3': [], 'scd0': [],
+        'config': {
+            'target_schema': schema,
+            'unique_key': None,
+            'strategy': None,
+            'updated_at': None,
+            'check_cols': None
+        }
+    }
+
+    check_cols = []
+    for row in cols_dict.values():
+        scd_value = str(row.get('SCD', '')).lower().strip()
+        column_name = row.get('STAGING LAYER COLUMN NAME')
+
+        if 'key' in scd_value:
+            scd_dict['KEY'].append(column_name)
+            if scd_dict['config']['unique_key'] is None:
+                scd_dict['config']['unique_key'] = []
+            scd_dict['config']['unique_key'].append(column_name)
+        elif 'timestamp' in scd_value:
+            scd_dict['config']['strategy'] = 'timestamp'
+            scd_dict['config']['updated_at'] = column_name
+        elif 'check:' in scd_value:
+            scd_dict['config']['strategy'] = 'check'
+            if 'all' in scd_value.replace(' ', ''):
+                scd_dict['config']['check_cols'] = 'all'
+            else:
+                check_cols.append(column_name)
+
+        # Existing SCD type assignments
+        if '1' in scd_value:
+            scd_dict['scd1'].append(column_name)
+        if '2' in scd_value:
+            scd_dict['scd2'].append(column_name)
+        if '3' in scd_value:
+            scd_dict['scd3'].append(column_name)
+        if '0' in scd_value:
+            scd_dict['scd0'].append(column_name)
+
+    # If check_cols is not 'all', set it to the list of check columns
+    if scd_dict['config']['check_cols'] != 'all' and check_cols:
+        scd_dict['config']['check_cols'] = check_cols
+
+    # If there's only one key, convert it from a list to a string
+    if len(scd_dict['KEY']) == 1:
+        scd_dict['KEY'] = scd_dict['KEY'][0]
+        scd_dict['config']['unique_key'] = scd_dict['config']['unique_key'][0]
+
+    return scd_dict
+
+def generate_dbt_snapshot_config(scd_dict):
+    """
+    Generates a dictionary containing dbt snapshot configuration based on SCD information.
+    """
+    config = scd_dict.get('config', {})
+    snapshot_config = {
+        'target_schema': config.get('target_schema'),
+        'unique_key': config.get('unique_key'),
+        'strategy': config.get('strategy'),
+    }
+
+    if config.get('strategy') == 'timestamp':
+        snapshot_config['updated_at'] = config.get('updated_at')
+    elif config.get('strategy') == 'check':
+        snapshot_config['check_cols'] = config.get('check_cols')
+
+    return snapshot_config
+
+def get_config(cur_layer, alter_sql='', scd_dict=None):
+    """
+    Builds the CONFIG dynamically based on the layer, alter SQL, and SCD information
+    """
     config = {}
-    compileif = ['view', 'tags', 'alter']
-    
-    if cur_layer.startswith('SAT') or cur_layer.startswith('HUB') or cur_layer.startswith('LNK'):
-        config['tags'] = f'tags = [ "raw_vault" ]'
+
+    # Basic config setup
+    if cur_layer.startswith(('SAT', 'HUB', 'LNK')):
+        config['tags'] = ['raw_vault']
 
     if alter_sql:
-        alter_sql = '\n'.join(alter_sql)
-        config['alter'] = f'post_hook = ("\n{alter_sql}\n") '
+        alter_sql_str = '\n'.join(alter_sql) if isinstance(alter_sql, list) else alter_sql
+        config['post_hook'] = f'("{alter_sql_str}")'
 
-    concat_config = ''
-    compile_cnt = 0
-    for checkval in compileif:
-        if checkval in config and compile_cnt == 0:
-            concat_config = f'{{{{ config( \n{config.get(checkval)} '
-            compile_cnt += 1
-        elif checkval in config:
-            concat_config += f'\n,\t {config.get(checkval)}'
-            compile_cnt += 1
-    if compile_cnt > 0:
-        concat_config += '\n) }}'
+    # Incorporate snapshot config if SCD info is provided
+    if scd_dict:
+        snapshot_config = generate_dbt_snapshot_config(scd_dict)
+        config.update(snapshot_config)
 
-    config_sql = ''.join(concat_config)
+    # Generate the config string
+    config_items = []
+    for key, value in config.items():
+        if isinstance(value, list):
+            config_items.append(f"{key} = {value}")
+        elif isinstance(value, str):
+            config_items.append(f"{key} = '{value}'")
+        else:
+            config_items.append(f"{key} = {value}")
 
-    return config_sql
+    if config_items:
+        config_str = "{{ config(\n    " + ",\n    ".join(config_items) + "\n) }}"
+    else:
+        config_str = ""
+
+    return config_str
+
+# Example usage:
+# scd_dict = get_scdinfo(schema, table, cols_dict)
+# config_sql = get_config(cur_layer, alter_sql, scd_dict)
 
 
 def get_model_tests(row):
@@ -806,60 +902,54 @@ def get_source_sql(target_table, cols, tables):
         src_col = row.get('SOURCE COLUMN', '')
         manual_logic = row.get('MANUAL LOGIC', '')
         datatype = row.get('DATATYPE')
-        automated_logic = row.get('AUTOMATED LOGIC')
+        automated_logic = row.get('AUTOMATED_LOGIC')
         staging_col_name = row.get('STAGING LAYER COLUMN NAME', '')
 
-        if current_layer == 'STG':
-            if src_col == '(DERIVED)':
-                # src_sql = manual_logic.strip() if manual_logic else staging_col_name
-                # row['LOGIC_NAME'] = staging_col_name
-                manual_logic_upper =  manual_logic.upper() if manual_logic else ''
-                if 'HASH' in manual_logic_upper or 'COMPOSITE' in manual_logic_upper:
-                    hashcol = manual_logic_upper.replace('HASH:', '').replace('COMPOSITE:', '').replace('\n', '').replace(' ', '').strip()
-                    temp1 = hashcol.split(',')
-                    row['LOGIC_NAME'] = staging_col_name
-                    joincol = (', ').join(temp1)
-                    hashcol = ("','").join(temp1)
-                    col1 = f"{{ dbt_utils.generate_surrogate_key ( [ '{hashcol}' ] ) }}"
-                    src_sql = f"{{{col1}}}"
-                else:
-                    src_sql = manual_logic_upper.strip()
-            else:
-                src_sql = src_col
-                if automated_logic:
-                    automated_logic = automated_logic.lower()
-                    if 'trim' in automated_logic:
-                        src_sql = f"TRIM({src_sql})"
-                    if 'upper' in automated_logic:
-                        src_sql = f"UPPER({src_sql})"
-                src_sql = f"NULLIF(TRIM( {src_sql} ), '')"
-                row['LOGIC_NAME'] = src_col
-        else:
-            if src_col == '(DERIVED)':
-                if manual_logic:
-                    if 'HASH' in manual_logic.upper() or 'COMPOSITE' in manual_logic.upper():
-                        hashcol = manual_logic.replace('HASH:', '').replace('COMPOSITE:', '').replace('\n', '').replace(' ', '').strip()
-                        temp1 = hashcol.split(',')
-                        joincol = (', ').join(temp1)
-                        hashcol = ("','").join(temp1)
-                        col1 = f"{{ dbt_utils.generate_surrogate_key ( [ '{hashcol}' ] ) }}"
-                        src_sql = f"{{{col1}}}"
-                    else:
-                        src_sql = manual_logic.strip()
-                elif datatype == 'DATE':
-                    src_sql = f"CASE WHEN {staging_col_name} is null then '-1' WHEN {staging_col_name} < '1901-01-01' then '-2' WHEN {staging_col_name} > '2099-12-31' then '-3' ELSE regexp_replace( {staging_col_name}, '[^0-9]+', '') END :: INTEGER"
-                else:
-                    src_sql = staging_col_name
+        if (current_layer == 'STG' or src_col == '(DERIVED)') and manual_logic:
+            if 'HASH:' in manual_logic.upper() or 'COMPOSITE:' in manual_logic.upper():
+                hashcol = manual_logic.replace('HASH:', '').replace('COMPOSITE:', '').replace('\n', '').replace(' ', '').strip()
+                temp1 = [comp.strip() for comp in hashcol.split(',')]
                 row['LOGIC_NAME'] = staging_col_name
+                
+                # Build the custom hash key with improved formatting
+                hash_components = []
+                for component in temp1:
+                    hash_components.append(f"        IFNULL(NULLIF(UPPER(TRIM(CAST({component} as VARCHAR))), ''), '^^')")
+                
+                hash_concatenation = "\n        || '||' ||\n".join(hash_components)
+                final_hash = f"        )) as BINARY(16))                                           "
+                src_sql = f"""CAST(MD5_BINARY(CONCAT(
+{hash_concatenation}
+{final_hash}"""
             else:
-                src_sql = src_col
-                row['LOGIC_NAME'] = src_col
+                src_sql = manual_logic.strip()
+        elif src_col == '(DERIVED)':
+            if datatype == 'DATE':
+                src_sql = f"""CASE WHEN {staging_col_name} is null then '-1' 
+                                   WHEN {staging_col_name} < '1901-01-01' then '-2' 
+                                   WHEN {staging_col_name} > '2099-12-31' then '-3' 
+                                   ELSE regexp_replace({staging_col_name}, '[^0-9]+', '') 
+                              END :: INTEGER"""
+            else:
+                src_sql = staging_col_name
+            row['LOGIC_NAME'] = staging_col_name
+        else:
+            src_sql = src_col
+            if automated_logic:
+                automated_logic = automated_logic.lower()
+                if 'trim' in automated_logic:
+                    src_sql = f"TRIM({src_sql})"
+                if 'upper' in automated_logic:
+                    src_sql = f"UPPER({src_sql})"
+            src_sql = f"NULLIF(TRIM({src_sql}), '')"
+            row['LOGIC_NAME'] = src_col
 
         row['SQL'] = src_sql
         row['RENAME'] = staging_col_name
         row['IS_DERIVED'] = src_col == '(DERIVED)'
 
     return columns
+
 
 def make_scd( schema, table_name, scd_dict):
     '''
@@ -893,6 +983,10 @@ def make_yml(table_name, tables, columns):
     model_tests = []
     column_tests = {}
 
+    # Get the derived name from the first table in the tables dictionary
+    derived_name = next(iter(tables.values()))['DERIVED_NAME']
+    output_name = derived_name.replace(' ', '_').lower()
+
     for row in columns.values():
         col_name = row.get('STAGING LAYER COLUMN NAME')
         if col_name:
@@ -903,7 +997,7 @@ def make_yml(table_name, tables, columns):
         'version': 2,
         'models': [
             {
-                'name': table_name,
+                'name': output_name,  # Use the derived name here
                 'tests': model_tests,
                 'columns': []
             }
@@ -918,7 +1012,7 @@ def make_yml(table_name, tables, columns):
             }
             schema_dict['models'][0]['columns'].append(column_entry)
 
-    debug_print(f"Generated YAML for {table_name}:")
+    debug_print(f"Generated YAML for {output_name}:")
     debug_print(yaml.dump(schema_dict, sort_keys=False))
 
     return schema_dict
@@ -956,7 +1050,7 @@ def format_manual_logic(logic, indent):
     return f"{lines[0]}\n" + '\n'.join([f"{indent}{line.strip()}" for line in lines[1:]])
 
 
-def build(args, modeldir, table_name, tables, columns, wb, alter_sql='', config_sql=''):
+def build(args, modeldir, table_name, tables, columns, wb, alter_sql='', scd_dict=None):
     print(f'\t\t-- Building {table_name} ...')
     yml = make_yml(table_name, tables, columns)
     all_sql = []
@@ -965,7 +1059,19 @@ def build(args, modeldir, table_name, tables, columns, wb, alter_sql='', config_
         current_layer = table_name.split('_')[0]
         columns = get_source_sql(table_name, columns, tables)
 
+        # Use the derived name from the first table in the tables dictionary
+        derived_name = next(iter(tables.values()))['DERIVED_NAME']
+        output_name = derived_name.replace(' ', '_').lower()
+
+        # Determine if it's a snapshot based on scd_dict
+        is_snapshot = scd_dict and 'config' in scd_dict and scd_dict['config'].get('strategy') is not None
+
+        # Add snapshot opening tag if it's a snapshot
+        if is_snapshot:
+            all_sql.append(f"{{% snapshot {output_name}_snapshot %}}\n")
+
         # Config and SRC LAYER
+        config_sql = get_config(output_name, alter_sql, scd_dict)
         all_sql.append(config_sql)
         if config_sql:
             all_sql.append('\n')  # Add a newline after the config block
@@ -996,11 +1102,15 @@ def build(args, modeldir, table_name, tables, columns, wb, alter_sql='', config_
         final_sql = build_final_layer(tables, columns, current_layer, base_join_alias)
         all_sql.append(final_sql)
 
+        # Add snapshot closing tag if it's a snapshot
+        if is_snapshot:
+            all_sql.append("\n{% endsnapshot %}")
+
         sql_str = '\n'.join(all_sql)
 
-        # Write files
-        yml_file = modeldir / (table_name.lower() + '.yml')
-        sql_file = modeldir / (table_name.lower() + '.sql')
+        # Write files using the derived name
+        yml_file = modeldir / (output_name + '.yml')
+        sql_file = modeldir / (output_name + '.sql')
 
         with open(yml_file, 'w') as fw:
             yaml.dump(yml, fw, sort_keys=False)
@@ -1011,55 +1121,57 @@ def build(args, modeldir, table_name, tables, columns, wb, alter_sql='', config_
             print(f'\t\t-- Created SQL file: {sql_file}')
 
     except Exception as e:
-        print(f'\t\t-- Error building {table_name}: {str(e)}')
+        print(f'\t\t-- Error building {output_name}: {str(e)}')
         traceback.print_exc()
 
-    print(f'\t\t-- Finished building {table_name}')
+    print(f'\t\t-- Finished building {output_name}')
 
 
 def build_src_layer(args, tables, current_layer):
-    '''
-    {1: {'SOURCE SCHEMA': 'STAGING', 'SOURCE TABLE': 'STG_DEP_MEMBERS', 'ALIAS': 'M', 'FILTER CONDITIONS': None, 'Parent Join Number': 2, 'PARENT TABLE JOIN': None, 'Child Table Join': None, 'JOIN TYPE': None}, 2: {'SOURCE SCHEMA': 'STAGING', 'SOURCE TABLE': 'STG_DEP_ADDRESS', 'ALIAS': 'A', 'FILTER CONDITIONS': None, 'Parent Join Number': 2, 'PARENT TABLE JOIN': 'CONCAT(M.PEACH_BASE_NUMBER, M.PEACH_SUFFIX_NUMBER)', 'Child Table Join': 'CONCAT(A_PEACH_BASE_NUMBER, A_PEACH_SUFFIX_NUMBER)', 'JOIN TYPE': 'left join'}, 3: {'SOURCE SCHEMA': 'STAGING', 'SOURCE TABLE': 'STG_DEP_US_ZIPCODE_LIST', 'ALIAS': 'Z', 'FILTER CONDITIONS': None, 'Parent Join Number': 1, 'PARENT TABLE JOIN': 'A.ZIP_CODE', 'Child Table Join': 'Z.ZIPCODE', 'JOIN TYPE': 'left join'}}
-    '''
     debug_print(f'==== Build SOURCE SQL for {current_layer} layer.')
     all_sql = []
 
-    if current_layer == 'STG':
-        for tbl in tables.values():
-            source_schema = tbl.get('SOURCE SCHEMA')
-            source_table = tbl.get('SOURCE TABLE')
-            table = tbl.get('ALIAS')
-            if source_schema and source_table:
-                sql = f"SRC_{table:<14} as ( SELECT * FROM {{{{ source('{source_schema}', '{source_table}') }}}} )"
-                all_sql.append(sql)
+    for row in tables.values():
+        source_schema = row.get('SOURCE SCHEMA')
+        source_table = row.get('SOURCE TABLE')
+        table = row.get('ALIAS')
+        
+        if source_schema and source_table:
+            # Get the original filter conditions
+            filter_conditions = row.get('FILTER CONDITIONS') or  ''
+            filter_condition_upper = filter_conditions.upper()
+            
+            # Check if DBT_VALID_TO is in the filter conditions (case-insensitive)
+            if 'DBT_VALID_TO' in filter_condition_upper and 'NULL' in filter_condition_upper:
+                # Use the entire filter condition in the WHERE clause
+                dbt_where = f"WHERE {filter_conditions}"
+                # Remove this condition from the FILTER_CONDITIONS for later use
+                row['FILTER CONDITIONS'] = ''
             else:
-                debug_print(f"WARNING: Missing SOURCE SCHEMA or SOURCE TABLE for STG layer table {table}")
-    else:
-        for tbl in tables.values():
-            table = tbl.get('ALIAS')
-            if table is not None:
-                act_table = tbl.get('SOURCE TABLE')
-                sql = f"SRC_{table:<14} as ( SELECT * FROM {{{{ ref('{act_table.lower()}') }}}} )"
-                all_sql.append(sql)
+                dbt_where = ''
+            
+            if current_layer == 'STG':
+                sql = f"SRC_{table:<14} as ( SELECT * FROM {{{{ source('{source_schema}', '{source_table}') }}}} {dbt_where})"
+            else:
+                sql = f"SRC_{table:<14} as ( SELECT * FROM {{{{ ref('{source_table.lower()}') }}}} {dbt_where})"
+            
+            all_sql.append(sql)
+        else:
+            debug_print(f"WARNING: Missing SOURCE SCHEMA or SOURCE TABLE for {current_layer} layer table {table}")
 
     all_sql_str = ',\n'.join(all_sql)
 
     # Generate commented-out source references
     comment_sql = []
-    if current_layer == 'STG':
-        for tbl in tables.values():
-            table = tbl.get('ALIAS')
-            schema = tbl.get('SOURCE SCHEMA')
-            source_table = tbl.get('SOURCE TABLE')
-            if table is not None and schema is not None and source_table is not None:
+    for row in tables.values():
+        table = row.get('ALIAS')
+        schema = row.get('SOURCE SCHEMA')
+        source_table = row.get('SOURCE TABLE')
+        if table is not None and schema is not None and source_table is not None:
+            if current_layer == 'STG':
                 comment_sql.append(f"SRC_{table:<14} as ( SELECT * FROM {schema}.{source_table} )")
-    else:
-        for tbl in tables.values():
-            table = tbl.get('ALIAS')
-            schema = tbl.get('SOURCE SCHEMA')
-            if table is not None:
-                act_table = tbl.get('SOURCE TABLE')
-                comment_sql.append(f"SRC_{table:<14} as ( SELECT * FROM {schema}.{act_table} )")
+            else:
+                comment_sql.append(f"SRC_{table:<14} as ( SELECT * FROM {schema}.{source_table} )")
 
     comment_sql_str = '\n'.join(comment_sql)
 
@@ -1088,43 +1200,18 @@ def build_logic_layer(columns, tables, current_layer):
         tgt_tbl = f'LOGIC_{tbl}'
 
         table_cols = []
-        # Enumerate columns specifically for the current table to reset the IDX
         for idx, row in enumerate(columns.values()):
             if row.get('SOURCE TABLE') == tbl:
-                src_col = row.get('SOURCE COLUMN', '')
-                logic_name = row.get('LOGIC_NAME', '')
                 staging_col_name = row.get('STAGING LAYER COLUMN NAME', '')
-                is_derived = src_col == '(DERIVED)'
-                manual_logic = row.get('MANUAL LOGIC', '')
-                source_table = row.get('SOURCE TABLE')
-                automated_logic = row.get('AUTOMATED LOGIC', '')
+                is_derived = row.get('IS_DERIVED', False)
+                col_str = row['SQL']
 
-                # Skip derived columns without a source table (to be handled in FINAL layer)
-                if is_derived and not source_table:
-                    continue
+                # For STG layer, add the NULLIF(TRIM()) wrapper if not already present and not a derived column
+                if current_layer == 'STG' and not is_derived and not col_str.startswith('NULLIF(TRIM('):
+                    col_str = f"NULLIF(TRIM({col_str}), '')"
 
-                # Handle columns based on the current layer and derivation status
-                if is_derived and source_table:
-                    if 'HASH:' in manual_logic.upper() or 'COMPOSITE:' in manual_logic.upper():
-                        hashcol = manual_logic.replace('HASH:', '').replace('COMPOSITE:', '').replace('\n', '').replace(' ', '').strip()
-                        temp1 = hashcol.split(',')
-                        hashcol = ("','").join(temp1)
-                        col_str = f"{{{{ dbt_utils.generate_surrogate_key([ '{hashcol}' ]) }}}}"
-                    else:
-                        col_str = manual_logic
-                    col_str = f"{col_str:<60} as {staging_col_name:>50}"
-                elif current_layer == 'STG':
-                    col_str = src_col
-                    if automated_logic:
-                        automated_logic = automated_logic.lower()
-                        if 'trim' in automated_logic:
-                            col_str = f"TRIM({col_str})"
-                        if 'upper' in automated_logic:
-                            col_str = f"UPPER({col_str})"
-                    col_str = f"NULLIF(TRIM( {col_str} ), '')"
-                    col_str = f"{col_str:<60} as {logic_name:>50}"
-                else:
-                    col_str = logic_name
+                # Format the column string with perfect alignment
+                col_str = f"{col_str:<60} as {staging_col_name:>50}"
 
                 # Adjust the starting comma logic based on the index within the table's context
                 if idx == 0 or not table_cols:
@@ -1208,6 +1295,7 @@ def build_filter_layer(tables):
         source_table = f'RENAME_{from_table}'
 
         filters = row['FILTER CONDITIONS'].split(';') if row['FILTER CONDITIONS'] else []
+        filters = [f for f in filters if 'DBT_VALID_TO' not in f.upper() or 'NULL' not in f.upper()]
         filters_str = ' AND '.join(filters)
 
         sql = f"""
@@ -1364,15 +1452,21 @@ def build_final_layer(tables, columns, current_layer, base_join_alias):
 ---- FINAL LAYER ----
 SELECT
 {formatted_cols}
-FROM {base_join_alias}"""
+FROM {base_join_alias}\n"""
 
     # Add any final layer filters as comments
-    final_filter_str = ''
+    final_filter_str, filter_comment, final_filter = '','',''
     for row in tables.values():
-        filter_comment = row.get('FINAL LAYER FILTER', '')
-        if filter_comment:
-            filter_comment = filter_comment.replace("\n", " ")
-            final_filter_str += f'\n/* {filter_comment} */\n'
+        filter_comment += row.get('FILTER RESTRICTION RULE') or ''
+        final_filter += row.get('FINAL LAYER FILTER') or  ''
+        # filter_comment = row.get('FINAL LAYER FILTER', '')
+    if filter_comment:
+        filter_comment = filter_comment.replace("\n", " ")
+        final_filter_str += f'\n/* {filter_comment} */\n'
+    if final_filter:
+        final_filter_str = final_filter.strip()
+        # final_filter_str += f'\n {final_filter_str} \n'
+
 
     final_sql += final_filter_str
 
