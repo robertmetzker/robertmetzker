@@ -693,7 +693,7 @@ def get_model_tests(row):
     https://github.com/fishtown-analytics/dbt-utils
     '''
     test_dict = {}
-    test_cols = ['UNIQUE', 'MODEL EQUALITY', 'MODEL EQUAL ROWCOUNT', 'TEST EXPRESSION',  ]
+    test_cols = ['UNIQUE', 'MODEL EQUALITY', 'MODEL EQUAL ROWCOUNT', 'TEST EXPRESSION', 'PK' ]
     # Globally replacing the relationship with relationship_where
 
     tests = []
@@ -713,6 +713,17 @@ def get_model_tests(row):
                     'dbt_utils.unique_combination_of_columns': {
                         'combination_of_columns': [each.strip() for each in test.split(',')],
                         'severity': 'warn'
+                    }
+                }
+            else:
+                continue
+
+        if atest == 'PK':
+            if ':' in str(row[atest]):
+                test = str(row[atest]).replace('PK:', '').strip()
+                row[atest] = {
+                    'dbt_constraints.primary_key': {
+                        'column_names': [each.strip() for each in test.split(',')],
                     }
                 }
             else:
@@ -1068,7 +1079,7 @@ def build(args, modeldir, table_name, tables, columns, wb, alter_sql='', scd_dic
 
         # Add snapshot opening tag if it's a snapshot
         if is_snapshot:
-            all_sql.append(f"{{% snapshot {output_name}_snapshot %}}\n")
+            all_sql.append(f"{{% snapshot {output_name} %}}\n")
 
         # Config and SRC LAYER
         config_sql = get_config(output_name, alter_sql, scd_dict)
