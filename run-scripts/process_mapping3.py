@@ -1031,25 +1031,36 @@ def make_yml(table_name, tables, columns):
 
 def format_select_cols(columns, layer):
     select_cols = []
+    hashdiff_columns = []
+    
     for idx, col in enumerate(columns.values()):
         col_name = col.get('STAGING LAYER COLUMN NAME')
         src_sql = col.get('SQL')
-        
+        hashdiff_flag = col.get('HASHDIFF')  # Whether this column should be part of the HASHDIFF
+
         if col_name:
             if layer == 'FINAL':
-                if 'HASHDIFF' in src_sql:
-                    pass
-                else:
-                    col_str = col_name
+                # Gather columns for HASHDIFF if applicable
+                if hashdiff_flag == 'Y':
+                    hashdiff_columns.append(col_name)
+                
+                # Non-HASHDIFF columns are simply listed
+                col_str = col_name if idx == 0 else f"      , {col_name}"
+
             else:
+                # Non-final layer logic: Handle SQL formatting or col_name assignment
                 if '\n' in src_sql:
                     src_sql = format_manual_logic(src_sql, ' ' * 12)
                 col_str = f"{src_sql:<60} as {col_name:>50}"
-
-            if idx == 0:
-                select_cols.append(f"        {col_str}")
-            else:
-                select_cols.append(f"      , {col_str}")
+            
+            select_cols.append(col_str)
+    
+    # For FINAL layer, append the HASHDIFF calculation
+    if layer == 'FINAL' and hashdiff_columns:
+        # Concatenate all the relevant columns and calculate MD5 as HASHDIFF
+        hashdiff_expression = " || '|' || ".join(hashdiff_columns)  # Using '|' as a separator
+        hashdiff_sql = f"MD5({hashdiff_expression}) as HASHDIFF"
+        select_cols.append(f"      , {hashdiff_sql}")
     
     return '\n'.join(select_cols)
 
@@ -1416,7 +1427,7 @@ def build_final_layer(tables, columns, current_layer, base_join_alias):
     has_hashdiff = False
 
     for col in columns.values():
-        colname = col.get('STAGING LAYER COLUMN NAME', '')
+        colname = col.get('STAGING LAYER COLUMN NAME', '').upper()
         remove_column = (col.get('REMOVE COLUMN') or '').strip().lower()
         hashdiff = (col.get('HASHDIFF') or '').strip().lower()
         src_col = col.get('SOURCE COLUMN', '')
@@ -1434,7 +1445,7 @@ def build_final_layer(tables, columns, current_layer, base_join_alias):
 
             if hashdiff in ('yes', 'y'):
                 has_hashdiff = True
-                hashdiff_cols.append(f"IFNULL(NULLIF(TRIM({colname}), ''), '^^')")
+                hashdiff_cols.append(f"IFNULL({colname}, '^^')")
 
     # Build the SELECT statement with leading commas and aligned columns
     select_columns = []
@@ -1451,7 +1462,7 @@ def build_final_layer(tables, columns, current_layer, base_join_alias):
                 select_columns.append(f"        , {col}")
     
     # Add HASHDIFF column if necessary
-    if has_hashdiff and current_layer not in ['STG', 'BASE']:
+    if has_hashdiff: # and current_layer not in ['STG', 'BASE']:
         hashdiff_str = '\n            || '.join(hashdiff_cols)
         select_columns.append(f"""        , SHA2(
               {hashdiff_str}
@@ -1470,14 +1481,11 @@ FROM {base_join_alias}\n"""
     for row in tables.values():
         filter_comment += row.get('FILTER RESTRICTION RULE') or ''
         final_filter += row.get('FINAL LAYER FILTER') or  ''
-        # filter_comment = row.get('FINAL LAYER FILTER', '')
     if filter_comment:
         filter_comment = filter_comment.replace("\n", " ")
         final_filter_str += f'\n/* {filter_comment} */\n'
     if final_filter:
         final_filter_str = final_filter.strip()
-        # final_filter_str += f'\n {final_filter_str} \n'
-
 
     final_sql += final_filter_str
 
