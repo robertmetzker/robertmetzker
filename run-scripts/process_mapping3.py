@@ -653,10 +653,11 @@ def get_config(cur_layer, alter_sql='', scd_dict=None):
     """
     config = {}
 
-    # Basic config setup
-    if cur_layer.startswith(('SAT', 'HUB', 'LNK')):
-        config['tags'] = ['raw_vault']
+    # Skip config for Rawvault models
+    if cur_layer.startswith(('HUB', 'LINK', 'SAT')):
+        return ""
 
+    # Basic config setup
     if alter_sql:
         alter_sql_str = '\n'.join(alter_sql) if isinstance(alter_sql, list) else alter_sql
         config['post_hook'] = f'("{alter_sql_str}")'
@@ -1093,9 +1094,9 @@ def build(args, modeldir, table_name, tables, columns, wb, alter_sql='', scd_dic
             all_sql.append(f"{{% snapshot {output_name} %}}\n")
 
         # Config and SRC LAYER
-        config_sql = get_config(output_name, alter_sql, scd_dict)
-        all_sql.append(config_sql)
+        config_sql = get_config(current_layer, alter_sql, scd_dict)
         if config_sql:
+            all_sql.append(config_sql)
             all_sql.append('\n')  # Add a newline after the config block
         all_sql.append('---- SRC LAYER ----\nWITH')
         src_sql = build_src_layer(args, tables, current_layer)
@@ -1210,6 +1211,14 @@ def build_logic_layer(columns, tables, current_layer):
     alias_list = []
     final_sql = []
 
+    def format_manual_logic(logic, indent):
+        lines = logic.strip().split('\n')
+        if len(lines) > 1:
+            formatted_lines = [lines[0]] + [f"{indent}{line.strip()}" for line in lines[1:-1]]
+            last_line = lines[-1].strip()
+            return '\n'.join(formatted_lines), last_line
+        return logic.strip(), logic.strip()
+
     # Collect distinct table aliases
     for row in tables.values():
         tbl = row.get('ALIAS')
@@ -1228,18 +1237,26 @@ def build_logic_layer(columns, tables, current_layer):
                 is_derived = row.get('IS_DERIVED', False)
                 col_str = row['SQL']
 
-                # For STG layer, add the NULLIF(TRIM()) wrapper if not already present and not a derived column
-                if current_layer == 'STG' and not is_derived and not col_str.startswith('NULLIF(TRIM('):
-                    col_str = f"NULLIF(TRIM({col_str}), '')"
-
-                # Format the column string with perfect alignment
-                col_str = f"{col_str:<60} as {staging_col_name:>50}"
+                # Handle multi-line manual logic
+                if '\n' in col_str:
+                    formatted_logic, last_line = format_manual_logic(col_str, ' ' * 12)
+                    col_str = f"{formatted_logic}\n{' ' * 8}{last_line:<60} as {staging_col_name:>50}"
+                else:
+                    # Only apply NULLIF(TRIM()) for STG layer and non-derived columns
+                    if current_layer == 'STG' and not is_derived and not col_str.startswith('NULLIF(TRIM('):
+                        col_str = f"NULLIF(TRIM({col_str}), '')"
+                    
+                    # Format the column string with perfect alignment
+                    col_str = f"{col_str:<60} as {staging_col_name:>50}"
 
                 # Adjust the starting comma logic based on the index within the table's context
                 if idx == 0 or not table_cols:
                     table_cols.append(f"        {col_str}")
                 else:
                     table_cols.append(f"      , {col_str}")
+
+                # Store the rename information
+                row['RENAMED_TO'] = staging_col_name
 
         # Construct the SQL block if there are columns for the table
         if table_cols:
@@ -1275,23 +1292,23 @@ def build_rename_layer(columns):
         # Enumerate columns specifically for the current table to reset the IDX
         for idx, row in enumerate(columns.values()):
             if row.get('SOURCE TABLE') == tbl:
-                original_col = row.get('SOURCE COLUMN', '')
+                original_col = row.get('RENAMED_TO', '')  # Use the renamed column from the logic layer
                 target_col = row.get('STAGING LAYER COLUMN NAME', '')
                 is_derived = row.get('IS_DERIVED', False)
                 
-                # Determine column renaming or use as is
-                if is_derived:
-                    col_str = target_col  # Derived columns already have their final name from the LOGIC layer
-                elif original_col != target_col:
+                # Determine if we need to rename
+                if original_col and target_col and original_col != target_col:
                     col_str = f"{original_col:<60} as {target_col:>50}"
                 else:
-                    col_str = original_col
+                    col_str = original_col or target_col  # Use whichever is not empty
                 
-                # Adjust the starting comma logic based on the index within the table's context
-                if idx == 0 or not table_cols:
-                    table_cols.append(f"        {col_str}")
-                else:
-                    table_cols.append(f"      , {col_str}")
+                # Only add non-empty column strings
+                if col_str:
+                    # Adjust the starting comma logic based on the index within the table's context
+                    if idx == 0 or not table_cols:
+                        table_cols.append(f"        {col_str}")
+                    else:
+                        table_cols.append(f"      , {col_str}")
 
         # Construct the SQL block if there are columns for the table
         if table_cols:
@@ -1358,17 +1375,18 @@ def build_join_layer(tables, columns, current_layer):
     # Sort tables based on Parent Join Number, defaulting to 1 if not specified
     sorted_tables = sorted(tables.values(), key=lambda x: int(x.get('PARENT JOIN NUMBER', '1')))
 
-    # Check if all joins are UNION ALL
-    all_union_all = all(table.get('JOIN TYPE', '').strip().upper() == 'UNION ALL' for table in sorted_tables if table.get('JOIN TYPE'))
+    # Check if all joins are UNION or UNION ALL
+    all_union = all(table.get('JOIN TYPE', '').strip().upper() in ('UNION', 'UNION ALL') if table.get('JOIN TYPE') else False for table in sorted_tables)
 
-    if all_union_all:
+    if all_union:
         join_sql.append("---- JOIN LAYER ----")
         union_cte = ", JOIN_RESULT as (\n"
         for idx, table in enumerate(sorted_tables):
             alias = table['ALIAS']
+            join_type = table.get('JOIN TYPE', '').strip().upper() if table.get('JOIN TYPE') else 'UNION ALL'
             union_cte += f"    SELECT * FROM FILTER_{alias}"
             if idx < len(sorted_tables) - 1:
-                union_cte += "\n    UNION ALL\n"
+                union_cte += f"\n    {join_type}\n"
         union_cte += "\n)"
         join_sql.append(union_cte)
     else:
@@ -1387,8 +1405,9 @@ def build_join_layer(tables, columns, current_layer):
             if table == base_table:
                 continue  # Skip the base table
             
-            join_type = table.get('JOIN TYPE', '').strip().upper()
+            join_type = table.get('JOIN TYPE', '').strip().upper() if table.get('JOIN TYPE') else ''
             if not join_type:
+                debug_print(f"Warning: Missing JOIN TYPE for table {table.get('ALIAS')}. Skipping this join.")
                 continue
             
             alias = table['ALIAS']
@@ -1445,7 +1464,7 @@ def build_final_layer(tables, columns, current_layer, base_join_alias):
 
             if hashdiff in ('yes', 'y'):
                 has_hashdiff = True
-                hashdiff_cols.append(f"IFNULL({colname}, '^^')")
+                hashdiff_cols.append(f"IFNULL({colname}::text, '^^')")
 
     # Build the SELECT statement with leading commas and aligned columns
     select_columns = []
