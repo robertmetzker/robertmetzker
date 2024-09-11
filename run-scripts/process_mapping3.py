@@ -437,7 +437,7 @@ def get_scdinfo( schema, table, cols_dict):
 
 def process_tables(args, wb, tables_tab):
     print(f'\t\t-- Processing {tables_tab} ...')
-    expected_cols = ['SOURCE SCHEMA', 'SOURCE TABLE', 'ALIAS', 'FILTER CONDITIONS', 'FILTER RESTRICTION RULE','PARENT JOIN NUMBER', 'PARENT TABLE JOIN', 'CHILD TABLE JOIN','FINAL LAYER FILTER', 'JOIN TYPE']
+    expected_cols = ['SOURCE SCHEMA', 'SOURCE TABLE', 'ALIAS', 'SOURCE LAYER FILTER', 'FILTER CONDITIONS', 'FILTER RESTRICTION RULE','PARENT JOIN NUMBER', 'PARENT TABLE JOIN', 'CHILD TABLE JOIN','FINAL LAYER FILTER', 'JOIN TYPE']
 
     ws = wb[tables_tab]
     tables_dict = {}
@@ -953,7 +953,8 @@ def get_source_sql(target_table, cols, tables):
                     src_sql = f"TRIM({src_sql})"
                 if 'upper' in automated_logic:
                     src_sql = f"UPPER({src_sql})"
-            src_sql = f"NULLIF(TRIM({src_sql}), '')"
+            if current_layer == 'STG':
+                src_sql = f"NULLIF(TRIM({src_sql}), '')"
             row['LOGIC_NAME'] = src_col
 
         row['SQL'] = src_sql
@@ -1162,21 +1163,25 @@ def build_src_layer(args, tables, current_layer):
         if source_schema and source_table:
             # Get the original filter conditions
             filter_conditions = row.get('FILTER CONDITIONS') or  ''
+            src_filter_condition = row.get('SOURCE LAYER FILTER') or ''
             filter_condition_upper = filter_conditions.upper()
             
             # Check if DBT_VALID_TO is in the filter conditions (case-insensitive)
-            if 'DBT_VALID_TO' in filter_condition_upper and 'NULL' in filter_condition_upper:
+            # if 'DBT_VALID_TO' in filter_condition_upper and 'NULL' in filter_condition_upper:
+            if src_filter_condition:
+                # Let's split it by '\n' and rejoin by 7 tabs to align indents of the src_filter_condition as clean_src_filter
+                clean_src_filter = '\n' + (' ' * 24) + ('\n'+ ' ' * 24).join(src_filter_condition.split('\n'))
                 # Use the entire filter condition in the WHERE clause
-                dbt_where = f"WHERE {filter_conditions}"
+                dbt_where = f"{clean_src_filter}"
                 # Remove this condition from the FILTER_CONDITIONS for later use
-                row['FILTER CONDITIONS'] = ''
+                # row['FILTER CONDITIONS'] = ''
             else:
                 dbt_where = ''
             
             if current_layer == 'STG':
-                sql = f"SRC_{table:<14} as ( SELECT * FROM {{{{ source('{source_schema}', '{source_table}') }}}} {dbt_where})"
+                sql = f"SRC_{table:<14} as ( SELECT * FROM {{{{ source('{source_schema}', '{source_table}') }}}} {dbt_where} )"
             else:
-                sql = f"SRC_{table:<14} as ( SELECT * FROM {{{{ ref('{source_table.lower()}') }}}} {dbt_where})"
+                sql = f"SRC_{table:<14} as ( SELECT * FROM {{{{ ref('{source_table.lower()}') }}}} {dbt_where} )"
             
             all_sql.append(sql)
         else:
